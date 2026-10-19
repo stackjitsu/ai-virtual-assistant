@@ -1,0 +1,155 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Vibecoding Harness Project Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "status",
+    "project",
+    "architecture",
+    "validation"
+  ],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "const": 1 },
+    "status": { "enum": ["template", "active"] },
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "goal"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "goal": { "type": "string", "minLength": 1 }
+      }
+    },
+    "architecture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contextMap", "contexts"],
+      "properties": {
+        "contextMap": { "type": "string", "minLength": 1 },
+        "contexts": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/context" }
+        }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["adapter", "requiredChecks", "commands"],
+      "properties": {
+        "adapter": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "name"],
+          "properties": {
+            "status": { "enum": ["unconfigured", "configured"] },
+            "name": { "type": "string" }
+          }
+        },
+        "requiredChecks": {
+          "const": [
+            "format",
+            "lint",
+            "static",
+            "unit",
+            "contract",
+            "fuzz-smoke",
+            "fuzz-full"
+          ]
+        },
+        "commands": {
+          "type": "object",
+          "propertyNames": {
+            "enum": [
+              "format",
+              "lint",
+              "static",
+              "unit",
+              "contract",
+              "fuzz-smoke",
+              "fuzz-full"
+            ]
+          },
+          "additionalProperties": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "owner",
+        "ownedPaths",
+        "contract",
+        "communicationPath",
+        "collaborators"
+      ],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "owner": { "type": "string", "minLength": 1 },
+        "ownedPaths": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "contract": { "type": "string", "minLength": 1 },
+        "communicationPath": { "type": "string", "minLength": 1 },
+        "collaborators": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "const": "active" } } },
+      "then": {
+        "properties": {
+          "project": {
+            "properties": {
+              "name": { "not": { "const": "replace-with-project-name" } },
+              "goal": { "not": { "const": "replace-with-pinned-project-goal" } }
+            }
+          },
+          "architecture": {
+            "properties": {
+              "contexts": { "minItems": 1 }
+            }
+          },
+          "validation": {
+            "properties": {
+              "adapter": {
+                "properties": {
+                  "status": { "const": "configured" },
+                  "name": { "minLength": 1 }
+                }
+              },
+              "commands": {
+                "required": [
+                  "format",
+                  "lint",
+                  "static",
+                  "unit",
+                  "contract",
+                  "fuzz-smoke",
+                  "fuzz-full"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

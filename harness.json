@@ -1,0 +1,29 @@
+{
+  "$schema": "./schemas/harness.schema.json",
+  "schemaVersion": 1,
+  "status": "template",
+  "project": {
+    "name": "AI Virtual Assistant",
+    "goal": "Build an AI-powered web support assistant whose first slice answers free-text questions from approved knowledge, persists isolated conversations, and fails safely."
+  },
+  "architecture": {
+    "contextMap": "docs/architecture/context-map.md",
+    "contexts": []
+  },
+  "validation": {
+    "adapter": {
+      "status": "unconfigured",
+      "name": ""
+    },
+    "requiredChecks": [
+      "format",
+      "lint",
+      "static",
+      "unit",
+      "contract",
+      "fuzz-smoke",
+      "fuzz-full"
+    ],
+    "commands": {}
+  }
+}
