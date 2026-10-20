@@ -1,19 +1,52 @@
 {
   "$schema": "./schemas/harness.schema.json",
   "schemaVersion": 1,
-  "status": "template",
+  "status": "active",
   "project": {
     "name": "AI Virtual Assistant",
     "goal": "Build an AI-powered web support assistant whose first slice answers free-text questions from approved knowledge, persists isolated conversations, and fails safely."
   },
   "architecture": {
     "contextMap": "docs/architecture/context-map.md",
-    "contexts": []
+    "contexts": [
+      {
+        "id": "project-foundation",
+        "owner": "SETUP-01 contract-tooling worker",
+        "ownedPaths": ["docs/architecture/**", "docs/contracts/**", "docs/testing/project-checks.md", "go.mod", "go.sum", "Makefile", "scripts/**", "harness.json", "README.md", ".env.example", "GLOSSARY.md"],
+        "contract": "docs/testing/project-checks.md",
+        "communicationPath": "Contract/dependency requests via orchestrator; affected backend/widget owners acknowledge changes",
+        "collaborators": ["chat-backend", "chat-widget", "coordination"]
+      },
+      {
+        "id": "chat-backend",
+        "owner": "CHAT-01 backend owner",
+        "ownedPaths": ["cmd/**", "internal/**", "database/**"],
+        "contract": "docs/contracts/backend.md",
+        "communicationPath": "HTTP/records and asset-import coordination through orchestrator and widget owner",
+        "collaborators": ["project-foundation", "chat-widget", "coordination"]
+      },
+      {
+        "id": "chat-widget",
+        "owner": "WIDGET-01 widget owner",
+        "ownedPaths": ["web/**"],
+        "contract": "docs/contracts/chat.md",
+        "communicationPath": "HTTP and web.Assets contract changes via backend owner and orchestrator",
+        "collaborators": ["project-foundation", "chat-backend", "coordination"]
+      },
+      {
+        "id": "coordination",
+        "owner": "Primary orchestrator",
+        "ownedPaths": [".harness/**", ".scratch/**"],
+        "contract": "docs/agents/delegation-protocol.md",
+        "communicationPath": "Task dispatch, review, blockers and state updates with named context owners",
+        "collaborators": ["project-foundation", "chat-backend", "chat-widget"]
+      }
+    ]
   },
   "validation": {
     "adapter": {
-      "status": "unconfigured",
-      "name": ""
+      "status": "configured",
+      "name": "Go + Node built-ins + Python stdlib"
     },
     "requiredChecks": [
       "format",
@@ -24,6 +57,14 @@
       "fuzz-smoke",
       "fuzz-full"
     ],
-    "commands": {}
+    "commands": {
+      "format": ["make", "format"],
+      "lint": ["make", "lint"],
+      "static": ["make", "static"],
+      "unit": ["make", "unit"],
+      "contract": ["make", "contract"],
+      "fuzz-smoke": ["make", "fuzz-smoke"],
+      "fuzz-full": ["make", "fuzz-full"]
+    }
   }
 }

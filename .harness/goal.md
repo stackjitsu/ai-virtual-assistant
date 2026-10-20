@@ -1,6 +1,6 @@
 # Pinned Goal
 
-Status: pinned; application implementation not started
+Status: first-slice implementation authorized; contract and validation setup in progress
 
 ## Goal
 
@@ -18,8 +18,10 @@ The canonical support actor is **User**. Guest and signed-in access are separate
 
 ## Current boundary
 
-This bootstrap contains application identity and development workflow metadata only. Application code, dependencies, provider setup, and an autonomous product runtime are outside this task.
+The current task is the first AI-first chat slice: a framework-neutral widget, Go/Chi backend, approved-knowledge retrieval, conversation persistence/isolation and safe failure handling. OpenAI/Turso adapters may be implemented and tested with local fixtures; live credentialed requests, infrastructure provisioning and deployment require separate setup/consent. Academic report files remain untouched. Staff administration, live escalation and WhatsApp are later slices.
+
+TDD remains an open workflow choice. Tests and reproducible validation are required now; this is not a claim that test-first development was selected.
 
 ## Next decision
 
-Assign the first slice's owners and contracts, configure the validation adapters, and decide whether to use TDD. No test-first commitment has been made.
+Review the first-slice contract/validation baseline, implement within assigned ownership, then review evidence and outstanding live-service blockers. No commit, push, provider charge or production deployment is authorized by this development task.

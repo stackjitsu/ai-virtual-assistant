@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Support assistant</title>
+  <link rel="stylesheet" href="widget.css">
+  <script type="module" src="widget.js"></script>
+</head>
+<body class="widget-page">
+  <main class="chat" aria-labelledby="chat-title">
+    <header class="chat-header">
+      <p class="eyebrow">DEMO / AI SUPPORT</p>
+      <h1 id="chat-title">A little guidance.</h1>
+      <p>Ask about getting started with the fictional demo.</p>
+    </header>
+    <section class="disclosure" aria-label="Before you ask">
+      <p>AI may be wrong. Do not share sensitive data. Demo knowledge is fictional, not organization policy.</p>
+      <p id="transmission"></p>
+      <p>Guest access stays in this frame’s memory. Reloading loses access to this chat; it does not delete server history.</p>
+    </section>
+    <p id="status" role="status" aria-live="polite">Waiting for a secure connection…</p>
+    <p id="error" role="alert" hidden></p>
+    <button id="retry" type="button" hidden>Retry</button>
+    <button id="older" type="button" hidden>Load older messages</button>
+    <ol id="messages" aria-label="Conversation" aria-live="polite" aria-relevant="additions"></ol>
+    <form id="message-form" aria-label="Ask the support assistant">
+      <label for="question">Your question</label>
+      <textarea id="question" name="question" rows="3" placeholder="How do I get started?" aria-describedby="compose-hint" aria-keyshortcuts="Control+Enter Meta+Enter" required disabled></textarea>
+      <div class="compose-footer"><span id="compose-hint">Up to 2,000 characters. Ctrl/⌘+Enter sends; Enter adds a line.</span><button id="send" type="button" disabled>Send question</button></div>
+    </form>
+    <noscript>This assistant needs JavaScript to connect.</noscript>
+  </main>
+</body>
+</html>

@@ -1,5 +1,96 @@
 {
   "$schema": "./tasks.schema.json",
   "schemaVersion": 1,
-  "tasks": []
+  "tasks": [
+    {
+      "id": "SETUP-01",
+      "title": "First-slice contracts and validation tooling",
+      "status": "completed",
+      "goal": "Define owned interfaces and real validation adapters before feature implementation.",
+      "acceptanceCriteria": ["Exact HTTP, data, storage/provider and widget contracts exist", "All required checks have executable implementations and manifest is truthful", "README explains local versus live service setup without secrets"],
+      "context": "project-foundation",
+      "owner": "contract-tooling worker",
+      "allowedPaths": ["docs/architecture/**", "docs/contracts/**", "docs/testing/project-checks.md", "go.mod", "go.sum", "Makefile", "scripts/**", "harness.json", "README.md", ".env.example", "GLOSSARY.md"],
+      "contractRefs": [".scratch/ai-chat/spec.md", "docs/architecture/rules.md", "docs/testing/testing-contract.md"],
+      "invariants": ["No application runtime implemented before contract gate", "AI-first and conversation capability isolation required", "No live service calls, secrets, global installs, commits or pushes"],
+      "checks": ["format", "lint", "static", "unit", "contract", "fuzz-smoke"],
+      "dependencies": [],
+      "evidence": ["Reviewed docs/contracts/chat.md and backend.md, ownership map and seven executable Make checks", "make setup-check: 10 tooling tests passed; make format and go mod verify passed", "Feature checks intentionally fail while application packages/tests are absent; no fake successful stubs", "Dependencies chi v5.5.0 and modernc SQLite v1.60.1; live services not called"]
+    },
+    {
+      "id": "CHAT-01",
+      "title": "Persistent AI-first chat backend",
+      "status": "completed",
+      "goal": "Implement the reviewed Go/Chi, SQLite/Turso and grounded OpenAI contracts with isolated local tests.",
+      "acceptanceCriteria": ["HTTP contract covers capability auth, atomic turns/replay/history and safe errors", "Approved knowledge precedes AI and malformed/unsupported provider results fail safely", "SQLite restart and Turso/OpenAI fixture tests plus three fuzz targets exist and pass"],
+      "context": "chat-backend",
+      "owner": "backend worker",
+      "allowedPaths": ["cmd/**", "internal/**", "database/**", ".scratch/ai-chat/issues/02-backend.md"],
+      "contractRefs": ["docs/contracts/chat.md", "docs/contracts/backend.md", ".scratch/ai-chat/spec.md"],
+      "invariants": ["No live credentials or paid/remote database calls", "Never store raw capability or half-turn", "AI-first answers, safe limitations and bounded validated context/history", "No commits/pushes or edits to web/tooling/report files"],
+      "checks": ["format", "lint", "static", "unit", "contract", "fuzz-smoke"],
+      "dependencies": ["SETUP-01"],
+      "evidence": ["Resume baseline: primary independently ran make format lint static unit contract fuzz-smoke; all passed", "Backend review added exact JSON names/duplicate-key/presence/charset regressions and CLI startup/restart/remote migration guards", "Worker reran all gates and Go race; 19 behavioral Go tests, helper, 38 subtests and16fuzzseeds passed", "Full fuzz30s/target passed: provider119499, Turso23344, message4416executions; HTTP provider/DB tests used loopback fixtures only", "Primary reviewed actual handler/store/provider/record code and handoff; no known local backend blocker"]
+    },
+    {
+      "id": "WIDGET-01",
+      "title": "Embeddable widget and sample host",
+      "status": "completed",
+      "goal": "Implement the reviewed loader/iframe interface, chat state/error handling and DOM safety tests.",
+      "acceptanceCriteria": ["Actual sample-host loader/iframe integration and web.Assets compile", "Exact source/origin validation and private capability handling", "Loading, sources, clarification, safe retry/history and disclosure rendered with no HTML injection", "Node ordinary and contract tests plus browser-ready sample exist"],
+      "context": "chat-widget",
+      "owner": "widget worker",
+      "allowedPaths": ["web/**", ".scratch/ai-chat/issues/03-widget.md"],
+      "contractRefs": ["docs/contracts/chat.md", "docs/contracts/backend.md", ".scratch/ai-chat/spec.md"],
+      "invariants": ["No backend/tooling edits or academic document changes", "Capability stays in iframe memory only", "No unrestricted postMessage or HTML/Markdown rendering", "No live model calls or commits/pushes"],
+      "checks": ["format", "lint", "static", "unit", "contract"],
+      "dependencies": ["SETUP-01"],
+      "evidence": ["Implementation handed off: web/embed.go, loader/iframe assets, sample host and Node test suites", "36 Node tests passed (24 ordinary, 12 contract); go test -race ./web and go vet ./web passed", "Independent Chromium validation found one native form-submit blocker (WIDGET-02) while cross-origin, containment and safety checks passed", "Fix validated by independent actual-input browser acceptance; see WIDGET-02"]
+    },
+    {
+      "id": "VERIFY-01",
+      "title": "Independent integrated and browser verification",
+      "status": "completed",
+      "goal": "Prepare then run targeted independent verification after feature-owner completion.",
+      "acceptanceCriteria": ["Actual local Go/check commands and failure/security cases reviewed", "Actual cross-origin browser loader/iframe interaction checked with labelled fixtures", "Live-service limitations and concrete failures reported without claiming production readiness"],
+      "context": "coordination",
+      "owner": "independent validation worker",
+      "allowedPaths": ["/tmp/opencode/ai-chat-verification/**"],
+      "contractRefs": ["docs/contracts/chat.md", "docs/contracts/backend.md", ".scratch/ai-chat/spec.md"],
+      "invariants": ["No concurrent edits to implementation-owner paths", "No live OpenAI/Turso calls or credentials", "Wait for explicit completed-feature handoff before integrated validation, no progress polling"],
+      "checks": ["format", "lint", "static", "unit", "contract", "fuzz-smoke"],
+      "dependencies": ["CHAT-01", "WIDGET-01"],
+      "evidence": ["Initial actual Chromium run: 33 passed/1 native form-submit blocker; synthetic-submit checks were not accepted as User-submission proof", "Independent rerun on fixed assets: durable sandbox-send regression 22 passed/0 failed and adapted full fixture 42 passed/0 failed with browser-trusted CDP mouse/keyboard and exactly one POST per send", "Sandbox/CSP unchanged; served assets matched web/assets byte-for-byte (SHA-256 verified by primary); zero leftover owned processes", "MOCK positive UI evidence labelled separately; no live OpenAI/Turso or production-readiness proof", "Primary reran make format lint static unit contract fuzz-smoke on the post-fix tree: all passed"]
+    },
+    {
+      "id": "DOCS-01",
+      "title": "Local first-slice run documentation",
+      "status": "completed",
+      "goal": "Replace stale scaffold-only README text with exact local startup and truthful live-service limitations while independent reviews run.",
+      "acceptanceCriteria": ["Document local SQLite/demo seed/sample host commands matching existing CLI", "Missing-key limitation and sample-vs-live knowledge are explicit", "No credentials, implementation changes or production/live-test claims"],
+      "context": "project-foundation",
+      "owner": "foundation documentation worker",
+      "allowedPaths": ["README.md", "docs/testing/project-checks.md", "harness.json", ".scratch/ai-chat/issues/04-run-docs.md"],
+      "contractRefs": ["docs/contracts/chat.md", "docs/contracts/backend.md", "web/README.md"],
+      "invariants": ["Do not edit runtime/widget files or run concurrent full integration checks", "Live service setup requires separate approval", "User keys stay server-side and are never requested in chat"],
+      "checks": ["format", "static"],
+      "dependencies": ["SETUP-01"],
+      "evidence": ["README now documents actual local seed/start/sample URL and missing-provider behavior, not an unimplemented scaffold", "Only README, project-checks status, manifest adapter name and owned issue changed", "Focused nonmutating format/10Markdownlinks/fences/JSONsyntax checks passed; no live calls or runtime changes"]
+    },
+    {
+      "id": "WIDGET-02",
+      "title": "Fix real User submission inside restricted iframe",
+      "status": "completed",
+      "goal": "Make real mouse/keyboard sending work without widening sandbox permissions.",
+      "acceptanceCriteria": ["Actual red browser submission regression before fix", "Real Send click and keyboard action produce exactly one POST after fix", "No synthetic submit workaround used as final acceptance evidence", "Existing widget security/state tests and focused new regression checks pass"],
+      "context": "chat-widget",
+      "owner": "widget worker",
+      "allowedPaths": ["web/**", ".scratch/ai-chat/issues/05-sandbox-send.md", "/tmp/opencode/ai-chat-send-fix/**"],
+      "contractRefs": ["docs/contracts/chat.md", ".scratch/ai-chat/issues/05-sandbox-send.md"],
+      "invariants": ["Keep sandbox/CSP permissions unchanged", "Keep capability containment and exact replay semantics", "No backend/dependency/live-service/academic-report edits"],
+      "checks": ["format", "lint", "static", "unit", "contract"],
+      "dependencies": ["WIDGET-01", "CHAT-01"],
+      "evidence": ["Owner confirmed browser red11pass/5fail and focusedNode0/4 before fix", "Updated shared send path to explicit click plus keyboard shortcut; sandbox/CSP unchanged", "Owner actual-inputChromium22/22 and broaderfixture39/39 passed; Node40/40 and makeformat/lint/static/unit/contract passed", "Durable browser regression web/tests/sandbox-send.browser.mjs added; primary reviewed actual code", "Independent validator acceptance passed (22/0 durable, 42/0 full fixture, real isTrusted inputs, no synthetic-submit final evidence); primary gate rerun passed"]
+    }
+  ]
 }
