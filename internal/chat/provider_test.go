@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"reflect"
 	"strings"
 	"sync/atomic"
@@ -205,6 +206,170 @@ func FuzzDecodeProvider(f *testing.F) {
 		again, err := decodeProvider(providerEnvelope(string(encoded), "stop"))
 		if err != nil || !reflect.DeepEqual(again, c) {
 			t.Fatal("roundtrip", err)
+		}
+	})
+}
+
+// The configured endpoint override must receive the exact provider POST:
+// same method, bearer of the key, content type, bounded prompt and strict
+// composition decode, at the configured complete URL including its path.
+func TestContractOpenAIConfiguredEndpoint(t *testing.T) {
+	const configuredPath = "/v1beta/openai/chat/completions"
+	var calls atomic.Int32
+	var mode atomic.Int32 // 1 valid envelope; 2 invalid composition
+	fixture := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls.Add(1)
+		if r.URL.Path != configuredPath {
+			http.NotFound(w, r)
+			return
+		}
+		if r.Method != "POST" || r.Header.Get("Authorization") != "Bearer endpoint-key" || r.Header.Get("Content-Type") != "application/json" {
+			t.Error("configured endpoint method/headers")
+		}
+		b, err := readBounded(r.Body, providerBodyLimit)
+		if err != nil || len(b) == 0 || len(b) >= providerBodyLimit {
+			t.Error("unbounded/missing provider request body")
+		}
+		var request struct {
+			Model       string              `json:"model"`
+			Messages    []map[string]string `json:"messages"`
+			Max         int                 `json:"max_completion_tokens"`
+			Temperature int                 `json:"temperature"`
+			Response    map[string]string   `json:"response_format"`
+		}
+		if strictJSON(b, &request) != nil || request.Model != "endpoint-model" || request.Max != 1200 || request.Temperature != 0 || request.Response["type"] != "json_object" || len(request.Messages) != 2 {
+			t.Error("override changed the provider request discipline")
+		}
+		var data ComposeInput
+		if json.Unmarshal([]byte(request.Messages[1]["content"]), &data) != nil || len(data.Knowledge) != 1 || data.Knowledge[0].ID != "demo-start" || len(data.History) > 10 {
+			t.Error("prompt data")
+		}
+		if mode.Load() == 2 {
+			_, _ = w.Write(providerEnvelope(`{"answer":"x","source_ids":["demo-start"],"unsupported":false,"extra":true}`, "stop"))
+			return
+		}
+		_, _ = w.Write(providerEnvelope(`{"answer":"Configured endpoint answer","source_ids":["demo-start"],"unsupported":false}`, "stop"))
+	}))
+	defer fixture.Close()
+	p := NewOpenAIEndpoint("endpoint-key", "endpoint-model", fixture.URL+configuredPath)
+	c, err := p.Compose(context.Background(), fixtureInput())
+	if err != nil || c.Answer != "Configured endpoint answer" || calls.Load() != 1 {
+		t.Fatal(c, err)
+	}
+	mode.Store(2)
+	if _, err = p.Compose(context.Background(), fixtureInput()); err == nil || calls.Load() != 2 {
+		t.Fatal("override bypassed the strict composition decode", err)
+	}
+	p.key = ""
+	if _, err = p.Compose(context.Background(), fixtureInput()); err == nil || calls.Load() != 2 {
+		t.Fatal("missing key invoked HTTP", err)
+	}
+}
+
+// NewOpenAI must keep its fixed endpoint and shape, and constructing the
+// provider with that same endpoint must yield identical shared fields.
+func TestOpenAIDefaultEndpointEquivalence(t *testing.T) {
+	fixed := NewOpenAI("same-key", "same-model")
+	seam := NewOpenAIEndpoint("same-key", "same-model", providerEndpoint)
+	if fixed.endpoint != providerEndpoint || fixed.endpoint != seam.endpoint || fixed.key != seam.key || fixed.model != seam.model {
+		t.Fatal("configured constructor diverged from the fixed endpoint constructor")
+	}
+	for _, p := range []*OpenAI{fixed, seam} {
+		if p.client.Timeout != 15*time.Second {
+			t.Fatal("endpoint constructor lost the 15s provider timeout")
+		}
+		if err := p.client.CheckRedirect(nil, nil); err != http.ErrUseLastResponse {
+			t.Fatal("endpoint constructor dropped the no-redirect rule", err)
+		}
+	}
+}
+
+func TestValidateOpenAIEndpoint(t *testing.T) {
+	cases := []struct {
+		name     string
+		raw      string
+		endpoint string
+		ok       bool
+	}{
+		{"missing", "", "", true},
+		{"blank falls back", " \t\n", "", true},
+		{"gemini compatible endpoint", "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", true},
+		{"default host https", "https://api.openai.com/v1/chat/completions", "https://api.openai.com/v1/chat/completions", true},
+		{"https loopback", "https://127.0.0.1:8443/v1/chat/completions", "https://127.0.0.1:8443/v1/chat/completions", true},
+		{"http loopback ip", "http://127.0.0.1:8080/v1/chat/completions", "http://127.0.0.1:8080/v1/chat/completions", true},
+		{"http loopback localhost", "http://localhost:9000/chat/completions", "http://localhost:9000/chat/completions", true},
+		{"case folded loopback host", "http://LOCALHOST:9000/chat/completions", "http://LOCALHOST:9000/chat/completions", true},
+		{"uppercase scheme normalized by parse", "HTTPS://example.org/v1/chat/completions", "HTTPS://example.org/v1/chat/completions", true},
+		{"trimmed value", " https://example.org/v1/chat/completions\t", "https://example.org/v1/chat/completions", true},
+		{"relative url", "example.org/v1/chat/completions", "", false},
+		{"scheme relative", "//example.org/v1/chat/completions", "", false},
+		{"http elsewhere rejected", "http://example.org/v1/chat/completions", "", false},
+		{"http private network rejected", "http://192.168.1.10:8080/v1/chat/completions", "", false},
+		{"http ipv6 rejected", "http://[::1]:8080/v1/chat/completions", "", false},
+		{"userinfo rejected", "https://user:pass@example.org/v1/chat/completions", "", false},
+		{"bare user rejected", "https://user@example.org/v1/chat/completions", "", false},
+		{"fragment rejected", "https://example.org/v1/chat/completions#results", "", false},
+		{"query rejected", "https://example.org/v1/chat/completions?api=1", "", false},
+		{"missing host", "https://", "", false},
+		{"port only host", "https://:8080/v1/chat/completions", "", false},
+		{"wrong scheme", "ftp://example.org/v1/chat/completions", "", false},
+		{"opaque value", "junk:opaque", "", false},
+		{"inner whitespace", "https://exa mple.org/v1/chat/completions", "", false},
+		{"trailing garbage", "https://example.org/v1/chat/completions trailing", "", false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			endpoint, err := ValidateOpenAIEndpoint(tc.raw)
+			if tc.ok != (err == nil) || endpoint != tc.endpoint {
+				t.Fatalf("raw=%q endpoint=%q err=%v", tc.raw, endpoint, err)
+			}
+			if err == nil && endpoint != "" {
+				again, aerr := ValidateOpenAIEndpoint(endpoint)
+				if aerr != nil || again != endpoint {
+					t.Fatal("accepted endpoint is not stably valid")
+				}
+			}
+		})
+	}
+}
+
+// Property: endpoint validation never panics; a blank value falls back to the
+// default endpoint, and an accepted override is trimmed, absolute, https
+// unless loopback, free of userinfo/fragment/query, and stably valid.
+func FuzzValidateOpenAIEndpoint(f *testing.F) {
+	for _, raw := range []string{
+		"https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+		"http://127.0.0.1:8080/v1/chat/completions",
+		" https://example.org/v1/chat/completions ",
+		"   ", "//example.org", "https://u:p@h/x?a=b#c", "https://", "example.org", "ftp://h", "junk:opaque",
+	} {
+		f.Add(raw)
+	}
+	f.Fuzz(func(t *testing.T, raw string) {
+		endpoint, err := ValidateOpenAIEndpoint(raw)
+		if err != nil {
+			return
+		}
+		if endpoint == "" {
+			if strings.TrimSpace(raw) != "" {
+				t.Fatal("nonblank raw fell back to the default endpoint")
+			}
+			return
+		}
+		if endpoint != strings.TrimSpace(raw) {
+			t.Fatal("accepted endpoint kept surrounding whitespace")
+		}
+		if strings.ContainsFunc(endpoint, func(r rune) bool { return r <= ' ' }) {
+			t.Fatal("accepted endpoint kept an ASCII space/control character", endpoint)
+		}
+		u, uerr := url.Parse(endpoint)
+		if uerr != nil || !u.IsAbs() || u.Hostname() == "" || u.User != nil || u.RawQuery != "" || u.Fragment != "" ||
+			(u.Scheme != "https" && !(u.Scheme == "http" && loopbackEndpointHost(u.Hostname()))) {
+			t.Fatal("accepted override violated the endpoint invariants", endpoint)
+		}
+		again, aerr := ValidateOpenAIEndpoint(endpoint)
+		if aerr != nil || again != endpoint {
+			t.Fatal("accepted endpoint is not stably valid")
 		}
 	})
 }

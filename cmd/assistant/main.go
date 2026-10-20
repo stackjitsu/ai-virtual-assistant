@@ -90,7 +90,17 @@ func main() {
 	if len(model) > 128 || strings.ContainsAny(model, "\r\n\t ") {
 		log.Fatal("invalid model configuration")
 	}
-	handler, err := chat.NewHandler(store, chat.NewOpenAI(os.Getenv("OPENAI_API_KEY"), model), chat.HTTPConfig{AssistantOrigin: origin, ParentOrigins: parents}, assets)
+	// OPENAI_BASE_URL optionally names the complete chat-completions URL the
+	// provider POSTs exactly; blank or missing keeps the fixed OpenAI default.
+	openai := chat.NewOpenAI(os.Getenv("OPENAI_API_KEY"), model)
+	endpoint, err := chat.ValidateOpenAIEndpoint(os.Getenv("OPENAI_BASE_URL"))
+	if err != nil {
+		log.Fatal("invalid OpenAI endpoint configuration")
+	}
+	if endpoint != "" {
+		openai = chat.NewOpenAIEndpoint(os.Getenv("OPENAI_API_KEY"), model, endpoint)
+	}
+	handler, err := chat.NewHandler(store, openai, chat.HTTPConfig{AssistantOrigin: origin, ParentOrigins: parents}, assets)
 	if err != nil {
 		log.Fatal("invalid HTTP origin configuration")
 	}

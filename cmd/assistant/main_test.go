@@ -182,3 +182,31 @@ func TestContractCLILocalSeedNoProviderAndRestart(t *testing.T) {
 		t.Fatal("CLI restart lost or duplicated whole pair", string(history))
 	}
 }
+
+func TestContractCLIEndpointOverrideGuard(t *testing.T) {
+	dir := t.TempDir()
+	for _, tc := range []struct {
+		name  string
+		value string
+	}{
+		{"relative", "example.org/v1/chat/completions"},
+		{"http elsewhere", "http://example.org/v1/chat/completions"},
+		{"userinfo", "https://user:pass@example.org/v1/chat/completions"},
+		{"fragment", "https://example.org/v1/chat/completions#results"},
+		{"query", "https://example.org/v1/chat/completions?api=1"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			cmd := cliCommand(ctx, []string{
+				"STORE_MODE=sqlite",
+				"SQLITE_PATH=" + filepath.Join(dir, tc.name, "assistant.db"),
+				"OPENAI_BASE_URL=" + tc.value,
+			}, "serve")
+			out, err := cmd.CombinedOutput()
+			if err == nil || !strings.Contains(string(out), "invalid OpenAI endpoint configuration") {
+				t.Fatalf("override %q did not fail fast: err=%v output=%s", tc.value, err, out)
+			}
+		})
+	}
+}

@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -26,6 +27,48 @@ func newOpenAI(key, model, endpoint string, client *http.Client) *OpenAI {
 	c := *client
 	c.CheckRedirect = func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }
 	return &OpenAI{key, model, endpoint, &c}
+}
+
+// NewOpenAIEndpoint points the provider at an alternative OpenAI-compatible
+// chat-completions endpoint. The endpoint value is the complete URL the
+// provider POSTs exactly; every field, timeout, bound and decode discipline
+// is unchanged from NewOpenAI.
+func NewOpenAIEndpoint(key, model, endpoint string) *OpenAI {
+	return newOpenAI(key, model, endpoint, &http.Client{Timeout: 15 * time.Second})
+}
+
+// loopbackEndpointHost reports whether plain http is acceptable for an
+// endpoint override: only the literal loopback hosts local httptest fixtures
+// and local evaluation use.
+func loopbackEndpointHost(host string) bool {
+	return strings.EqualFold(host, "localhost") || host == "127.0.0.1"
+}
+
+// ValidateOpenAIEndpoint validates an optional endpoint override that names
+// the complete chat-completions URL. It returns the endpoint to use, or ""
+// when the value is blank so the default endpoint stays unchanged. An
+// override must be an absolute URL using https:// unless the host is
+// 127.0.0.1 or localhost, must carry no userinfo, fragment or query, and must
+// not contain ASCII spaces or control characters (an unencoded space is not
+// a valid URL character, which rejects trailing garbage).
+func ValidateOpenAIEndpoint(raw string) (string, error) {
+	endpoint := strings.TrimSpace(raw)
+	if endpoint == "" {
+		return "", nil
+	}
+	for _, r := range endpoint {
+		if r <= ' ' {
+			return "", ErrInvalid
+		}
+	}
+	u, err := url.Parse(endpoint)
+	if err != nil || !u.IsAbs() || u.Hostname() == "" || u.User != nil || u.RawQuery != "" || u.Fragment != "" {
+		return "", ErrInvalid
+	}
+	if u.Scheme != "https" && !(u.Scheme == "http" && loopbackEndpointHost(u.Hostname())) {
+		return "", ErrInvalid
+	}
+	return endpoint, nil
 }
 
 func (p *OpenAI) Compose(ctx context.Context, in ComposeInput) (Composition, error) {
