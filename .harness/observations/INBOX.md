@@ -62,3 +62,9 @@ Append atomic, factual observations using the schema in `docs/agents/observation
   context: LLM-01
   fact: Provider endpoint configuration seam completed additively: OPENAI_BASE_URL names the complete chat-completions URL, unset behavior byte-for-byte unchanged (default branch keeps the literal NewOpenAI call), validator rejects control characters, userinfo, fragments and queries, https required except literal loopback hosts; five fail-fast CLI guard cases; all gates pass; academic Milestone 4 report built in parallel from the pinned pushed HEAD and does not depend on this task.
   evidence: .scratch/provider-endpoint-seam/issues/01-backend.md; /tmp/opencode/ai-endpoint-seam/HANDOFF.md; README.md endpoint bullet
+- id: OBS-20261020-011
+  observed_at: 2026-10-20
+  source: tool result
+  context: live provider evaluation
+  fact: Live composition was verified once at revision 190ffe4 against the Gemini OpenAI-compatible endpoint with an operator-held credential: browser-trusted input produced an answered turn grounded in the seeded onboarding entry with its matching approved source; the credential stayed outside the repository and was never printed; no deployment, Turso storage or email transport was involved.
+  evidence: .scratch/ai-chat/evidence/live-evaluation.md; /tmp/opencode/live3/evidence/chat-live-answer.png

@@ -29,3 +29,11 @@ The automated suite uses local provider fixtures. A future live evaluation requi
 ## Recording results
 
 Record revision, mode (actual Go backend / browser API fixture / provider fixture / live), input, expected and actual behavior, pass/fail/not-run, and evidence path. Grounding/citation checks do not by themselves establish factual correctness; review actual answer content when model evaluation is authorized. No production security or readiness claim follows from this checklist.
+
+## Recorded results
+
+### Live provider evaluation — 2026-10-20
+
+Mode: live. Revision: 190ffe4 (server binary built from that commit). One question, "How do I start the demo?", was submitted with browser-trusted input against the seeded local SQLite store; the composition request went to a hosted OpenAI-compatible endpoint with an operator-held credential kept outside the repository. Result: PASS — an answered turn labelled "AI answer", grounded in the approved onboarding entry, with its matching approved source listed. Full record, limits and evidence hashes: `evidence/live-evaluation.md`.
+
+This single result does not establish deployment readiness, live Turso storage, email delivery, or factual correctness beyond the fictional seed entry.

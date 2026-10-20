@@ -1,6 +1,6 @@
 # Active Plan
 
-Status: first-slice implementation complete and pushed; no live service calls or deployment
+Status: slices 1–2 and the provider endpoint seam complete and pushed; live composition verified locally; no deployment
 
 | Step | Outcome | Owner | Status | Depends on |
 |---|---|---|---|---|
@@ -15,6 +15,7 @@ Status: first-slice implementation complete and pushed; no live service calls or
 | 09 | Expose escalation affordance, consent and email capture in widget | widget owner | completed; ESC-02 accepted after primary diff + gate review | 08 |
 | 10 | Independently validate escalation flow end to end | validation owner | completed; ESC-03 15/15 scenarios PASS accepted after primary evidence review | 08, 09 |
 | 11 | Add provider endpoint configuration seam for zero-cost live evaluation | backend owner | completed; LLM-01 accepted after primary diff + gate review | 08 |
+| 12 | Verify live composition against a compatible hosted endpoint at zero cost | orchestrator / validation evidence | completed; one grounded answered turn with matching approved source recorded in `.scratch/ai-chat/evidence/live-evaluation.md` | 11 |
 
 ## Decision log
 
@@ -28,11 +29,10 @@ Status: first-slice implementation complete and pushed; no live service calls or
 - Independent acceptance: actual Chromium mouse/keyboard input submitted exactly one POST per send against the actual Go/SQLite backend with sandbox/CSP unchanged and byte-identical served assets; primary reran all integrated gates on the post-fix tree.
 - First-slice commit 69ca0f0 (54 files, 5872 insertions) pushed to private origin/main after explicit user authorization; remote ref and privacy verified after push.
 - Testing approach resolved as tests-alongside, not strict TDD, for current and near-term slices; recorded in `docs/adr/0001-testing-approach.md`.
+- Slice-2 commits 896ed7a and closure 8915abc pushed to private origin/main after explicit user authorization; escalation records, evidence and harness state included.
+- Provider seam commits e4bdf39 and closure 190ffe4 pushed after explicit user authorization; the default provider endpoint stays byte-for-byte unchanged.
+- Live composition evaluated once on 2026-10-20 against the Gemini OpenAI-compatible endpoint with an operator-held credential: browser-trusted input produced an answered turn grounded in the seed entry with its approved source. This is a single-question evaluation, not deployment readiness (see `.scratch/ai-chat/evidence/live-evaluation.md`).
 
 ## Next decision
 
-ESC-01 backend implementation is dispatched for claim. Follow-up: ESC-02 widget affordance after the additive contract lands, then ESC-03 independent validation. Report live-answer figure remains pending the user's separately held provider credential.
-
-## Next decision
-
-Commit 69ca0f0 (54 files) was pushed to the private origin/main with explicit user authorization; academic documents are outside the repo. Remaining undecided items, each requiring separate user input: live OpenAI/Turso credentials and evaluation, TDD adoption, deployment.
+Both slices, the endpoint seam and the live evaluation are closed; no task is dispatched. The user's next decisions are deployment (hosted Turso/libSQL plus production provider configuration), real email delivery, and the conditional WhatsApp channel, each requiring separate setup, credentials and authorization.
