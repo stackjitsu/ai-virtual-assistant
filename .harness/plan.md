@@ -1,6 +1,6 @@
 # Active Plan
 
-Status: active first-slice work; no live service calls or deployment
+Status: first-slice implementation complete and pushed; no live service calls or deployment
 
 | Step | Outcome | Owner | Status | Depends on |
 |---|---|---|---|---|
@@ -22,7 +22,8 @@ Status: active first-slice work; no live service calls or deployment
 - Local SQLite may support offline development of the Turso/libSQL-compatible schema; live Turso and OpenAI tests require explicit credentials and are not implied by local test passes.
 - Resume check: independently ran make format, lint, static, unit, contract and fuzz-smoke against persisted implementation; all passed. This does not close pending backend review/browser checks or establish live-service integration.
 - Independent acceptance: actual Chromium mouse/keyboard input submitted exactly one POST per send against the actual Go/SQLite backend with sandbox/CSP unchanged and byte-identical served assets; primary reran all integrated gates on the post-fix tree.
+- First-slice commit 69ca0f0 (54 files, 5872 insertions) pushed to private origin/main after explicit user authorization; remote ref and privacy verified after push.
 
 ## Next decision
 
-First-slice implementation and local validation are complete. Next decision is the user's: authorize committing/pushing the first slice, and separately decide whether to supply live OpenAI/Turso credentials for live evaluation. TDD adoption and deployment remain undecided.
+Commit 69ca0f0 (54 files) was pushed to the private origin/main with explicit user authorization; academic documents are outside the repo. Remaining undecided items, each requiring separate user input: live OpenAI/Turso credentials and evaluation, TDD adoption, deployment.

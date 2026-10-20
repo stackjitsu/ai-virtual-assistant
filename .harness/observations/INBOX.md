@@ -32,3 +32,9 @@ Append atomic, factual observations using the schema in `docs/agents/observation
   context: VERIFY-01
   fact: Independent Chromium acceptance of the sandbox-send fix passed 22/0 (durable regression) and 42/0 (full fixture) using browser-trusted input, exactly one POST per send, sandbox/CSP unchanged and byte-identical served assets; no live OpenAI/Turso evidence.
   evidence: /tmp/opencode/ai-chat-verification-resume/independent-acceptance.md
+- id: OBS-20261020-006
+  observed_at: 2026-10-20
+  source: user interaction
+  context: first AI-chat slice
+  fact: User authorized commit and push; commit 69ca0f0 (54 files, 5872 insertions) pushed to private origin/main and repo privacy confirmed after push. Academic documents remain outside the repository.
+  evidence: .harness/plan.md; git log adf10eb..69ca0f0
