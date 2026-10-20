@@ -91,6 +91,51 @@
       "checks": ["format", "lint", "static", "unit", "contract"],
       "dependencies": ["WIDGET-01", "CHAT-01"],
       "evidence": ["Owner confirmed browser red11pass/5fail and focusedNode0/4 before fix", "Updated shared send path to explicit click plus keyboard shortcut; sandbox/CSP unchanged", "Owner actual-inputChromium22/22 and broaderfixture39/39 passed; Node40/40 and makeformat/lint/static/unit/contract passed", "Durable browser regression web/tests/sandbox-send.browser.mjs added; primary reviewed actual code", "Independent validator acceptance passed (22/0 durable, 42/0 full fixture, real isTrusted inputs, no synthetic-submit final evidence); primary gate rerun passed"]
+    },
+    {
+      "id": "ESC-01",
+      "title": "Email escalation backend and contract",
+      "status": "completed",
+      "goal": "Add the visitor-triggered email escalation path: additive chat.md contract section, additive storage migration, capability-authorized ticket records with a local email-outcome adapter, tests alongside per ADR 0001.",
+      "acceptanceCriteria": ["Additive contract section with routes, exact fields, explicit consent, limits and honest outcomes", "Additive idempotent migration; existing tables untouched", "Handler/store authorization reuses the capability seam; no raw capability storage or logging", "New behavioral tests, race-clean new code, existing suites green; full local gates pass"],
+      "context": "chat-backend",
+      "owner": "backend worker",
+      "allowedPaths": ["docs/contracts/chat.md", "internal/**", "database/**", ".scratch/support-escalation/issues/01-backend.md", "/tmp/opencode/ai-escalation-backend/**"],
+      "contractRefs": [".scratch/support-escalation/spec.md", "docs/contracts/backend.md", "docs/adr/0001-testing-approach.md", ".scratch/support-escalation/issues/01-backend.md"],
+      "invariants": ["No commits, pushes or live email/provider/database calls", "No web/**, harness shared state or academic edits", "Capabilities remain bearer-only; email stored only as visitor-provided", "Additive only: existing routes/fields/schema behavior unchanged"],
+      "checks": ["format", "lint", "static", "unit", "contract", "fuzz-smoke"],
+      "dependencies": ["CHAT-01"],
+      "evidence": ["Worker claimed issue 01 before edits; additive chat.md section verified by primary diff review (pre-existing text untouched)", "Additive idempotent migration 002: escalation_tickets with schema CHECK pinning delivery_outcome=delivery_not_wired, atomic 5-ticket cap, dedup replay", "Handler reuses existing authorize seam; consent fails closed at decode; replay precedes cap; outbox observes after storage only", "Primary reran make format lint static unit contract fuzz-smoke on final tree: all PASS incl. new FuzzDecodeEscalation (3664 execs smoke)", "internal/chat tests 20 to 27 functions, 49 to 95 cases; race clean incl. -count=3; no commits, no web edits, no live calls"]
+    },
+    {
+      "id": "ESC-02",
+      "title": "Widget escalation affordance with consent and email capture",
+      "status": "completed",
+      "goal": "Add the visitor-facing escalation form inside the existing restricted widget: email input, explicit consent control, disclosure text and honest delivery-outcome presentation.",
+      "acceptanceCriteria": ["Escalation affordance visible only after a conversation exists and uses the additive contract exactly", "Consent is an explicit control; email validation mirrors server rules", "Unconfigured delivery shows the truthful outcome wording, not success", "Existing widget security/state tests and focused new regression checks pass"],
+      "context": "chat-widget",
+      "owner": "widget worker",
+      "allowedPaths": ["web/**", ".scratch/support-escalation/issues/02-widget.md", "/tmp/opencode/ai-escalation-send/**"],
+      "contractRefs": ["docs/contracts/chat.md", ".scratch/support-escalation/spec.md"],
+      "invariants": ["Sandbox and CSP permissions unchanged", "No backend or harness edits; no live services or commits/pushes", "Escalation request never carries capability or stored secrets outside declared fields"],
+      "checks": ["format", "lint", "static", "unit", "contract"],
+      "dependencies": ["ESC-01"],
+      "evidence": ["Worker claimed issue 02 before edits; loader.js/sandbox/CSP byte-for-byte untouched, verified by primary diff review", "Consent fails closed client-side (checked !== true) and 201 rendered only after validEscalationTicket validation; server message verbatim, inert textContent only", "New web/tests/escalation.test.mjs 20 regressions at real mounted handlers; embedding contract test extended additive-only", "Node tests 40 to 61, all green; primary reran make format lint static unit contract fuzz-smoke on final tree: all PASS (48 unit, 13 contract)", "Pagehide aborts all in-flight requests via inFlight Set; chat send path and cooldown behavior-equivalent"]
+    },
+    {
+      "id": "ESC-03",
+      "title": "Independent escalation verification",
+      "status": "completed",
+      "goal": "Verify the escalation flow end to end in a real browser against the actual Go backend, including consent gating, email validation, duplicate behavior, persistence across restart and honest outcome wording.",
+      "acceptanceCriteria": ["Real trusted input drives the visitor path; no synthetic-submit evidence accepted", "Authorization and isolation checks pass across conversations", "Restart persistence and bounded-rate behavior demonstrated with evidence", "Findings are blockers first, fixes delegated to owning context"],
+      "context": "coordination",
+      "owner": "independent validation worker",
+      "allowedPaths": ["/tmp/opencode/ai-escalation-verification/**"],
+      "contractRefs": ["docs/contracts/chat.md", ".scratch/support-escalation/spec.md"],
+      "invariants": ["No concurrent edits to implementation-owner paths", "No live email/provider/database calls or credentials", "No commits, pushes or harness shared-state edits"],
+      "checks": ["format", "lint", "static", "unit", "contract"],
+      "dependencies": ["ESC-01", "ESC-02"],
+      "evidence": ["Validator claimed issue 03 first; zero implementation edits (HEAD unchanged ac7bdb6); verified by primary status/log review", "Real headless Chromium 154 via CDP through backend-served sample host; 996 real-input events, every isTrusted true, zero submit events; CSP byte-checked restricted", "15/15 scenario records PASS incl. zero-network consent blocks, byte-for-byte duplicate replay (sha256), 5-ticket cap then 409, byte-identical 401 no-existence-oracle, 3x SIGTERM restart persistence, 429+Retry-After cooldown with chat unaffected", "Machine-checkable: results.json 190/190 checks pass; primary independently re-counted pass flags", "Durable copies at .scratch/support-escalation/evidence/{independent-acceptance.md,results.json}"]
     }
   ]
 }

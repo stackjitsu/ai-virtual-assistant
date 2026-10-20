@@ -38,3 +38,21 @@ Append atomic, factual observations using the schema in `docs/agents/observation
   context: first AI-chat slice
   fact: User authorized commit and push; commit 69ca0f0 (54 files, 5872 insertions) pushed to private origin/main and repo privacy confirmed after push. Academic documents remain outside the repository.
   evidence: .harness/plan.md; git log adf10eb..69ca0f0
+- id: OBS-20261020-007
+  observed_at: 2026-10-20
+  source: worker handoff
+  context: ESC-01
+  fact: Email escalation backend completed additively: contract section, idempotent migration 002, capability-authorized tickets with delivery_outcome pinned to delivery_not_wired by schema CHECK, atomic 5-ticket cap and byte-for-byte duplicate replay; all gates pass including a new escalation fuzz target; primary independently reviewed diffs and reran gates.
+  evidence: .scratch/support-escalation/issues/01-backend.md; /tmp/opencode/ai-escalation-backend/HANDOFF.md; docs/adr/0001-testing-approach.md
+- id: OBS-20261020-008
+  observed_at: 2026-10-20
+  source: worker handoff
+  context: ESC-02
+  fact: Widget escalation UI completed additively: click-gated affordance, standalone never-prechecked consent checkbox failing closed, server-truthful outcome rendered verbatim as inert text with validEscalationTicket validation, duplicate replay surfaced as stored-ticket feature, pagehide aborts all in-flight requests; sandbox/CSP byte-for-byte unchanged; Node tests 40 to 61 all green; primary reviewed diffs and reran all gates.
+  evidence: .scratch/support-escalation/issues/02-widget.md; web/tests/escalation.test.mjs; web/tests/embedding.contract.test.mjs
+- id: OBS-20261020-009
+  observed_at: 2026-10-20
+  source: worker handoff
+  context: ESC-03
+  fact: Independent escalation verification passed 15/15 scenario records and 190/190 machine-checked assertions on the real backend with real headless Chromium (996 trusted-input events, zero synthetic submits): consent blocks send zero requests, valid escalations persist truthful delivery_not_wired tickets, duplicate replay is byte-for-byte identical, the 5-ticket cap yields 409 with replay still working, wrong capabilities get three byte-identical 401s without existence oracle, three SIGTERM restarts preserve tickets byte-for-byte, and 429 cooldown disables only the escalation send while chat continues; no blockers.
+  evidence: .scratch/support-escalation/evidence/independent-acceptance.md; .scratch/support-escalation/evidence/results.json

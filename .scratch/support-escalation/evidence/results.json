@@ -1,0 +1,1703 @@
+{
+  "results": [
+    {
+      "id": "ENV",
+      "name": "environment and served-widget preconditions (real binary, real Chromium, no credentials)",
+      "pass": true,
+      "obs": [
+        {
+          "label": "server command used (also in server-command.txt)",
+          "pass": true,
+          "detail": "go build -o /tmp/opencode/ai-escalation-verification/assistant /home/me/Documents/formartting/Working_Milestone_Files/ai-virtual-assistant/cmd/assistant\nenv STORE_MODE=sqlite SQLITE_PATH=/tmp/opencode/ai-escalation-verification/assistant.sqlite OPENAI_API_KEY='' TURSO_DATABASE_URL='' TURSO_AUTH_TOKEN='' ASSISTANT_ORIGIN=http://127.0.0.1:35953 LISTEN_ADDR=127.0.0.1:35953 WIDGET_PARENT_ORIGINS=http://127.0.0.1:35953 /tmp/opencode/ai-escalation-verification/assistant serve --seed-demo\n"
+        },
+        {
+          "label": "unknown API route returns safe JSON (backend alive)",
+          "pass": true,
+          "detail": {
+            "status": 404,
+            "body": "{\"error\":{\"code\":\"not_found\",\"message\":\"The request could not be completed.\"}}\n"
+          }
+        },
+        {
+          "label": "backend API responds with safe JSON on unknown route",
+          "pass": true,
+          "detail": {
+            "status": 404,
+            "headers": {
+              "cache-control": "no-store",
+              "content-type": "application/json",
+              "x-content-type-options": "nosniff",
+              "date": "Tue, 20 Oct 2026 12:10:41 GMT",
+              "content-length": "79"
+            },
+            "body": "{\"error\":{\"code\":\"not_found\",\"message\":\"The request could not be completed.\"}}\n"
+          }
+        },
+        {
+          "label": "widget CSP served by backend",
+          "pass": true,
+          "detail": {
+            "content-security-policy": "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors http://127.0.0.1:35953"
+          }
+        },
+        {
+          "label": "restricted CSP intact (form-action none, script-src self, frame-ancestors locked)",
+          "pass": true,
+          "detail": "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors http://127.0.0.1:35953"
+        },
+        {
+          "label": "browser under test",
+          "pass": true,
+          "detail": {
+            "browser": "Chrome/154.0.8037.97",
+            "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+          }
+        }
+      ],
+      "error": null
+    },
+    {
+      "id": "S1",
+      "name": "chat send still works end to end (real input, completed clarification turn)",
+      "pass": true,
+      "obs": [
+        {
+          "label": "iframe sandbox is exactly allow-scripts allow-same-origin",
+          "pass": true,
+          "detail": null
+        },
+        {
+          "label": "chat state after real-input send",
+          "pass": true,
+          "detail": {
+            "status": "Clarification received: approved knowledge is limited.",
+            "error": "",
+            "errHidden": true,
+            "count": 2,
+            "text": "YouCan you explain quantum entanglement?Clarification · limited knowledgeI need more information: the currently approved support material does not support an answer to that question. Please clarify what you need help with. Demo knowledge describes a fictional sample organization, not real organization policies.",
+            "sendDisabled": false
+          }
+        },
+        {
+          "label": "exactly one POST /messages from real input",
+          "pass": true,
+          "detail": [
+            {
+              "sid": "C6C787419DAAC61F173341F9DC2BF274",
+              "url": "http://127.0.0.1:35953/api/v1/conversations/860136d408a0d758ec0cbfcd072b2b04/messages",
+              "method": "POST",
+              "body": {
+                "request_id": "dccbd3e3-1613-4fd2-8641-aebf5bd96d39",
+                "text": "Can you explain quantum entanglement?"
+              }
+            }
+          ]
+        },
+        {
+          "label": "message POST response is 200",
+          "pass": true,
+          "detail": {
+            "sid": "C6C787419DAAC61F173341F9DC2BF274",
+            "url": "http://127.0.0.1:35953/api/v1/conversations/860136d408a0d758ec0cbfcd072b2b04/messages",
+            "status": 200,
+            "headers": {
+              "cache-control": "no-store",
+              "content-length": "690",
+              "date": "Tue, 20 Oct 2026 12:10:46 GMT",
+              "content-type": "application/json",
+              "x-content-type-options": "nosniff"
+            }
+          }
+        },
+        {
+          "label": "completed pair rendered (user + assistant)",
+          "pass": true,
+          "detail": {
+            "status": "Clarification received: approved knowledge is limited.",
+            "error": "",
+            "errHidden": true,
+            "count": 2,
+            "text": "YouCan you explain quantum entanglement?Clarification · limited knowledgeI need more information: the currently approved support material does not support an answer to that question. Please clarify what you need help with. Demo knowledge describes a fictional sample organization, not real organization policies.",
+            "sendDisabled": false
+          }
+        },
+        {
+          "label": "clarification status shown",
+          "pass": true,
+          "detail": "Clarification received: approved knowledge is limited."
+        },
+        {
+          "label": "conversation history shows the user question",
+          "pass": true,
+          "detail": "YouCan you explain quantum entanglement?Clarification · limited knowledgeI need more information: the currently approved support material does not support an answer to that question. Please clarify wh"
+        },
+        {
+          "label": "no /escalation request during chat send",
+          "pass": true,
+          "detail": null
+        },
+        {
+          "label": "screenshot saved: s1-chat-regression.png",
+          "pass": true,
+          "detail": "s1-chat-regression.png"
+        }
+      ],
+      "error": null
+    },
+    {
+      "id": "S2",
+      "name": "escalation affordance is click-gated only and never auto-opens (incl. provider failure)",
+      "pass": true,
+      "obs": [
+        {
+          "label": "escalation panel state right after conversation exists",
+          "pass": true,
+          "detail": {
+            "toggleHidden": false,
+            "toggleDisabled": false,
+            "expanded": "false",
+            "formHidden": true,
+            "email": "",
+            "note": "",
+            "consent": false,
+            "sendDisabled": false,
+            "error": "",
+            "errHidden": true,
+            "outcome": "",
+            "outHidden": true
+          }
+        },
+        {
+          "label": "panel closed after conversation exists (no auto-open)",
+          "pass": true,
+          "detail": {
+            "toggleHidden": false,
+            "toggleDisabled": false,
+            "expanded": "false",
+            "formHidden": true,
+            "email": "",
+            "note": "",
+            "consent": false,
+            "sendDisabled": false,
+            "error": "",
+            "errHidden": true,
+            "outcome": "",
+            "outHidden": true
+          }
+        },
+        {
+          "label": "toggle visible+enabled once conversation exists",
+          "pass": true,
+          "detail": {
+            "toggleHidden": false,
+            "toggleDisabled": false,
+            "expanded": "false",
+            "formHidden": true,
+            "email": "",
+            "note": "",
+            "consent": false,
+            "sendDisabled": false,
+            "error": "",
+            "errHidden": true,
+            "outcome": "",
+            "outHidden": true
+          }
+        },
+        {
+          "label": "chat state after 503 provider failure",
+          "pass": true,
+          "detail": {
+            "status": "No saved reply found. Retry uses the same question ID.",
+            "error": "The AI service is unavailable. Your question has not been answered. Please retry later.",
+            "errHidden": false,
+            "count": 1,
+            "text": "You · awaiting confirmationHow do I start the demo?",
+            "sendDisabled": true
+          }
+        },
+        {
+          "label": "provider failure wording shown (AI service unavailable, no fake answer)",
+          "pass": true,
+          "detail": "The AI service is unavailable. Your question has not been answered. Please retry later."
+        },
+        {
+          "label": "503 failure did not open the escalation panel",
+          "pass": true,
+          "detail": {
+            "toggleHidden": false,
+            "toggleDisabled": false,
+            "expanded": "false",
+            "formHidden": true,
+            "email": "",
+            "note": "",
+            "consent": false,
+            "sendDisabled": false,
+            "error": "",
+            "errHidden": true,
+            "outcome": "",
+            "outHidden": true
+          }
+        },
+        {
+          "label": "post-reconcile: panel still closed",
+          "pass": true,
+          "detail": {
+            "toggleHidden": false,
+            "toggleDisabled": false,
+            "expanded": "false",
+            "formHidden": true,
+            "email": "",
+            "note": "",
+            "consent": false,
+            "sendDisabled": false,
+            "error": "",
+            "errHidden": true,
+            "outcome": "",
+            "outHidden": true
+          }
+        },
+        {
+          "label": "zero /escalation requests before any toggle click",
+          "pass": true,
+          "detail": []
+        },
+        {
+          "label": "real toggle click opens the panel",
+          "pass": true,
+          "detail": {
+            "toggleHidden": false,
+            "toggleDisabled": false,
+            "expanded": "true",
+            "formHidden": false,
+            "email": "",
+            "note": "",
+            "consent": false,
+            "sendDisabled": false,
+            "error": "",
+            "errHidden": true,
+            "outcome": "",
+            "outHidden": true
+          }
+        },
+        {
+          "label": "screenshot saved: s2-panel-open.png",
+          "pass": true,
+          "detail": "s2-panel-open.png"
+        },
+        {
+          "label": "second real toggle click closes the panel",
+          "pass": true,
+          "detail": {
+            "toggleHidden": false,
+            "toggleDisabled": false,
+            "expanded": "false",
+            "formHidden": true,
+            "email": "",
+            "note": "",
+            "consent": false,
+            "sendDisabled": false,
+            "error": "",
+            "errHidden": true,
+            "outcome": "",
+            "outHidden": true
+          }
+        },
+        {
+          "label": "still zero /escalation requests for the whole scenario",
+          "pass": true,
+          "detail": []
+        }
+      ],
+      "error": null
+    },
+    {
+      "id": "S3",
+      "name": "submit without consent → client-side block, zero network, truthful wording",
+      "pass": true,
+      "obs": [
+        {
+          "label": "escalation panel state after consent-less send",
+          "pass": true,
+          "detail": {
+            "toggleHidden": false,
+            "toggleDisabled": false,
+            "expanded": "true",
+            "formHidden": false,
+            "email": "visitor-probe@example.com",
+            "note": "",
+            "consent": false,
+            "sendDisabled": false,
+            "error": "Tick the consent box first. Nothing is recorded for you without your consent.",
+            "errHidden": false,
+            "outcome": "",
+            "outHidden": true
+          }
+        },
+        {
+          "label": "consent wording exact",
+          "pass": true,
+          "detail": "Tick the consent box first. Nothing is recorded for you without your consent."
+        },
+        {
+          "label": "zero /escalation network requests",
+          "pass": true,
+          "detail": []
+        },
+        {
+          "label": "zero additional /api/v1 requests at all (nothing left the iframe)",
+          "pass": true,
+          "detail": [
+            "http://127.0.0.1:35953/api/v1/conversations",
+            "http://127.0.0.1:35953/api/v1/conversations/a32b3084443aafddcc10eb002c96941e/messages?limit=20"
+          ]
+        },
+        {
+          "label": "no outcome shown",
+          "pass": true,
+          "detail": {
+            "toggleHidden": false,
+            "toggleDisabled": false,
+            "expanded": "true",
+            "formHidden": false,
+            "email": "visitor-probe@example.com",
+            "note": "",
+            "consent": false,
+            "sendDisabled": false,
+            "error": "Tick the consent box first. Nothing is recorded for you without your consent.",
+            "errHidden": false,
+            "outcome": "",
+            "outHidden": true
+          }
+        },
+        {
+          "label": "screenshot saved: s3-no-consent-block.png",
+          "pass": true,
+          "detail": "s3-no-consent-block.png"
+        }
+      ],
+      "error": null
+    },
+    {
+      "id": "S4",
+      "name": "invalid email → client-side block, zero network",
+      "pass": true,
+      "obs": [
+        {
+          "label": "consent checkbox checked by real click",
+          "pass": true,
+          "detail": null
+        },
+        {
+          "label": "escalation panel state after invalid-email send",
+          "pass": true,
+          "detail": {
+            "toggleHidden": false,
+            "toggleDisabled": false,
+            "expanded": "true",
+            "formHidden": false,
+            "email": "invalid@@example.com",
+            "note": "",
+            "consent": true,
+            "sendDisabled": false,
+            "error": "Enter one valid email address of up to 254 bytes, like you@example.org.",
+            "errHidden": false,
+            "outcome": "",
+            "outHidden": true
+          }
+        },
+        {
+          "label": "invalid-email wording exact",
+          "pass": true,
+          "detail": "Enter one valid email address of up to 254 bytes, like you@example.org."
+        },
+        {
+          "label": "zero /escalation network requests",
+          "pass": true,
+          "detail": []
+        },
+        {
+          "label": "zero additional /api/v1 requests at all",
+          "pass": true,
+          "detail": [
+            "http://127.0.0.1:35953/api/v1/conversations",
+            "http://127.0.0.1:35953/api/v1/conversations/a0fb320473602c2d68cd295f291f4c0a/messages?limit=20"
+          ]
+        },
+        {
+          "label": "screenshot saved: s4-invalid-email-block.png",
+          "pass": true,
+          "detail": "s4-invalid-email-block.png"
+        }
+      ],
+      "error": null
+    },
+    {
+      "id": "S5",
+      "name": "valid escalation → 201 truthful outcome + server-side ticket row; duplicate replay byte-identical, no new row",
+      "pass": true,
+      "obs": [
+        {
+          "label": "wire body of first escalation POST",
+          "pass": true,
+          "detail": [
+            {
+              "email": "Visitor@Example.COM",
+              "consent": true,
+              "question_note": " Please ring me at three "
+            }
+          ]
+        },
+        {
+          "label": "escalation panel outcome after first submit",
+          "pass": true,
+          "detail": "Your request has been recorded. Email delivery is not configured, so no email has been sent.\nRecorded Tue, 20 Oct 2026 12:10:58 GMT.\nRequest reference: 24696783b4dad4fa36bd58f7beaf25c7."
+        },
+        {
+          "label": "first POST returns 201",
+          "pass": true,
+          "detail": {
+            "sid": "837354812039A2EC5529A496C907EFAF",
+            "url": "http://127.0.0.1:35953/api/v1/conversations/c74d689b3be6b1995147b85f170d1f5c/escalation",
+            "status": 201,
+            "headers": {
+              "cache-control": "no-store",
+              "content-length": "241",
+              "date": "Tue, 20 Oct 2026 12:10:58 GMT",
+              "content-type": "application/json",
+              "x-content-type-options": "nosniff"
+            }
+          }
+        },
+        {
+          "label": "server truthful sentence rendered verbatim",
+          "pass": true,
+          "detail": "Your request has been recorded. Email delivery is not configured, so no email has been sent.\nRecorded Tue, 20 Oct 2026 12:10:58 GMT.\nRequest reference: 24696783b4dad4fa36bd58f7beaf25c7."
+        },
+        {
+          "label": "ticket reference rendered",
+          "pass": true,
+          "detail": "24696783b4dad4fa36bd58f7beaf25c7"
+        },
+        {
+          "label": "replay note absent on first submit",
+          "pass": true,
+          "detail": "Your request has been recorded. Email delivery is not configured, so no email has been sent.\nRecorded Tue, 20 Oct 2026 12:10:58 GMT.\nRequest reference: 24696783b4dad4fa36bd58f7beaf25c7."
+        },
+        {
+          "label": "rendered reference resolves to a stored ticket conversation",
+          "pass": true,
+          "detail": {
+            "ref": "24696783b4dad4fa36bd58f7beaf25c7",
+            "conversation": "c74d689b3be6b1995147b85f170d1f5c"
+          }
+        },
+        {
+          "label": "sqlite escalation_tickets rows for S5 conversation",
+          "pass": true,
+          "detail": [
+            {
+              "ticket_id": "24696783b4dad4fa36bd58f7beaf25c7",
+              "email": "visitor@example.com",
+              "question_note": "Please ring me at three",
+              "delivery_outcome": "delivery_not_wired",
+              "ticket_number": 1,
+              "recorded_at": "2026-10-20T12:10:58.768438594Z"
+            }
+          ]
+        },
+        {
+          "label": "exactly one ticket row server-side",
+          "pass": true,
+          "detail": [
+            {
+              "ticket_id": "24696783b4dad4fa36bd58f7beaf25c7",
+              "email": "visitor@example.com",
+              "question_note": "Please ring me at three",
+              "delivery_outcome": "delivery_not_wired",
+              "ticket_number": 1,
+              "recorded_at": "2026-10-20T12:10:58.768438594Z"
+            }
+          ]
+        },
+        {
+          "label": "stored email is canonical lowercase",
+          "pass": true,
+          "detail": "visitor@example.com"
+        },
+        {
+          "label": "stored note is canonical trimmed",
+          "pass": true,
+          "detail": "Please ring me at three"
+        },
+        {
+          "label": "stored outcome is delivery_not_wired",
+          "pass": true,
+          "detail": "delivery_not_wired"
+        },
+        {
+          "label": "rendered reference equals stored ticket_id",
+          "pass": true,
+          "detail": {
+            "rendered": "24696783b4dad4fa36bd58f7beaf25c7",
+            "stored": "24696783b4dad4fa36bd58f7beaf25c7"
+          }
+        },
+        {
+          "label": "panel outcome after identical replay",
+          "pass": true,
+          "detail": "Your request has been recorded. Email delivery is not configured, so no email has been sent.\nRecorded Tue, 20 Oct 2026 12:10:58 GMT.\nRequest reference: 24696783b4dad4fa36bd58f7beaf25c7.\nThis is your previously stored request, replayed unchanged."
+        },
+        {
+          "label": "replay shows same ticket reference",
+          "pass": true,
+          "detail": {
+            "first": "24696783b4dad4fa36bd58f7beaf25c7",
+            "replay": "24696783b4dad4fa36bd58f7beaf25c7"
+          }
+        },
+        {
+          "label": "replay note shown",
+          "pass": true,
+          "detail": "Your request has been recorded. Email delivery is not configured, so no email has been sent.\nRecorded Tue, 20 Oct 2026 12:10:58 GMT.\nRequest reference: 24696783b4dad4fa36bd58f7beaf25c7.\nThis is your previously stored request, replayed unchanged."
+        },
+        {
+          "label": "still one ticket row after replay",
+          "pass": true,
+          "detail": null
+        },
+        {
+          "label": "panel outcome after canonical-variant replay",
+          "pass": true,
+          "detail": "Your request has been recorded. Email delivery is not configured, so no email has been sent.\nRecorded Tue, 20 Oct 2026 12:10:58 GMT.\nRequest reference: 24696783b4dad4fa36bd58f7beaf25c7.\nThis is your previously stored request, replayed unchanged."
+        },
+        {
+          "label": "canonical-variant replay shows the same stored ticket",
+          "pass": true,
+          "detail": "Your request has been recorded. Email delivery is not configured, so no email has been sent.\nRecorded Tue, 20 Oct 2026 12:10:58 GMT.\nRequest reference: 24696783b4dad4fa36bd58f7beaf25c7.\nThis is your previously stored request, replayed unchanged."
+        },
+        {
+          "label": "still one ticket row after canonical-variant replay",
+          "pass": true,
+          "detail": null
+        },
+        {
+          "label": "screenshot saved: s5-201-outcome.png",
+          "pass": true,
+          "detail": "s5-201-outcome.png"
+        },
+        {
+          "label": "direct-API duplicate bodies (sha256 + parsed content)",
+          "pass": true,
+          "detail": {
+            "a": {
+              "status": 201,
+              "sha256": "83bb0e10b050dede0515c396b89c6f402b81245103dc6cfb6f8cd5eed957daea",
+              "parsed": {
+                "ticket_id": "690dc1d93167da02c61c5e4c3882037e",
+                "recorded_at": "2026-10-20T12:11:01.724874715Z",
+                "delivery_outcome": "delivery_not_wired",
+                "message": "Your request has been recorded. Email delivery is not configured, so no email has been sent."
+              }
+            },
+            "b": {
+              "status": 201,
+              "sha256": "83bb0e10b050dede0515c396b89c6f402b81245103dc6cfb6f8cd5eed957daea"
+            }
+          }
+        },
+        {
+          "label": "direct-API duplicate status 201 for both",
+          "pass": true,
+          "detail": {
+            "a": 201,
+            "b": 201
+          }
+        },
+        {
+          "label": "direct-API duplicate bodies byte-for-byte identical",
+          "pass": true,
+          "detail": {
+            "sha_a": "83bb0e10b050dede0515c396b89c6f402b81245103dc6cfb6f8cd5eed957daea",
+            "sha_b": "83bb0e10b050dede0515c396b89c6f402b81245103dc6cfb6f8cd5eed957daea"
+          }
+        },
+        {
+          "label": "direct-API duplicates created exactly one ticket row (no duplicate append)",
+          "pass": true,
+          "detail": 1
+        },
+        {
+          "label": "direct-API replay ticket matches the stored row",
+          "pass": true,
+          "detail": {
+            "row": {
+              "ticket_id": "690dc1d93167da02c61c5e4c3882037e",
+              "recorded_at": "2026-10-20T12:11:01.724874715Z"
+            },
+            "api": {
+              "ticket_id": "690dc1d93167da02c61c5e4c3882037e",
+              "recorded_at": "2026-10-20T12:11:01.724874715Z",
+              "delivery_outcome": "delivery_not_wired",
+              "message": "Your request has been recorded. Email delivery is not configured, so no email has been sent."
+            }
+          }
+        },
+        {
+          "label": "direct-API replay envelope is the truthful 201 shape",
+          "pass": true,
+          "detail": "{\"ticket_id\":\"690dc1d93167da02c61c5e4c3882037e\",\"recorded_at\":\"2026-10-20T12:11:01.724874715Z\",\"delivery_outcome\":\"delivery_not_wired\",\"message\":\"Your request has been recorded. Email delivery is not configured, so no email has been sent.\"}\n"
+        }
+      ],
+      "error": null,
+      "refs": {
+        "ticket": "24696783b4dad4fa36bd58f7beaf25c7"
+      }
+    },
+    {
+      "id": "S8a",
+      "name": "persistence setup: conversation with a chat turn and an escalation ticket (direct API)",
+      "pass": true,
+      "obs": [
+        {
+          "label": "chat turn response",
+          "pass": true,
+          "detail": {
+            "status": 200
+          }
+        },
+        {
+          "label": "chat turn stored (200 completed turn)",
+          "pass": true,
+          "detail": "{\"request_id\":\"75a20acf-fae7-46f7-b8e9-e08eaa6519d0\",\"messages\":[{\"seq\":1,\"request_id\":\"75a20acf-fae7-46f7-b8e9-e08eaa6519d0\",\"role\":\"user\",\"text\":\"Can you explain quantum entanglement?\",\"created_at\":\"2026-10-20T12:11:02.177985412Z\",\"status\":\"submitted\",\"sources\":[]},{\"seq\":2,\"request_id\":\"75a20acf-"
+        },
+        {
+          "label": "pre-restart escalation 201 body (sha256 + content)",
+          "pass": true,
+          "detail": {
+            "status": 201,
+            "sha256": "3536d3dcf9b2101c22f8194e13c9ed80ecffcf602b3b50d59a05bf2a996884a4",
+            "body": {
+              "ticket_id": "18fbf83dad022ee12b55cb70ea4c92d9",
+              "recorded_at": "2026-10-20T12:11:02.247646105Z",
+              "delivery_outcome": "delivery_not_wired",
+              "message": "Your request has been recorded. Email delivery is not configured, so no email has been sent."
+            }
+          }
+        },
+        {
+          "label": "pre-restart escalation 201",
+          "pass": true,
+          "detail": 201
+        },
+        {
+          "label": "Retry-After absent on ordinary 201",
+          "pass": true,
+          "detail": {
+            "cache-control": "no-store",
+            "content-type": "application/json",
+            "x-content-type-options": "nosniff",
+            "date": "Tue, 20 Oct 2026 12:11:02 GMT",
+            "content-length": "241"
+          }
+        },
+        {
+          "label": "no-store + nosniff on escalation 201",
+          "pass": true,
+          "detail": {
+            "cache-control": "no-store",
+            "content-type": "application/json",
+            "x-content-type-options": "nosniff",
+            "date": "Tue, 20 Oct 2026 12:11:02 GMT",
+            "content-length": "241"
+          }
+        }
+      ],
+      "error": null
+    },
+    {
+      "id": "R1",
+      "name": "server restart #1 (persistence boundary)",
+      "pass": true,
+      "obs": [
+        {
+          "label": "restart #1",
+          "pass": true,
+          "detail": "assistant process stopped (SIGTERM → clean exit) and restarted on the same sqlite path"
+        }
+      ],
+      "error": null
+    },
+    {
+      "id": "S8",
+      "name": "persistence across restart: history intact, ticket survives, replay byte-identical",
+      "pass": true,
+      "obs": [
+        {
+          "label": "GET history after restart",
+          "pass": true,
+          "detail": {
+            "status": 200,
+            "body": "{\"messages\":[{\"seq\":1,\"request_id\":\"75a20acf-fae7-46f7-b8e9-e08eaa6519d0\",\"role\":\"user\",\"text\":\"Can you explain quantum entanglement?\",\"created_at\":\"2026-10-20T12:11:02.177985412Z\",\"status\":\"submitted\",\"sources\":[]},{\"seq\":2,\"request_id\":\"75a20acf-fae7-46f7-b8e9-e08eaa6519d0\",\"role\":\"assistant\",\"text\":\"I need more information: the currently approved support material does not support an answer to that question. Please clarify what you need help with. Demo knowledge describes a fictional sample or"
+          }
+        },
+        {
+          "label": "history GET is 200 with the same conversation capability",
+          "pass": true,
+          "detail": 200
+        },
+        {
+          "label": "history intact: 2 messages after restart",
+          "pass": true,
+          "detail": 2
+        },
+        {
+          "label": "history intact: user text preserved",
+          "pass": true,
+          "detail": "Can you explain quantum entanglement?"
+        },
+        {
+          "label": "history intact: assistant clarification preserved",
+          "pass": true,
+          "detail": {
+            "stored": "I need more information: the currently approved support material does not support an answer to that question. Please clarify what you need help with. Demo knowledge describes a fictional sample organization, not real organization policies.",
+            "returned": "I need more information: the currently approved support material does not support an answer to that question. Please clarify what you need help with. Demo knowledge describes a fictional sample organization, not real organization policies."
+          }
+        },
+        {
+          "label": "history intact: same request_id",
+          "pass": true,
+          "detail": [
+            "75a20acf-fae7-46f7-b8e9-e08eaa6519d0",
+            "75a20acf-fae7-46f7-b8e9-e08eaa6519d0"
+          ]
+        },
+        {
+          "label": "post-restart escalation replay (sha256 + content)",
+          "pass": true,
+          "detail": {
+            "status": 201,
+            "sha256": "3536d3dcf9b2101c22f8194e13c9ed80ecffcf602b3b50d59a05bf2a996884a4",
+            "body": {
+              "ticket_id": "18fbf83dad022ee12b55cb70ea4c92d9",
+              "recorded_at": "2026-10-20T12:11:02.247646105Z",
+              "delivery_outcome": "delivery_not_wired",
+              "message": "Your request has been recorded. Email delivery is not configured, so no email has been sent."
+            }
+          }
+        },
+        {
+          "label": "post-restart replay is 201",
+          "pass": true,
+          "detail": 201
+        },
+        {
+          "label": "post-restart replay body byte-for-byte identical to pre-restart ticket",
+          "pass": true,
+          "detail": {
+            "sha_pre": "3536d3dcf9b2101c22f8194e13c9ed80ecffcf602b3b50d59a05bf2a996884a4",
+            "sha_post": "3536d3dcf9b2101c22f8194e13c9ed80ecffcf602b3b50d59a05bf2a996884a4"
+          }
+        },
+        {
+          "label": "sqlite escalation rows for persistence conversation after restart",
+          "pass": true,
+          "detail": [
+            {
+              "ticket_id": "18fbf83dad022ee12b55cb70ea4c92d9",
+              "email": "persistence-check@example.com",
+              "question_note": "Restart persistence probe",
+              "delivery_outcome": "delivery_not_wired",
+              "ticket_number": 1,
+              "recorded_at": "2026-10-20T12:11:02.247646105Z"
+            }
+          ]
+        },
+        {
+          "label": "ticket row survives restart with identical fields",
+          "pass": true,
+          "detail": [
+            {
+              "ticket_id": "18fbf83dad022ee12b55cb70ea4c92d9",
+              "email": "persistence-check@example.com",
+              "question_note": "Restart persistence probe",
+              "delivery_outcome": "delivery_not_wired",
+              "ticket_number": 1,
+              "recorded_at": "2026-10-20T12:11:02.247646105Z"
+            }
+          ]
+        },
+        {
+          "label": "sqlite turns for persistence conversation after restart",
+          "pass": true,
+          "detail": [
+            {
+              "request_id": "75a20acf-fae7-46f7-b8e9-e08eaa6519d0",
+              "status": "needs_clarification"
+            }
+          ]
+        },
+        {
+          "label": "chat turn row survives restart (needs_clarification, untouched by escalations)",
+          "pass": true,
+          "detail": [
+            {
+              "request_id": "75a20acf-fae7-46f7-b8e9-e08eaa6519d0",
+              "status": "needs_clarification",
+              "user_text": "Can you explain quantum entanglement?"
+            }
+          ]
+        }
+      ],
+      "error": null
+    },
+    {
+      "id": "S6",
+      "name": "cap: 5 distinct tickets recorded, 6th distinct → 409 with bound wording; replay still works at cap",
+      "pass": true,
+      "obs": [
+        {
+          "label": "post-restart fresh page: chat send works (200 pair)",
+          "pass": true,
+          "detail": null
+        },
+        {
+          "label": "S6 consent checkbox checked by real click",
+          "pass": true,
+          "detail": null
+        },
+        {
+          "label": "ticket 1 submission",
+          "pass": true,
+          "detail": {
+            "status": 201,
+            "ref": "055a7b2c101c1daefb4511cb16aed30f",
+            "error": ""
+          }
+        },
+        {
+          "label": "distinct escalation 1 recorded with 201 and reference",
+          "pass": true,
+          "detail": {
+            "status": 201,
+            "ref": "055a7b2c101c1daefb4511cb16aed30f",
+            "error": ""
+          }
+        },
+        {
+          "label": "ticket 2 submission",
+          "pass": true,
+          "detail": {
+            "status": 201,
+            "ref": "dc008504c82ad79da6d78ce98fda5bcc",
+            "error": ""
+          }
+        },
+        {
+          "label": "distinct escalation 2 recorded with 201 and reference",
+          "pass": true,
+          "detail": {
+            "status": 201,
+            "ref": "dc008504c82ad79da6d78ce98fda5bcc",
+            "error": ""
+          }
+        },
+        {
+          "label": "ticket 3 submission",
+          "pass": true,
+          "detail": {
+            "status": 201,
+            "ref": "a22c8c401c4c13bccb826ec3a9eeb8af",
+            "error": ""
+          }
+        },
+        {
+          "label": "distinct escalation 3 recorded with 201 and reference",
+          "pass": true,
+          "detail": {
+            "status": 201,
+            "ref": "a22c8c401c4c13bccb826ec3a9eeb8af",
+            "error": ""
+          }
+        },
+        {
+          "label": "ticket 4 submission",
+          "pass": true,
+          "detail": {
+            "status": 201,
+            "ref": "b5170c68f02147b8eac8ec9314dd9b06",
+            "error": ""
+          }
+        },
+        {
+          "label": "distinct escalation 4 recorded with 201 and reference",
+          "pass": true,
+          "detail": {
+            "status": 201,
+            "ref": "b5170c68f02147b8eac8ec9314dd9b06",
+            "error": ""
+          }
+        },
+        {
+          "label": "ticket 5 submission",
+          "pass": true,
+          "detail": {
+            "status": 201,
+            "ref": "d8f7896384eeac4d93c768f218e820e2",
+            "error": ""
+          }
+        },
+        {
+          "label": "distinct escalation 5 recorded with 201 and reference",
+          "pass": true,
+          "detail": {
+            "status": 201,
+            "ref": "d8f7896384eeac4d93c768f218e820e2",
+            "error": ""
+          }
+        },
+        {
+          "label": "sqlite rows for the cap conversation",
+          "pass": true,
+          "detail": [
+            {
+              "ticket_id": "055a7b2c101c1daefb4511cb16aed30f",
+              "ticket_number": 1,
+              "email": "visitor1@example.com",
+              "delivery_outcome": "delivery_not_wired"
+            },
+            {
+              "ticket_id": "dc008504c82ad79da6d78ce98fda5bcc",
+              "ticket_number": 2,
+              "email": "visitor2@example.com",
+              "delivery_outcome": "delivery_not_wired"
+            },
+            {
+              "ticket_id": "a22c8c401c4c13bccb826ec3a9eeb8af",
+              "ticket_number": 3,
+              "email": "visitor3@example.com",
+              "delivery_outcome": "delivery_not_wired"
+            },
+            {
+              "ticket_id": "b5170c68f02147b8eac8ec9314dd9b06",
+              "ticket_number": 4,
+              "email": "visitor4@example.com",
+              "delivery_outcome": "delivery_not_wired"
+            },
+            {
+              "ticket_id": "d8f7896384eeac4d93c768f218e820e2",
+              "ticket_number": 5,
+              "email": "visitor5@example.com",
+              "delivery_outcome": "delivery_not_wired"
+            }
+          ]
+        },
+        {
+          "label": "five distinct ticket rows stored",
+          "pass": true,
+          "detail": 5
+        },
+        {
+          "label": "ticket numbers are 1..5",
+          "pass": true,
+          "detail": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        },
+        {
+          "label": "all five rows are delivery_not_wired",
+          "pass": true,
+          "detail": [
+            "delivery_not_wired",
+            "delivery_not_wired",
+            "delivery_not_wired",
+            "delivery_not_wired",
+            "delivery_not_wired"
+          ]
+        },
+        {
+          "label": "panel state after 6th distinct request",
+          "pass": true,
+          "detail": {
+            "toggleHidden": false,
+            "toggleDisabled": false,
+            "expanded": "true",
+            "formHidden": false,
+            "email": "visitor6@example.com",
+            "note": "",
+            "consent": true,
+            "sendDisabled": false,
+            "error": "This conversation has recorded its limit of 5 support requests. Sending the same email and note again shows your stored request; a new request needs a fresh chat.",
+            "errHidden": false,
+            "outcome": "",
+            "outHidden": true
+          }
+        },
+        {
+          "label": "6th distinct request gets 409 from server",
+          "pass": true,
+          "detail": {
+            "sid": "AE6C14EAA7DC744523DA2D9414536381",
+            "url": "http://127.0.0.1:35953/api/v1/conversations/57166e284d43360be771ba69bba6bfaa/escalation",
+            "status": 409,
+            "headers": {
+              "cache-control": "no-store",
+              "content-length": "102",
+              "date": "Tue, 20 Oct 2026 12:11:14 GMT",
+              "content-type": "application/json",
+              "x-content-type-options": "nosniff"
+            }
+          }
+        },
+        {
+          "label": "409 wording exact (5-request bound + replay explanation)",
+          "pass": true,
+          "detail": "This conversation has recorded its limit of 5 support requests. Sending the same email and note again shows your stored request; a new request needs a fresh chat."
+        },
+        {
+          "label": "screenshot saved: s6-cap-409.png",
+          "pass": true,
+          "detail": "s6-cap-409.png"
+        },
+        {
+          "label": "panel outcome for replay at cap",
+          "pass": true,
+          "detail": {
+            "status": 201,
+            "outcome": "Your request has been recorded. Email delivery is not configured, so no email has been sent.\nRecorded Tue, 20 Oct 2026 12:11:08 GMT.\nRequest reference: 055a7b2c101c1daefb4511cb16aed30f.\nThis is your previously stored request, replayed unchanged."
+          }
+        },
+        {
+          "label": "replay at cap returns stored ticket (201, same reference)",
+          "pass": true,
+          "detail": {
+            "expected": "055a7b2c101c1daefb4511cb16aed30f",
+            "got": "055a7b2c101c1daefb4511cb16aed30f",
+            "status": 201
+          }
+        },
+        {
+          "label": "replay note shown at cap",
+          "pass": true,
+          "detail": "Your request has been recorded. Email delivery is not configured, so no email has been sent.\nRecorded Tue, 20 Oct 2026 12:11:08 GMT.\nRequest reference: 055a7b2c101c1daefb4511cb16aed30f.\nThis is your previously stored request, replayed unchanged."
+        },
+        {
+          "label": "cap conversation still has exactly 5 rows after the 409 + replay",
+          "pass": true,
+          "detail": 5
+        }
+      ],
+      "error": null,
+      "refs": {
+        "tickets": [
+          "055a7b2c101c1daefb4511cb16aed30f",
+          "dc008504c82ad79da6d78ce98fda5bcc",
+          "a22c8c401c4c13bccb826ec3a9eeb8af",
+          "b5170c68f02147b8eac8ec9314dd9b06",
+          "d8f7896384eeac4d93c768f218e820e2"
+        ],
+        "conversation": "57166e284d43360be771ba69bba6bfaa"
+      }
+    },
+    {
+      "id": "R2",
+      "name": "server restart #2 (cap tickets survive)",
+      "pass": true,
+      "obs": [
+        {
+          "label": "restart #2",
+          "pass": true,
+          "detail": "assistant process stopped (SIGTERM → clean exit) and restarted on the same sqlite path"
+        },
+        {
+          "label": "cap-conversation ticket rows after restart #2",
+          "pass": true,
+          "detail": {
+            "n": 5
+          }
+        },
+        {
+          "label": "the 5 cap tickets survive restart #2",
+          "pass": true,
+          "detail": 5
+        }
+      ],
+      "error": null
+    },
+    {
+      "id": "S7",
+      "name": "isolation: escalation is capability-bound; another conversation's capability is denied (direct API)",
+      "pass": true,
+      "obs": [
+        {
+          "label": "401 body: wrong capability on existing conversation",
+          "pass": true,
+          "detail": {
+            "status": 401,
+            "body": "{\"error\":{\"code\":\"unauthorized\",\"message\":\"Conversation authorization is required.\"}}\n"
+          }
+        },
+        {
+          "label": "401 body: malformed capability on existing conversation",
+          "pass": true,
+          "detail": {
+            "status": 401,
+            "body": "{\"error\":{\"code\":\"unauthorized\",\"message\":\"Conversation authorization is required.\"}}\n"
+          }
+        },
+        {
+          "label": "401 body: valid capability on unknown conversation",
+          "pass": true,
+          "detail": {
+            "status": 401,
+            "body": "{\"error\":{\"code\":\"unauthorized\",\"message\":\"Conversation authorization is required.\"}}\n"
+          }
+        },
+        {
+          "label": "wrong capability → 401 unauthorized",
+          "pass": true,
+          "detail": 401
+        },
+        {
+          "label": "malformed capability → 401",
+          "pass": true,
+          "detail": 401
+        },
+        {
+          "label": "unknown conversation id → 401",
+          "pass": true,
+          "detail": 401
+        },
+        {
+          "label": "identical 401 bodies (no existence oracle)",
+          "pass": true,
+          "detail": {
+            "a": "9c8e7bbafea74188bb858f00489cfa4ba7166f1caf62c89968dcc950c8934427",
+            "b": "9c8e7bbafea74188bb858f00489cfa4ba7166f1caf62c89968dcc950c8934427",
+            "c": "9c8e7bbafea74188bb858f00489cfa4ba7166f1caf62c89968dcc950c8934427"
+          }
+        },
+        {
+          "label": "correct-capability replay on the same conversation",
+          "pass": true,
+          "detail": {
+            "status": 201,
+            "body": "{\"ticket_id\":\"18fbf83dad022ee12b55cb70ea4c92d9\",\"recorded_at\":\"2026-10-20T12:11:02.247646105Z\",\"delivery_outcome\":\"delivery_not_wired\",\"message\":\"Your request has been recorded. Email delivery is not configured, so no email has been sent.\"}\n"
+          }
+        },
+        {
+          "label": "own capability still works on the same conversation (201 replay, byte-identical to stored ticket)",
+          "pass": true,
+          "detail": {
+            "status": 201,
+            "identical": true
+          }
+        },
+        {
+          "label": "denied attempts stored nothing (still 1 row)",
+          "pass": true,
+          "detail": 1
+        },
+        {
+          "label": "messages isolation: other capability → 401 on history too",
+          "pass": true,
+          "detail": 401
+        }
+      ],
+      "error": null,
+      "refs": {
+        "victim": "1ed8f8aa48de92b89911e6a2d7035d94",
+        "intruder": "2683e7dd6276b43f6c89c1401ae9702f"
+      }
+    },
+    {
+      "id": "R3",
+      "name": "server restart #3 (fresh rate-limit registry for the 429 scenario)",
+      "pass": true,
+      "obs": [
+        {
+          "label": "restart #3",
+          "pass": true,
+          "detail": "assistant process stopped (SIGTERM → clean exit) and restarted on the same sqlite path"
+        }
+      ],
+      "error": null
+    },
+    {
+      "id": "S9",
+      "name": "rate limit: rapid escalation attempts → 429 + Retry-After honored by widget UI; chat path untouched",
+      "pass": true,
+      "obs": [
+        {
+          "label": "attempt 1 allowed (201, stable reference)",
+          "pass": true,
+          "detail": {
+            "status": 201,
+            "ref": "3f6cb5020312c8d50f30405ec06b9b92",
+            "error": ""
+          }
+        },
+        {
+          "label": "attempt 2 allowed (201, stable reference)",
+          "pass": true,
+          "detail": {
+            "status": 201,
+            "ref": "3f6cb5020312c8d50f30405ec06b9b92",
+            "error": ""
+          }
+        },
+        {
+          "label": "attempt 3 allowed (201, stable reference)",
+          "pass": true,
+          "detail": {
+            "status": 201,
+            "ref": "3f6cb5020312c8d50f30405ec06b9b92",
+            "error": ""
+          }
+        },
+        {
+          "label": "attempt 4 allowed (201, stable reference)",
+          "pass": true,
+          "detail": {
+            "status": 201,
+            "ref": "3f6cb5020312c8d50f30405ec06b9b92",
+            "error": ""
+          }
+        },
+        {
+          "label": "attempt 5 allowed (201, stable reference)",
+          "pass": true,
+          "detail": {
+            "status": 201,
+            "ref": "3f6cb5020312c8d50f30405ec06b9b92",
+            "error": ""
+          }
+        },
+        {
+          "label": "attempt 6 allowed (201, stable reference)",
+          "pass": true,
+          "detail": {
+            "status": 201,
+            "ref": "3f6cb5020312c8d50f30405ec06b9b92",
+            "error": ""
+          }
+        },
+        {
+          "label": "attempt 7 allowed (201, stable reference)",
+          "pass": true,
+          "detail": {
+            "status": 201,
+            "ref": "3f6cb5020312c8d50f30405ec06b9b92",
+            "error": ""
+          }
+        },
+        {
+          "label": "attempt 8 allowed (201, stable reference)",
+          "pass": true,
+          "detail": {
+            "status": 201,
+            "ref": "3f6cb5020312c8d50f30405ec06b9b92",
+            "error": ""
+          }
+        },
+        {
+          "label": "attempt 9 allowed (201, stable reference)",
+          "pass": true,
+          "detail": {
+            "status": 201,
+            "ref": "3f6cb5020312c8d50f30405ec06b9b92",
+            "error": ""
+          }
+        },
+        {
+          "label": "attempt 10 allowed (201, stable reference)",
+          "pass": true,
+          "detail": {
+            "status": 201,
+            "ref": "3f6cb5020312c8d50f30405ec06b9b92",
+            "error": ""
+          }
+        },
+        {
+          "label": "429 observation",
+          "pass": true,
+          "detail": {
+            "attempt": 11,
+            "error": "Too many support requests. Please wait a moment, then send again.",
+            "sendDisabled": true,
+            "retryAfter": "60"
+          }
+        },
+        {
+          "label": "rapid burst exceeds 10 attempts/minute → 429 rate_limited",
+          "pass": true,
+          "detail": {
+            "sid": "3FEF80F126A43ACAB2CA2A4027B40A74",
+            "url": "http://127.0.0.1:35953/api/v1/conversations/098c96c4b0f9867021921db74f20b3fc/escalation",
+            "status": 429,
+            "headers": {
+              "cache-control": "no-store",
+              "retry-after": "60",
+              "content-length": "85",
+              "date": "Tue, 20 Oct 2026 12:11:20 GMT",
+              "content-type": "application/json",
+              "x-content-type-options": "nosniff"
+            }
+          }
+        },
+        {
+          "label": "Retry-After: 60 sent by server",
+          "pass": true,
+          "detail": "60"
+        },
+        {
+          "label": "429 wording exact",
+          "pass": true,
+          "detail": "Too many support requests. Please wait a moment, then send again."
+        },
+        {
+          "label": "widget honors Retry-After: send disabled during cooldown",
+          "pass": true,
+          "detail": {
+            "toggleHidden": false,
+            "toggleDisabled": false,
+            "expanded": "true",
+            "formHidden": false,
+            "email": "visitor9@example.com",
+            "note": "Rate limit probe",
+            "consent": true,
+            "sendDisabled": true,
+            "error": "Too many support requests. Please wait a moment, then send again.",
+            "errHidden": false,
+            "outcome": "",
+            "outHidden": true
+          }
+        },
+        {
+          "label": "exactly one distinct ticket created during the burst (replays never append)",
+          "pass": true,
+          "detail": [
+            "3f6cb5020312c8d50f30405ec06b9b92"
+          ]
+        },
+        {
+          "label": "sqlite: burst produced exactly one ticket row",
+          "pass": true,
+          "detail": 1
+        },
+        {
+          "label": "screenshot saved: s9-429-cooldown.png",
+          "pass": true,
+          "detail": "s9-429-cooldown.png"
+        },
+        {
+          "label": "chat send still works during escalation cooldown (200 pair rendered)",
+          "pass": true,
+          "detail": {
+            "status": "Clarification received: approved knowledge is limited.",
+            "error": "",
+            "errHidden": true,
+            "count": 2,
+            "text": "YouCan you explain quantum entanglement?Clarification · limited knowledgeI need more information: the currently approved support material does not support an answer to that question. Please clarify what you need help with. Demo knowledge describes a fictional sample organization, not real organization policies.",
+            "sendDisabled": false
+          }
+        },
+        {
+          "label": "chat POST not rate limited while escalation is (separate windows)",
+          "pass": true,
+          "detail": null
+        },
+        {
+          "label": "waiting ~62 s for the 60 s Retry-After cooldown to expire",
+          "pass": true,
+          "detail": "real-time pause"
+        },
+        {
+          "label": "panel state after cooldown expiry",
+          "pass": true,
+          "detail": {
+            "sendDisabled": false,
+            "error": "Too many support requests. Please wait a moment, then send again."
+          }
+        },
+        {
+          "label": "send re-enabled after Retry-After elapsed",
+          "pass": true,
+          "detail": {
+            "toggleHidden": false,
+            "toggleDisabled": false,
+            "expanded": "true",
+            "formHidden": false,
+            "email": "visitor9@example.com",
+            "note": "Rate limit probe",
+            "consent": true,
+            "sendDisabled": false,
+            "error": "Too many support requests. Please wait a moment, then send again.",
+            "errHidden": false,
+            "outcome": "",
+            "outHidden": true
+          }
+        },
+        {
+          "label": "panel outcome after cooldown-expired retry",
+          "pass": true,
+          "detail": {
+            "status": 201,
+            "outcome": "Your request has been recorded. Email delivery is not configured, so no email has been sent.\nRecorded Tue, 20 Oct 2026 12:11:19 GMT.\nRequest reference: 3f6cb5020312c8d50f30405ec06b9b92.\nThis is your previously stored request, replayed unchanged."
+          }
+        },
+        {
+          "label": "post-cooldown attempt allowed again (201 replay of the stored ticket)",
+          "pass": true,
+          "detail": {
+            "toggleHidden": false,
+            "toggleDisabled": false,
+            "expanded": "true",
+            "formHidden": false,
+            "email": "visitor9@example.com",
+            "note": "Rate limit probe",
+            "consent": true,
+            "sendDisabled": false,
+            "error": "",
+            "errHidden": true,
+            "outcome": "Your request has been recorded. Email delivery is not configured, so no email has been sent.\nRecorded Tue, 20 Oct 2026 12:11:19 GMT.\nRequest reference: 3f6cb5020312c8d50f30405ec06b9b92.\nThis is your previously stored request, replayed unchanged.",
+            "outHidden": false
+          }
+        },
+        {
+          "label": "still exactly one ticket row after the cooldown retry",
+          "pass": true,
+          "detail": 1
+        },
+        {
+          "label": "screenshot saved: s9-after-cooldown.png",
+          "pass": true,
+          "detail": "s9-after-cooldown.png"
+        }
+      ],
+      "error": null,
+      "refs": {
+        "ticket": "3f6cb5020312c8d50f30405ec06b9b92",
+        "conversation": "098c96c4b0f9867021921db74f20b3fc"
+      }
+    },
+    {
+      "id": "X1",
+      "name": "input authenticity + page safety summary",
+      "pass": true,
+      "obs": [
+        {
+          "label": "recorded real input events per scenario (click/keydown/input on chat+escalation controls)",
+          "pass": true,
+          "detail": [
+            {
+              "scenario": "S1",
+              "count": 79
+            },
+            {
+              "scenario": "S2",
+              "count": 55
+            },
+            {
+              "scenario": "S3",
+              "count": 55
+            },
+            {
+              "scenario": "S4",
+              "count": 47
+            },
+            {
+              "scenario": "S5",
+              "count": 192
+            },
+            {
+              "scenario": "S6",
+              "count": 396
+            },
+            {
+              "scenario": "S9",
+              "count": 172
+            }
+          ]
+        },
+        {
+          "label": "recorded submit events across all pages",
+          "pass": true,
+          "detail": []
+        },
+        {
+          "label": "every recorded control input event was browser-trusted (isTrusted true)",
+          "pass": true,
+          "detail": {
+            "untrusted": [],
+            "total": 996
+          }
+        },
+        {
+          "label": "no trusted submit event ever fired (sandbox forms-disabled held; no synthetic submit used)",
+          "pass": true,
+          "detail": []
+        },
+        {
+          "label": "no browser JS exceptions during the whole run",
+          "pass": true,
+          "detail": null
+        },
+        {
+          "label": "browser security log entries (informational: sandbox allow-scripts+allow-same-origin note is the contract-mandated sandbox itself)",
+          "pass": true,
+          "detail": [
+            {
+              "level": "warning",
+              "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+            },
+            {
+              "level": "warning",
+              "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+            },
+            {
+              "level": "warning",
+              "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+            },
+            {
+              "level": "warning",
+              "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+            },
+            {
+              "level": "warning",
+              "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+            },
+            {
+              "level": "warning",
+              "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+            },
+            {
+              "level": "warning",
+              "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+            }
+          ]
+        },
+        {
+          "label": "no browser security errors at error level",
+          "pass": true,
+          "detail": []
+        },
+        {
+          "label": "escalation network calls across the whole run",
+          "pass": true,
+          "detail": {
+            "requests": 22,
+            "responsesByStatus": {
+              "201": 20,
+              "409": 1,
+              "429": 1
+            }
+          }
+        }
+      ],
+      "error": null
+    }
+  ],
+  "summary": {
+    "scenarios": [
+      {
+        "id": "ENV",
+        "name": "environment and served-widget preconditions (real binary, real Chromium, no credentials)",
+        "pass": true,
+        "error": null
+      },
+      {
+        "id": "S1",
+        "name": "chat send still works end to end (real input, completed clarification turn)",
+        "pass": true,
+        "error": null
+      },
+      {
+        "id": "S2",
+        "name": "escalation affordance is click-gated only and never auto-opens (incl. provider failure)",
+        "pass": true,
+        "error": null
+      },
+      {
+        "id": "S3",
+        "name": "submit without consent → client-side block, zero network, truthful wording",
+        "pass": true,
+        "error": null
+      },
+      {
+        "id": "S4",
+        "name": "invalid email → client-side block, zero network",
+        "pass": true,
+        "error": null
+      },
+      {
+        "id": "S5",
+        "name": "valid escalation → 201 truthful outcome + server-side ticket row; duplicate replay byte-identical, no new row",
+        "pass": true,
+        "error": null
+      },
+      {
+        "id": "S8a",
+        "name": "persistence setup: conversation with a chat turn and an escalation ticket (direct API)",
+        "pass": true,
+        "error": null
+      },
+      {
+        "id": "R1",
+        "name": "server restart #1 (persistence boundary)",
+        "pass": true,
+        "error": null
+      },
+      {
+        "id": "S8",
+        "name": "persistence across restart: history intact, ticket survives, replay byte-identical",
+        "pass": true,
+        "error": null
+      },
+      {
+        "id": "S6",
+        "name": "cap: 5 distinct tickets recorded, 6th distinct → 409 with bound wording; replay still works at cap",
+        "pass": true,
+        "error": null
+      },
+      {
+        "id": "R2",
+        "name": "server restart #2 (cap tickets survive)",
+        "pass": true,
+        "error": null
+      },
+      {
+        "id": "S7",
+        "name": "isolation: escalation is capability-bound; another conversation's capability is denied (direct API)",
+        "pass": true,
+        "error": null
+      },
+      {
+        "id": "R3",
+        "name": "server restart #3 (fresh rate-limit registry for the 429 scenario)",
+        "pass": true,
+        "error": null
+      },
+      {
+        "id": "S9",
+        "name": "rate limit: rapid escalation attempts → 429 + Retry-After honored by widget UI; chat path untouched",
+        "pass": true,
+        "error": null
+      },
+      {
+        "id": "X1",
+        "name": "input authenticity + page safety summary",
+        "pass": true,
+        "error": null
+      }
+    ],
+    "totals": {
+      "passed": 15,
+      "failed": 0,
+      "failedChecks": []
+    }
+  }
+}
