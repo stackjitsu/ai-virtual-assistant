@@ -136,6 +136,21 @@
       "checks": ["format", "lint", "static", "unit", "contract"],
       "dependencies": ["ESC-01", "ESC-02"],
       "evidence": ["Validator claimed issue 03 first; zero implementation edits (HEAD unchanged ac7bdb6); verified by primary status/log review", "Real headless Chromium 154 via CDP through backend-served sample host; 996 real-input events, every isTrusted true, zero submit events; CSP byte-checked restricted", "15/15 scenario records PASS incl. zero-network consent blocks, byte-for-byte duplicate replay (sha256), 5-ticket cap then 409, byte-identical 401 no-existence-oracle, 3x SIGTERM restart persistence, 429+Retry-After cooldown with chat unaffected", "Machine-checkable: results.json 190/190 checks pass; primary independently re-counted pass flags", "Durable copies at .scratch/support-escalation/evidence/{independent-acceptance.md,results.json}"]
+    },
+    {
+      "id": "LLM-01",
+      "title": "Provider endpoint configuration seam",
+      "status": "completed",
+      "goal": "Add an additive OPENAI_BASE_URL runtime override naming the complete chat-completions URL, so approved-knowledge inference can be evaluated against any OpenAI-compatible endpoint (zero-cost free tier) with unset-variable behavior byte-for-byte unchanged.",
+      "acceptanceCriteria": ["Unset variable reproduces today's provider behavior exactly (existing provider tests untouched and green)", "Override validated (absolute URL, https unless loopback host, no userinfo/fragment/query) and fails fast in existing honest style", "Loopback httptest test proves the POST lands on the configured path with bearer auth", "Contract and README document the surface additively; all gates pass"],
+      "context": "chat-backend",
+      "owner": "backend worker",
+      "allowedPaths": ["internal/chat/**", "cmd/assistant/main.go", "docs/contracts/backend.md", "README.md", ".scratch/provider-endpoint-seam/issues/01-backend.md", "/tmp/opencode/ai-endpoint-seam/**"],
+      "contractRefs": [".scratch/provider-endpoint-seam/spec.md", ".scratch/provider-endpoint-seam/issues/01-backend.md", "docs/adr/0001-testing-approach.md"],
+      "invariants": ["Default endpoint byte-for-byte unchanged; additive contract note only", "No web/**, no live provider calls (loopback httptest only), no commits/pushes", "Provider discipline unchanged: timeouts, bounds, strict decode"],
+      "checks": ["format", "lint", "static", "unit", "contract", "fuzz-smoke"],
+      "dependencies": ["CHAT-01"],
+      "evidence": ["Worker claimed issue 01 first; NewOpenAI/Compose/providerEndpoint byte-for-byte unchanged, verified by primary diff review; main.go default branch keeps the literal today expression", "Validator rejects control/space characters (url.Parse alone tolerated inner spaces; bug caught by the brief's trailing-garbage test and fixed), userinfo, fragments, queries; https required except literal loopback hosts", "Loopback httptest capture proves the POST lands on the configured complete URL with bearer of the key; 5 subprocess fail-fast CLI guard cases", "internal/chat tests 23 to 26 functions, fuzz targets 4 to 5 incl. new FuzzValidateOpenAIEndpoint; cmd 3 to 4 tests; existing tests untouched (primary hunks check)", "Primary reran make format lint static unit contract fuzz-smoke on final tree: all PASS (48 Node unit, 13 contract); race clean -count=2"]
     }
   ]
 }

@@ -56,3 +56,9 @@ Append atomic, factual observations using the schema in `docs/agents/observation
   context: ESC-03
   fact: Independent escalation verification passed 15/15 scenario records and 190/190 machine-checked assertions on the real backend with real headless Chromium (996 trusted-input events, zero synthetic submits): consent blocks send zero requests, valid escalations persist truthful delivery_not_wired tickets, duplicate replay is byte-for-byte identical, the 5-ticket cap yields 409 with replay still working, wrong capabilities get three byte-identical 401s without existence oracle, three SIGTERM restarts preserve tickets byte-for-byte, and 429 cooldown disables only the escalation send while chat continues; no blockers.
   evidence: .scratch/support-escalation/evidence/independent-acceptance.md; .scratch/support-escalation/evidence/results.json
+- id: OBS-20261020-010
+  observed_at: 2026-10-20
+  source: worker handoff
+  context: LLM-01
+  fact: Provider endpoint configuration seam completed additively: OPENAI_BASE_URL names the complete chat-completions URL, unset behavior byte-for-byte unchanged (default branch keeps the literal NewOpenAI call), validator rejects control characters, userinfo, fragments and queries, https required except literal loopback hosts; five fail-fast CLI guard cases; all gates pass; academic Milestone 4 report built in parallel from the pinned pushed HEAD and does not depend on this task.
+  evidence: .scratch/provider-endpoint-seam/issues/01-backend.md; /tmp/opencode/ai-endpoint-seam/HANDOFF.md; README.md endpoint bullet

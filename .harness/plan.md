@@ -14,6 +14,7 @@ Status: first-slice implementation complete and pushed; no live service calls or
 | 08 | Implement visitor email escalation backend and additive contract | backend owner | completed; ESC-01 accepted after primary diff + gate review | 07 |
 | 09 | Expose escalation affordance, consent and email capture in widget | widget owner | completed; ESC-02 accepted after primary diff + gate review | 08 |
 | 10 | Independently validate escalation flow end to end | validation owner | completed; ESC-03 15/15 scenarios PASS accepted after primary evidence review | 08, 09 |
+| 11 | Add provider endpoint configuration seam for zero-cost live evaluation | backend owner | completed; LLM-01 accepted after primary diff + gate review | 08 |
 
 ## Decision log
 
