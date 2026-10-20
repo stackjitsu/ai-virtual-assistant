@@ -25,8 +25,20 @@ button:focus-visible, textarea:focus-visible, a:focus-visible { outline: 3px sol
 a { color: #215e50; text-underline-offset: 3px; }
 label { font-size: .85rem; font-weight: 650; display: block; margin-bottom: 7px; }
 textarea { width: 100%; resize: vertical; min-height: 85px; max-height: 200px; padding: 12px; color: #253b39; border: 1px solid #9bb2a5; border-radius: 10px; background: white; }
+/* Escalation panel styles are additive; the chat styles above are untouched. */
+.escalation { margin-top: 16px; }
+#escalate-toggle { background: transparent; color: #275b50; }
+#escalation-form { border: 1px solid #d8e2d8; border-radius: 10px; background: white; padding: 14px 15px; margin-top: 9px; }
+#escalate-email { width: 100%; padding: 10px 12px; color: #253b39; border: 1px solid #9bb2a5; border-radius: 10px; background: white; font: inherit; }
+#escalate-note { width: 100%; resize: vertical; min-height: 52px; max-height: 130px; padding: 10px 12px; color: #253b39; border: 1px solid #9bb2a5; border-radius: 10px; background: white; }
+#escalate-consent { width: 17px; height: 17px; accent-color: #275b50; flex: none; margin-top: 2px; }
+label.consent { font-size: .8rem; font-weight: 500; display: flex; gap: 9px; align-items: flex-start; margin: 13px 0 4px; }
+#escalate-error { margin: 9px 0 2px; padding: 10px 12px; font-size: .8rem; color: #843d26; background: #fff0e8; border-radius: 8px; }
+#escalate-outcome { margin: 9px 0 2px; padding: 10px 12px; font-size: .8rem; color: #253b39; white-space: pre-wrap; background: #eaf2ec; border: 1px solid #cfe0d2; border-radius: 8px; overflow-wrap: anywhere; }
 .compose-footer { display: flex; gap: 10px; align-items: center; justify-content: space-between; margin-top: 9px; }
 .compose-footer span { font-size: .7rem; color: #53675b; }
+.escalate-footer { display: flex; gap: 10px; align-items: center; justify-content: space-between; margin-top: 9px; }
+.escalate-footer span { font-size: .7rem; color: #53675b; }
 .sample-page { background: #f8f7f2; }
 .sample-content { max-width: 820px; margin: 12vh auto; padding: 30px; }
 .sample-content h1 { max-width: 650px; font-size: clamp(2.5rem, 7vw, 4.5rem); letter-spacing: -.065em; line-height: 1.05; }

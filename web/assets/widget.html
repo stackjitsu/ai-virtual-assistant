@@ -29,6 +29,20 @@
       <textarea id="question" name="question" rows="3" placeholder="How do I get started?" aria-describedby="compose-hint" aria-keyshortcuts="Control+Enter Meta+Enter" required disabled></textarea>
       <div class="compose-footer"><span id="compose-hint">Up to 2,000 characters. Ctrl/⌘+Enter sends; Enter adds a line.</span><button id="send" type="button" disabled>Send question</button></div>
     </form>
+    <section class="escalation" aria-label="Request human support by email">
+      <button id="escalate-toggle" type="button" disabled>Request human support by email</button>
+      <form id="escalation-form" aria-label="Request human support by email" hidden>
+        <label for="escalate-email">Your email</label>
+        <input id="escalate-email" name="email" type="text" inputmode="email" autocomplete="email" placeholder="you@example.org" aria-describedby="escalate-hint" required disabled>
+        <label for="escalate-note">Optional note</label>
+        <textarea id="escalate-note" name="question_note" rows="2" placeholder="An extra detail the team should know (optional)" aria-describedby="escalate-hint"></textarea>
+        <input id="escalate-consent" name="consent" type="checkbox">
+        <label class="consent" for="escalate-consent">I agree to store this request and note for human support by email. No email is sent while delivery is not configured.</label>
+        <p id="escalate-error" role="alert" hidden></p>
+        <p id="escalate-outcome" role="status" aria-live="polite" hidden></p>
+        <div class="escalate-footer"><span id="escalate-hint">Consent is required before a request is recorded. Email ≤254 bytes; note ≤1,000 characters (2,000 bytes).</span><button id="escalate-send" type="button" disabled>Send request</button></div>
+      </form>
+    </section>
     <noscript>This assistant needs JavaScript to connect.</noscript>
   </main>
 </body>

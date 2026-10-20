@@ -32,12 +32,15 @@ type flight struct {
 	fingerprint [32]byte
 }
 type rateWindow struct {
-	start             time.Time
-	creates, messages int
+	start       time.Time
+	creates     int
+	messages    int
+	escalations int
 }
 type server struct {
 	store     Store
 	provider  Provider
+	outbox    EmailOutbox
 	config    HTTPConfig
 	mu        sync.Mutex
 	active    map[string]flight
@@ -57,7 +60,19 @@ func ValidOrigin(raw string) bool {
 	return u.String() == raw
 }
 
+// NewHandler is the v1 constructor; escalations record through the local
+// transport-free outbox adapter.
 func NewHandler(store Store, provider Provider, cfg HTTPConfig, assets fs.FS) (http.Handler, error) {
+	return newServer(store, provider, cfg, assets, nil)
+}
+
+// NewHandlerWithOutbox injects an owned delivery observer instead of the
+// default local recorder. Existing constructor behavior is unchanged.
+func NewHandlerWithOutbox(store Store, provider Provider, cfg HTTPConfig, assets fs.FS, outbox EmailOutbox) (http.Handler, error) {
+	return newServer(store, provider, cfg, assets, outbox)
+}
+
+func newServer(store Store, provider Provider, cfg HTTPConfig, assets fs.FS, outbox EmailOutbox) (http.Handler, error) {
 	if store == nil || provider == nil || assets == nil || !ValidOrigin(cfg.AssistantOrigin) || len(cfg.ParentOrigins) == 0 {
 		return nil, ErrInvalid
 	}
@@ -66,11 +81,16 @@ func NewHandler(store Store, provider Provider, cfg HTTPConfig, assets fs.FS) (h
 			return nil, ErrInvalid
 		}
 	}
-	s := &server{store: store, provider: provider, config: cfg, active: map[string]flight{}, rates: map[string]rateWindow{}, inference: make(chan struct{}, 8)}
+	s := &server{store: store, provider: provider, outbox: outbox, config: cfg, active: map[string]flight{}, rates: map[string]rateWindow{}, inference: make(chan struct{}, 8)}
+	if s.outbox == nil {
+		s.outbox = &LocalEmailOutbox{}
+	}
 	api := chi.NewRouter()
 	api.Post("/conversations", s.create)
 	api.Get("/conversations/{id}/messages", s.history)
 	api.Post("/conversations/{id}/messages", s.message)
+	// Additive slice-2 route; the three routes above are byte-for-byte unchanged.
+	api.Post("/conversations/{id}/escalation", s.escalate)
 	api.NotFound(func(w http.ResponseWriter, r *http.Request) { apiError(w, 404, "not_found") })
 	api.MethodNotAllowed(func(w http.ResponseWriter, r *http.Request) { apiError(w, 405, "method_not_allowed") })
 	r := chi.NewRouter()
@@ -151,6 +171,8 @@ func apiError(w http.ResponseWriter, status int, code string) {
 		message = "This conversation is full. Please start a new conversation."
 	case "idempotency_conflict":
 		message = "That request ID was already used for a different question."
+	case "conflict":
+		message = "This conversation cannot accept another escalation request."
 	case "origin_not_allowed":
 		message = "This request origin is not allowed."
 	}
@@ -180,14 +202,10 @@ func decodeBody(w http.ResponseWriter, r *http.Request, max int64, dst any) bool
 	return true
 }
 
-func (s *server) rate(w http.ResponseWriter, r *http.Request, creation bool) bool {
-	peer, _, err := net.SplitHostPort(r.RemoteAddr)
-	if err != nil {
-		peer = r.RemoteAddr
-	}
-	now := time.Now()
-	s.mu.Lock()
-	defer s.mu.Unlock()
+// window returns the peer's fixed window for now, evicting the oldest entry
+// when the registry is at its bound and resetting expired windows.
+// Callers must hold s.mu.
+func (s *server) window(peer string, now time.Time) rateWindow {
 	window, ok := s.rates[peer]
 	if !ok {
 		if len(s.rates) >= 10000 {
@@ -205,19 +223,51 @@ func (s *server) rate(w http.ResponseWriter, r *http.Request, creation bool) boo
 	if now.Sub(window.start) >= time.Minute {
 		window = rateWindow{start: now}
 	}
-	allowed := true
-	if creation {
-		allowed = window.creates < 10
-		if allowed {
+	return window
+}
+
+func peerAddress(r *http.Request) string {
+	peer, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		peer = r.RemoteAddr
+	}
+	return peer
+}
+
+func (s *server) rate(w http.ResponseWriter, r *http.Request, creation bool) bool {
+	peer := peerAddress(r)
+	now := time.Now()
+	s.mu.Lock()
+	window := s.window(peer, now)
+	allowed := (creation && window.creates < 10) || (!creation && window.messages < 30)
+	if allowed {
+		if creation {
 			window.creates++
-		}
-	} else {
-		allowed = window.messages < 30
-		if allowed {
+		} else {
 			window.messages++
 		}
 	}
 	s.rates[peer] = window
+	s.mu.Unlock()
+	if !allowed {
+		apiError(w, 429, "rate_limited")
+	}
+	return allowed
+}
+
+// rateEscalation bounds escalation attempts per direct peer IP; rejected or
+// unauthorized attempts count exactly like message attempts.
+func (s *server) rateEscalation(w http.ResponseWriter, r *http.Request) bool {
+	peer := peerAddress(r)
+	now := time.Now()
+	s.mu.Lock()
+	window := s.window(peer, now)
+	allowed := window.escalations < escalationAttemptsPerMinute
+	if allowed {
+		window.escalations++
+	}
+	s.rates[peer] = window
+	s.mu.Unlock()
 	if !allowed {
 		apiError(w, 429, "rate_limited")
 	}
@@ -497,4 +547,82 @@ func (s *server) message(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	sendTurn(w, stored)
+}
+
+// escalationEnvelope is the 201 visitor-safe ticket response.
+type escalationEnvelope struct {
+	TicketID        string    `json:"ticket_id"`
+	RecordedAt      time.Time `json:"recorded_at"`
+	DeliveryOutcome string    `json:"delivery_outcome"`
+	Message         string    `json:"message"`
+}
+
+// sendEscalation always reports the stored outcome; the fixed truthful
+// message is derived from it and never claims email delivery.
+func sendEscalation(w http.ResponseWriter, t Escalation) {
+	message := ""
+	switch t.DeliveryOutcome {
+	case DeliveryNotWired:
+		message = DeliveryNotWiredMessage
+	}
+	writeJSON(w, 201, escalationEnvelope{t.TicketID, t.RecordedAt, t.DeliveryOutcome, message})
+}
+
+func (s *server) escalate(w http.ResponseWriter, r *http.Request) {
+	if !s.rateEscalation(w, r) {
+		return
+	}
+	if r.URL.RawQuery != "" {
+		apiError(w, 400, "invalid_request")
+		return
+	}
+	// strictJSON rejects unknown/duplicate fields, null, wrong types and
+	// trailing JSON exactly like the other owned records.
+	var body struct {
+		Email        *string `json:"email"`
+		QuestionNote *string `json:"question_note"`
+		Consent      *bool   `json:"consent"`
+	}
+	if !decodeBody(w, r, maxEscalationBodyBytes, &body) {
+		return
+	}
+	req, err := decodeEscalationRequest(body.Email, body.QuestionNote, body.Consent)
+	if err != nil {
+		apiError(w, 400, "invalid_request")
+		return
+	}
+	c, ok := s.authorize(w, r)
+	if !ok {
+		return
+	}
+	// Replay lookup precedes the per-conversation cap: identical repeats must
+	// still resolve to their stored ticket even when the cap is reached.
+	existing, err := s.store.FindEscalation(r.Context(), c.ID, req.Email, req.QuestionNote)
+	if err != nil && !errors.Is(err, ErrNotFound) {
+		apiError(w, 503, "storage_unavailable")
+		return
+	}
+	if err == nil {
+		sendEscalation(w, existing)
+		return
+	}
+	idBytes := make([]byte, 16)
+	if _, err := rand.Read(idBytes); err != nil {
+		apiError(w, 500, "internal_error")
+		return
+	}
+	ticket := Escalation{c.ID, hex.EncodeToString(idBytes), req.Email, req.QuestionNote, time.Now().UTC(), DeliveryNotWired}
+	stored, err := s.store.CreateEscalation(r.Context(), ticket)
+	if err != nil {
+		if errors.Is(err, ErrConflict) {
+			apiError(w, 409, "conflict")
+			return
+		}
+		apiError(w, 503, "storage_unavailable")
+		return
+	}
+	// The outbox observes the stored ticket only; its local adapter records
+	// the outcome with zero network I/O and cannot alter the written column.
+	_ = s.outbox.Deliver(r.Context(), stored)
+	sendEscalation(w, stored)
 }

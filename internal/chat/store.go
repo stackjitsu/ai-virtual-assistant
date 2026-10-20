@@ -316,6 +316,117 @@ func (s *SQLStore) ApprovedKnowledge(ctx context.Context) ([]Knowledge, error) {
 	return docs, nil
 }
 
+const escalationColumns = `conversation_id,ticket_id,email,question_note,recorded_at,delivery_outcome,ticket_number`
+
+// The guarded insert mirrors the completed-turn CAS: one atomic statement
+// claims the next step number, and UNIQUE(conversation_id,ticket_number)
+// plus the schema CHECK make multiple converged attempts safe.
+const insertEscalationSQL = `INSERT INTO escalation_tickets (` + escalationColumns + `)
+ SELECT ?,?,?,?,?,?,(?+1) WHERE ?=(SELECT COUNT(*) FROM escalation_tickets WHERE conversation_id=?)
+ RETURNING ` + escalationColumns
+
+func decodeEscalation(v []any) (Escalation, error) {
+	if len(v) != 7 {
+		return Escalation{}, ErrUnavailable
+	}
+	cid, a := textCell(v[0])
+	tid, b := textCell(v[1])
+	email, c := textCell(v[2])
+	note, d := textCell(v[3])
+	when, e := timeCell(v[4])
+	outcome, f := textCell(v[5])
+	n, g := v[6].(int64)
+	if !a || !b || !c || !d || !e || !f || !g {
+		return Escalation{}, ErrUnavailable
+	}
+	t := Escalation{cid, tid, email, note, when, outcome}
+	if validateEscalation(t) != nil || n < 1 || n > maxEscalationsPerConversation {
+		return Escalation{}, ErrUnavailable
+	}
+	return t, nil
+}
+
+func (s *SQLStore) FindEscalation(ctx context.Context, conversationID, email, note string) (Escalation, error) {
+	if !idPattern.MatchString(conversationID) {
+		return Escalation{}, ErrInvalid
+	}
+	// Bounded lookup: an inconsistent record set can never stream unbounded rows.
+	r, err := s.query(ctx, `SELECT `+escalationColumns+` FROM escalation_tickets WHERE conversation_id=? AND email=? AND question_note=? LIMIT 2`, conversationID, email, note)
+	if err != nil {
+		return Escalation{}, err
+	}
+	if len(r.rows) == 0 {
+		return Escalation{}, ErrNotFound
+	}
+	if len(r.rows) != 1 || len(r.rows[0]) != 7 {
+		return Escalation{}, ErrUnavailable
+	}
+	return decodeEscalation(r.rows[0])
+}
+
+func (s *SQLStore) EscalationCount(ctx context.Context, conversationID string) (int, error) {
+	if !idPattern.MatchString(conversationID) {
+		return 0, ErrInvalid
+	}
+	r, err := s.query(ctx, `SELECT COUNT(*) FROM escalation_tickets WHERE conversation_id=?`, conversationID)
+	if err != nil {
+		return 0, err
+	}
+	if len(r.rows) != 1 || len(r.rows[0]) != 1 {
+		return 0, ErrUnavailable
+	}
+	n, ok := r.rows[0][0].(int64)
+	if !ok || n < 0 || n > maxEscalationsPerConversation {
+		return 0, ErrUnavailable
+	}
+	return int(n), nil
+}
+
+// CreateEscalation appends an immutable ticket under the per-conversation cap.
+// For every attempt a stored identical repeat wins first (even at the cap),
+// so a lost or raced write is safe to retry: reads, never error strings,
+// decide the outcome.
+func (s *SQLStore) CreateEscalation(ctx context.Context, t Escalation) (Escalation, error) {
+	if validateEscalation(t) != nil {
+		return Escalation{}, ErrInvalid
+	}
+	if _, err := s.Conversation(ctx, t.ConversationID); err != nil {
+		return Escalation{}, err
+	}
+	for attempt := 0; attempt < 8; attempt++ {
+		existing, dedupErr := s.FindEscalation(ctx, t.ConversationID, t.Email, t.QuestionNote)
+		if dedupErr == nil {
+			return existing, nil
+		}
+		if !errors.Is(dedupErr, ErrNotFound) {
+			return Escalation{}, dedupErr
+		}
+		n, err := s.EscalationCount(ctx, t.ConversationID)
+		if err != nil {
+			return Escalation{}, err
+		}
+		if n >= maxEscalationsPerConversation {
+			return Escalation{}, ErrConflict
+		}
+		r, writeErr := s.query(ctx, insertEscalationSQL,
+			t.ConversationID, t.TicketID, t.Email, t.QuestionNote, timestamp(t.RecordedAt), t.DeliveryOutcome, n, n, t.ConversationID)
+		if writeErr == nil && len(r.rows) == 1 {
+			stored, err := decodeEscalation(r.rows[0])
+			if err != nil {
+				return Escalation{}, err
+			}
+			return stored, nil
+		}
+		// A failed or empty write may have committed a concurrent duplicate;
+		// the next attempt reads the dedup key back before counting it lost.
+		// A real storage failure returns from the bounded loop honestly.
+		if writeErr != nil && attempt == 7 {
+			return Escalation{}, writeErr
+		}
+	}
+	return Escalation{}, ErrUnavailable
+}
+
 // SeedDemo is deliberately local-only and explicit; these are fictional policies.
 func (s *SQLStore) SeedDemo(ctx context.Context) error {
 	if s.remote != nil {

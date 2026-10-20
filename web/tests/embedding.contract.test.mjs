@@ -175,3 +175,34 @@ test('published assets use local external files, semantic form and actual sample
   const fixture = await loaderFixture(); fixture.open();
   assert.equal(walk(fixture.document.body).filter((node) => node.tagName === 'IFRAME').length, 1);
 });
+
+test('escalation affordance is additive markup: explicit consent, bounded fields, no submit', async () => {
+  const html = await readFile(new URL('../assets/widget.html', import.meta.url), 'utf8');
+  // The additively inserted section sits beside, never inside, the chat form.
+  assert.match(html, /<\/form>\s*<section class="escalation" aria-label="Request human support by email">/u);
+  assert.match(html, /<button id="escalate-toggle" type="button" disabled>Request human support by email<\/button>/u);
+  assert.match(html, /<form id="escalation-form" aria-label="Request human support by email" hidden>/u);
+  assert.match(html, /<label for="escalate-email">Your email<\/label>/u);
+  assert.match(html, /<input id="escalate-email" name="email" type="text" inputmode="email" autocomplete="email" placeholder="you@example\.org" aria-describedby="escalate-hint" required disabled>/u);
+  assert.match(html, /<label for="escalate-note">Optional note<\/label>/u);
+  assert.match(html, /<textarea id="escalate-note" name="question_note" rows="2"/u);
+  // Consent is a standalone, never pre-checked checkbox with its own label.
+  assert.match(html, /<input id="escalate-consent" name="consent" type="checkbox">/u);
+  assert.match(html, /<label class="consent" for="escalate-consent">I agree to store this request and note for human support by email\. No email is sent while delivery is not configured\.<\/label>/u);
+  assert.match(html, /<p id="escalate-error" role="alert" hidden><\/p>/u);
+  assert.match(html, /<p id="escalate-outcome" role="status" aria-live="polite" hidden><\/p>/u);
+  assert.match(html, /<button id="escalate-send" type="button" disabled>Send request<\/button>/u);
+  assert.match(html, /id="escalate-hint">Consent is required before a request is recorded\. Email ≤254 bytes; note ≤1,000 characters \(2,000 bytes\)\.<\/span>/u);
+  assert.doesNotMatch(html, /checked(?!=)/u);
+  assert.doesNotMatch(html, /type="submit"/u);
+  assert.doesNotMatch(html, /<style| style=| on(?:click|load|submit)=/u);
+  // The sample host still demonstrates only the loader; escalation stays in the iframe.
+  const sample = await readFile(new URL('../assets/sample-host.html', import.meta.url), 'utf8');
+  assert.doesNotMatch(sample, /escalat/iu);
+  // Widget core actually wires the additive controls; handler coverage lives in the unit tests.
+  const core = await readFile(new URL('../assets/widget-core.mjs', import.meta.url), 'utf8');
+  assert.match(core, /ui\['escalate-toggle'\]\.addEventListener\('click', /u);
+  assert.match(core, /ui\['escalate-send'\]\.addEventListener\('click', submitEscalation\)/u);
+  assert.match(core, /ui\['escalation-form'\]\.addEventListener\('submit', \(event\) => \{/u);
+  assert.doesNotMatch(core, /innerHTML/u);
+});

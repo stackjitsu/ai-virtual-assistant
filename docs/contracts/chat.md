@@ -72,3 +72,35 @@ Host integration example:
 First slice: one backend process, no horizontal scaling claim. Limit global in-flight inference to 8, one per conversation. Provider timeout 15 s, handler deadline 20 s, storage HTTP timeout 3 s, bounded provider/storage response bodies 256 KiB/8 MiB (storage must fit bounded document/history rows including JSON escaping). No automatic paid-inference retries. Process-local per-direct-peer-IP fixed window: creation 10/minute, message attempts 30/minute; bound limiter registry to 10,000 entries with expiry/eviction. Do not trust X-Forwarded-For without a separately approved proxy policy. Count rejected authenticated attempts too; unauthorized requests must never reach provider. Body caps and deadlines apply before expensive work.
 
 Public widgets can be automated; bearer theft grants history access; an embedding host can replace/overlay its own UI; origin checks cannot stop non-browser abuse, malicious extensions or same-origin compromise. In-memory limits reset on restart and do not provide production DDoS or spending protection. No promise of PII filtering, automatic hallucination prevention, encryption at rest, deletion/export workflows or production readiness. Show User disclosure: AI may be wrong; questions/history go to the configured server and bounded excerpts go to OpenAI; use no sensitive data; the demo knowledge is fictional, not organization policy. No transcript/token logging by default.
+
+## Escalation — slice 2 additive section
+
+This section is **additive**: every route, field name, bound and behavior above is unchanged byte-for-byte. It specifies the guaranteed visitor email-escalation path (no staff interface, no WhatsApp, no auth changes). Real outgoing SMTP transport remains out of scope entirely; the local delivery adapter only records outcomes with zero network I/O. Ticket records append immutably to the conversation record set; no staff actor sees them in this slice.
+
+### `POST /api/v1/conversations/{id}/escalation`
+
+Same machinery as the message POST unless stated otherwise: capability `Authorization: Bearer <capability>` authorization reuses the identical seam and `unauthorized` semantics (missing, malformed, unknown-ID and wrong capability → identical 401 body, no existence oracle, digest-only constant-time comparison, ID alone is not authorization); identical origin rules (no API CORS, exact configured origin, rejected `Origin` values → 403); no query string; JSON UTF-8 only; strict single object with exact field names — unknown fields, duplicate keys (including escaped-equivalent repeats), trailing JSON, invalid UTF-8, JSON `null` leaves and wrong types are rejected as `invalid_request`. Request body at most 4 KiB. Timestamps UTC RFC3339, server-generated. Ticket IDs are opaque 32-char lowercase hex from `crypto/rand`; only the capability digest is stored, never the raw capability.
+
+Request (exact JSON names):
+
+| Field | Rule |
+|---|---|
+| `email` | required string. Trimmed and lowercased once, then validated in that canonical form, which is the form stored. Bounded: ≤254 bytes total; local part ≤64 bytes (`[a-z0-9]` edges, separators `._%+-` only between alphanumeric pieces); one `@`; domain ≤253 bytes of DNS labels (`[a-z0-9]` edges, `-` inside, each ≤63) followed by a final purely alphabetic TLD of 2–63 letters. No spaces, controls, multibyte runes, userinfo or quoted forms fail validation. |
+| `question_note` | optional string. Absent, empty or whitespace-only means no note (stored as empty string). Otherwise trimmed, then bounded to ≤1,000 Unicode code points and ≤2,000 UTF-8 bytes; reject NUL and control characters except tab/newline/CR. Never HTML/Markdown interpreted or composed into anything user-facing unsafely. |
+| `consent` | required and must be the literal JSON `true`. Absent, `false`, `null`, `"true"`, `1` or any other value fails closed: nothing is recorded and the response is 400 `invalid_request`. Consent is recorded with the ticket. |
+
+Success: 201 with exactly `{"ticket_id":"…","recorded_at":"2026-10-20T12:00:00Z","delivery_outcome":"delivery_not_wired","message":"Your request has been recorded. Email delivery is not configured, so no email has been sent."}`. The `message` is the one fixed truthful visitor sentence for this slice's outcome.
+
+Delivery honesty: this slice defines exactly one value of `delivery_outcome`: `delivery_not_wired`. It always means the ticket is saved to the conversation's record set and **no email has been sent or will be sent**, because no outgoing transport is configured anywhere in this codebase. A saved ticket with this outcome must never be worded as "email sent", and no response or record claims delivery. If a wired transport ever exists it is a separate contract change; until then the recording adapter performs no network I/O.
+
+Duplicates and appends: an exact repeat of the same canonical (`email`, `question_note`) pair for the same conversation replays the stored 201 envelope byte-for-byte (same `ticket_id`, same `recorded_at`) instead of appending a second ticket — a retry after transport loss is safe with the same body. Any new canonical pair appends a new immutable ticket record. Ticket appending never consumes turn sequences, never creates, edits or deletes messages, and never touches the conversation context.
+
+| HTTP | Codes / behavior |
+|---|---|
+| 400 | `invalid_request` (consent/email/note/body/ID-shape) |
+| 401 | `unauthorized`, identical to the message routes |
+| 409 | `conflict` — the per-conversation bound of 5 ticket records is reached; matching replays still return their stored ticket |
+| 429 | `rate_limited`, `Retry-After: 60` |
+| 503 | `storage_unavailable` |
+
+All other statuses (403/404/405/413/415/500) and the error envelope shape, fixed safe messages and no-store headers are exactly the v1 HTTP behavior. Escalation rate limiting is one more process-local per-direct-peer-IP fixed window: **10 escalation attempts/minute**, counting rejected and unauthorized attempts, sharing the bounded 10,000-entry registry with expiry/eviction as in v1. The 5-tickets-per-conversation bound is enforced atomically in storage (a step-number uniqueness plus range check), so concurrent racing inserts cannot exceed it; at the bound only already-stored identical repeats replay. Tickets persist across process restarts through the additive migration `2` alongside the v1 schema, which is untouched: columns are the conversation reference, ticket id, canonical visitor-provided email (lowercase-trimmed), note, `recorded_at`, the honest `delivery_outcome` and the bounded step number. No raw capabilities, secrets, staff views, provider contents or host-page data are stored or logged; the email is stored only as visitor-provided after bounds, for staff review in a later slice.

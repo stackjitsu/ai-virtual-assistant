@@ -31,11 +31,16 @@ export class Element {
 }
 export const walk = (element) => [element, ...element.children.flatMap(walk)];
 export function documentFixture() {
-  const ids = ['status', 'error', 'retry', 'older', 'messages', 'question', 'send', 'transmission', 'message-form'];
-  const elements = Object.fromEntries(ids.map((id) => [id, new Element(id === 'message-form' ? 'form' : 'div')]));
+  const ids = ['status', 'error', 'retry', 'older', 'messages', 'question', 'send', 'transmission', 'message-form',
+    'escalate-toggle', 'escalation-form', 'escalate-email', 'escalate-note', 'escalate-consent', 'escalate-error', 'escalate-outcome', 'escalate-send'];
+  const tags = { form: 'form', 'escalate-toggle': 'button', 'escalate-send': 'button', 'escalate-email': 'input', 'escalate-consent': 'input', 'escalate-note': 'textarea', 'escalate-error': 'p', 'escalate-outcome': 'p' };
+  const elements = Object.fromEntries(ids.map((id) => [id, new Element(tags[id] ?? 'div')]));
   elements.retry.hidden = true;
   elements.older.hidden = true;
   elements.error.hidden = true;
+  elements['escalation-form'].hidden = true;
+  elements['escalate-error'].hidden = true;
+  elements['escalate-outcome'].hidden = true;
   const body = new Element('body');
   body.append(...Object.values(elements));
   return { body, head: new Element('head'), documentElement: { scrollHeight: 650 }, elements,

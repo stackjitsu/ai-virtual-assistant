@@ -90,6 +90,32 @@ export function validTurn(turn, pending) {
 export const validCreation = (value) => keys(value, ['conversation_id', 'capability', 'created_at'])
   && typeof value.conversation_id === 'string' && /^[a-f0-9]{32}$/u.test(value.conversation_id)
   && typeof value.capability === 'string' && /^[a-f0-9]{64}$/u.test(value.capability) && timestamp(value.created_at);
+// Escalation mirrors follow the additive slice-2 contract exactly; the server
+// stays authoritative and these bounds only fail closed for the visitor.
+const emailLocalPart = /^[a-z0-9]+(?:[._%+-][a-z0-9]+)*$/u;
+const emailDomainPart = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/u;
+export const canonicalEmail = (raw) => (typeof raw === 'string' ? raw.trim().toLowerCase() : '');
+export function validEscalationEmail(raw) {
+  if (typeof raw !== 'string' || bytes(raw) > 254) return false;
+  const email = raw.trim().toLowerCase();
+  const at = email.indexOf('@');
+  if (at < 1) return false;
+  const local = email.slice(0, at);
+  const domain = email.slice(at + 1);
+  return bytes(local) <= 64 && bytes(domain) <= 253
+    && emailLocalPart.test(local) && emailDomainPart.test(domain);
+}
+export function validEscalationNote(raw) {
+  if (typeof raw !== 'string') return false;
+  const note = raw.trim();
+  return note === '' || validText(note, 1000, 2000);
+}
+export function validEscalationTicket(value) {
+  return keys(value, ['ticket_id', 'recorded_at', 'delivery_outcome', 'message'])
+    && /^[a-f0-9]{32}$/u.test(value.ticket_id) && timestamp(value.recorded_at)
+    && value.delivery_outcome === 'delivery_not_wired'
+    && typeof value.message === 'string' && value.message.length > 0;
+}
 export function retrySeconds(value) {
   if (typeof value !== 'string' || !/^\d{1,6}$/u.test(value)) return 1;
   return Math.max(1, Math.min(120, Number(value)));

@@ -1,6 +1,7 @@
 import {
-  keys, parentOrigin, retrySeconds, validCreation, validHistory, validInit,
-  validOrigin, validText, validTurn,
+  canonicalEmail, keys, parentOrigin, retrySeconds, validCreation, validEscalationEmail,
+  validEscalationNote, validEscalationTicket, validHistory, validInit, validOrigin, validText,
+  validTurn,
 } from './protocol.mjs';
 
 // Public construction takes a browser-like platform, not credentials. Conversation
@@ -8,7 +9,8 @@ import {
 export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 } = {}) {
   const { document } = platform;
   const element = (id) => document.getElementById(id);
-  const ui = Object.fromEntries(['status', 'error', 'retry', 'older', 'messages', 'question', 'send', 'transmission', 'message-form']
+  const ui = Object.fromEntries(['status', 'error', 'retry', 'older', 'messages', 'question', 'send', 'transmission', 'message-form',
+    'escalate-toggle', 'escalation-form', 'escalate-email', 'escalate-note', 'escalate-consent', 'escalate-error', 'escalate-outcome', 'escalate-send']
     .map((id) => [id, element(id)]));
   const origin = platform.location.origin;
   const parent = parentOrigin(platform.location.hash);
@@ -24,8 +26,18 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
   let cooldownUntil = 0;
   let cooldownTimer = null;
   let handshakeTimer = null;
-  let activeController = null;
+  // Escalation state is additive: the panel never mutates the send path,
+  // history or disclosures. Session memory of stored tickets only marks a
+  // replayed response; the server decides what is stored or replayed.
+  let escalateOpen = false;
+  let escalateBusy = false;
+  let escalateCooldownUntil = 0;
+  let escalateCooldownTimer = null;
+  const escalateStoredTickets = new Map();
   const messages = new Map();
+  // Tracking every in-flight controller lets pagehide abort chat and
+  // escalation requests together without widening any permission.
+  const inFlight = new Set();
   // Twenty maximum-size messages plus escaped JSON and source snapshots fit
   // under 1 MiB; a 256 KiB cap could reject a legitimate bounded history page.
   const responseLimit = 1048576;
@@ -44,9 +56,29 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
     ui.retry.disabled = busy || Date.now() < cooldownUntil;
     ui.older.hidden = nextBefore === null;
     ui.older.disabled = busy || pending !== null || stopped;
+    // Escalation affordance: visible only once a conversation exists, closed
+    // again when the chat is terminal. Chat controls above stay untouched.
+    ui['escalate-toggle'].hidden = !conversation || stopped;
+    ui['escalate-toggle'].disabled = false;
+    ui['escalate-toggle'].setAttribute('aria-expanded', String(escalateOpen));
+    ui['escalation-form'].hidden = !escalateOpen || stopped;
+    ui['escalate-email'].disabled = stopped;
+    ui['escalate-note'].disabled = stopped;
+    ui['escalate-consent'].disabled = stopped;
+    ui['escalate-send'].disabled = stopped || escalateBusy || Date.now() < escalateCooldownUntil;
     resize();
   }
   function status(text) { ui.status.textContent = text; }
+  function escalateError(text) {
+    ui['escalate-error'].textContent = text;
+    ui['escalate-error'].hidden = !text;
+    resize();
+  }
+  function escalateOutcome(text) {
+    ui['escalate-outcome'].textContent = text;
+    ui['escalate-outcome'].hidden = !text;
+    resize();
+  }
   function error(text) {
     ui.error.textContent = text;
     ui.error.hidden = !text;
@@ -118,7 +150,7 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
   }
   async function request(path, { method = 'GET', body } = {}) {
     const controller = new AbortController();
-    activeController = controller;
+    inFlight.add(controller);
     const timer = platform.setTimeout(() => controller.abort(), timeoutMs);
     try {
       const headers = { Accept: 'application/json' };
@@ -156,7 +188,7 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
       return { status: response.status, data, wait: retrySeconds(response.headers.get('Retry-After')) };
     } finally {
       platform.clearTimeout(timer);
-      if (activeController === controller) activeController = null;
+      inFlight.delete(controller);
     }
   }
   const historyPath = (before) => `/api/v1/conversations/${conversation.conversation_id}/messages?limit=20${before === undefined ? '' : `&before=${before}`}`;
@@ -318,6 +350,97 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
   ui.older.addEventListener('click', () => {
     if (!busy && !pending && nextBefore !== null) void loadHistory(nextBefore);
   });
+  // Escalation: the visitor opts in deliberately; no provider failure or
+  // server state ever opens this form automatically.
+  ui['escalate-toggle'].addEventListener('click', () => {
+    escalateOpen = !escalateOpen;
+    controls();
+    if (escalateOpen) ui['escalate-email'].focus?.();
+  });
+  ui['escalate-send'].addEventListener('click', submitEscalation);
+  // Defensive only; native submission is blocked in the forms-disabled sandbox.
+  ui['escalation-form'].addEventListener('submit', (event) => {
+    event.preventDefault();
+    submitEscalation();
+  });
+  // The stored recorded_at is already contract-validated; render it in a
+  // visitor-sane UTC form with the server's own truthful sentence verbatim.
+  function visitorTime(recordedAt) {
+    const date = new Date(recordedAt);
+    return Number.isNaN(date.getTime()) ? recordedAt : date.toUTCString();
+  }
+  function showTicket(data, key) {
+    const replayed = escalateStoredTickets.get(key) === data.ticket_id;
+    escalateStoredTickets.set(key, data.ticket_id);
+    if (escalateStoredTickets.size > 8) escalateStoredTickets.delete(escalateStoredTickets.keys().next().value);
+    const lines = [data.message, `Recorded ${visitorTime(data.recorded_at)}.`, `Request reference: ${data.ticket_id}.`];
+    if (replayed) lines.push('This is your previously stored request, replayed unchanged.');
+    escalateOutcome(lines.join('\n'));
+  }
+  function escalateCooldown(seconds) {
+    escalateCooldownUntil = Date.now() + seconds * 1000;
+    platform.clearTimeout(escalateCooldownTimer);
+    escalateCooldownTimer = platform.setTimeout(() => { escalateCooldownUntil = 0; controls(); }, seconds * 1000);
+  }
+  async function submitEscalation() {
+    if (stopped || !conversation || escalateBusy || Date.now() < escalateCooldownUntil) return;
+    const email = ui['escalate-email'].value;
+    const note = typeof ui['escalate-note'].value === 'string' ? ui['escalate-note'].value : '';
+    escalateError('');
+    escalateOutcome('');
+    // Consent fails closed: the checkbox must be literally checked (a
+    // truthy non-boolean state never sends), mirroring the "literal true"
+    // wire contract. Nothing is recorded without it.
+    if (ui['escalate-consent'].checked !== true) {
+      escalateError('Tick the consent box first. Nothing is recorded for you without your consent.');
+      return;
+    }
+    if (!validEscalationEmail(email)) {
+      escalateError('Enter one valid email address of up to 254 bytes, like you@example.org.');
+      return;
+    }
+    if (!validEscalationNote(note)) {
+      escalateError('The optional note can hold up to 1,000 characters (2,000 bytes) without control characters.');
+      return;
+    }
+    // The replay key mirrors the server's canonical stored form. The typed
+    // values themselves go on the wire; the server stays authoritative.
+    const key = JSON.stringify([canonicalEmail(email), note.trim()]);
+    escalateBusy = true;
+    escalateOutcome('Recording your support request…');
+    controls();
+    try {
+      const body = { email, consent: true };
+      if (note.trim() !== '') body.question_note = note;
+      const response = await request(`/api/v1/conversations/${conversation.conversation_id}/escalation`, { method: 'POST', body });
+      if (stopped) return;
+      escalateOutcome('');
+      if (rejectAccess(response)) return;
+      if (response.status === 201 && validEscalationTicket(response.data)) {
+        showTicket(response.data, key);
+        return;
+      }
+      const code = errorCode(response);
+      if (response.status === 400) {
+        escalateError('This request could not be validated. Check the email, the note and the consent box, then send again.');
+      } else if (response.status === 409 && code === 'conflict') {
+        escalateError('This conversation has recorded its limit of 5 support requests. Sending the same email and note again shows your stored request; a new request needs a fresh chat.');
+      } else if (response.status === 429 && code === 'rate_limited') {
+        escalateCooldown(response.wait);
+        escalateError('Too many support requests. Please wait a moment, then send again.');
+      } else if (response.status === 503) {
+        escalateError('The support service is temporarily unavailable. Your request was not recorded. Use "Send request" to try again.');
+      } else {
+        escalateError('The request could not be completed safely. Please retry later.');
+      }
+    } catch {
+      escalateOutcome('');
+      if (!stopped) escalateError('The support service could not be reached. Use "Send request" to try again.');
+    } finally {
+      escalateBusy = false;
+      controls();
+    }
+  }
   const onMessage = (event) => {
     if (stopped || initialized || event.source !== platform.parent || event.origin !== parent) return;
     if (!validInit(event.data)) {
@@ -334,9 +457,10 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
   platform.addEventListener('message', onMessage);
   platform.addEventListener('pagehide', () => {
     stopped = true;
-    activeController?.abort();
+    for (const controller of inFlight) controller.abort();
     platform.clearTimeout(cooldownTimer);
     platform.clearTimeout(handshakeTimer);
+    platform.clearTimeout(escalateCooldownTimer);
     conversation = null;
     pending = null;
     messages.clear();

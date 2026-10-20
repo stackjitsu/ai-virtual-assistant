@@ -71,6 +71,11 @@ type Store interface {
 	History(context.Context, string, int, *int64) (HistoryPage, error)
 	CompleteTurn(context.Context, Turn, int64) (Turn, error)
 	ApprovedKnowledge(context.Context) ([]Knowledge, error)
+	// Escalation ticket records append immutably to the conversation record
+	// set; they share the capability authorization seam and bounded lookups.
+	CreateEscalation(context.Context, Escalation) (Escalation, error)
+	FindEscalation(context.Context, string, string, string) (Escalation, error)
+	EscalationCount(context.Context, string) (int, error)
 }
 type ComposeInput struct {
 	Question  string      `json:"question"`
