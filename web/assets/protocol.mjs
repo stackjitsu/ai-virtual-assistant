@@ -116,6 +116,14 @@ export function validEscalationTicket(value) {
     && value.delivery_outcome === 'delivery_not_wired'
     && typeof value.message === 'string' && value.message.length > 0;
 }
+export const validRatingComment = (raw) => typeof raw === 'string'
+  && (raw.trim() === '' || validText(raw.trim(), 1000, 2000));
+const ratingTimestamp = (value) => timestamp(value)
+  && new Date(value).toISOString().slice(0, 19) === value.slice(0, 19);
+export const validRatingResult = (value) => keys(value, ['rating', 'comment', 'rated_at'])
+  && Number.isInteger(value.rating) && value.rating >= 1 && value.rating <= 5
+  && validRatingComment(value.comment) && value.comment === value.comment.trim()
+  && ratingTimestamp(value.rated_at);
 export function retrySeconds(value) {
   if (typeof value !== 'string' || !/^\d{1,6}$/u.test(value)) return 1;
   return Math.max(1, Math.min(120, Number(value)));

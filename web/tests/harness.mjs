@@ -37,7 +37,8 @@ export class Element {
 export const walk = (element) => [element, ...element.children.flatMap(walk)];
 export function documentFixture() {
   const ids = ['status', 'error', 'retry', 'older', 'messages', 'question', 'send', 'transmission', 'message-form',
-    'escalate-toggle', 'handoff-menu', 'handoff-email', 'handoff-whatsapp', 'escalation-form', 'escalate-email', 'escalate-note', 'escalate-consent', 'escalate-error', 'escalate-outcome', 'escalate-send'];
+    'escalate-toggle', 'handoff-menu', 'handoff-email', 'handoff-whatsapp', 'escalation-form', 'escalate-email', 'escalate-note', 'escalate-consent', 'escalate-error', 'escalate-outcome', 'escalate-send',
+    'rating-section', 'rating-comment', 'rating-hint', 'rating-error', 'rating-outcome', 'rating-send', ...[1, 2, 3, 4, 5].map((value) => `rating-choice-${value}`)];
   const tags = { form: 'form', 'escalate-toggle': 'button', 'handoff-email': 'button', 'handoff-whatsapp': 'button', 'escalate-send': 'button', 'escalate-email': 'input', 'escalate-consent': 'input', 'escalate-note': 'textarea', 'escalate-error': 'p', 'escalate-outcome': 'p' };
   const elements = Object.fromEntries(ids.map((id) => [id, new Element(tags[id] ?? 'div')]));
   elements.retry.hidden = true;
@@ -46,6 +47,9 @@ export function documentFixture() {
   elements['escalation-form'].hidden = true;
   elements['escalate-error'].hidden = true;
   elements['escalate-outcome'].hidden = true;
+  elements['rating-section'].hidden = true;
+  elements['rating-error'].hidden = true;
+  elements['rating-outcome'].hidden = true;
   const body = new Element('body');
   body.append(...Object.values(elements));
   return { body, head: new Element('head'), documentElement: { scrollHeight: 650 }, elements,

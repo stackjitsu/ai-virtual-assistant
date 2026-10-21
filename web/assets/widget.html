@@ -28,6 +28,23 @@
     <button id="retry" type="button" hidden>Retry</button>
     <button id="older" type="button" hidden>Load older messages</button>
     <ol id="messages" aria-label="Conversation" aria-live="polite" aria-relevant="additions"></ol>
+    <section id="rating-section" class="rating" aria-label="Rate this conversation" hidden>
+      <h2>Rate this conversation</h2>
+      <p>After a reply or clarification, you can rate this guest chat and revise your feedback while it remains open.</p>
+      <div role="group" aria-label="Conversation rating, 1 to 5">
+        <label><input id="rating-choice-1" type="radio" name="rating" value="1">1</label>
+        <label><input id="rating-choice-2" type="radio" name="rating" value="2">2</label>
+        <label><input id="rating-choice-3" type="radio" name="rating" value="3">3</label>
+        <label><input id="rating-choice-4" type="radio" name="rating" value="4">4</label>
+        <label><input id="rating-choice-5" type="radio" name="rating" value="5">5</label>
+      </div>
+      <label for="rating-comment">Optional comment</label>
+      <textarea id="rating-comment" rows="2" aria-describedby="rating-hint"></textarea>
+      <p id="rating-hint">Up to 1,000 characters and 2,000 bytes. Your rating can be updated in this guest chat.</p>
+      <p id="rating-error" role="alert" hidden></p>
+      <p id="rating-outcome" role="status" aria-live="polite" hidden></p>
+      <button id="rating-send" type="button">Save rating</button>
+    </section>
     <section class="escalation" aria-label="Request human support">
       <button id="escalate-toggle" type="button" disabled aria-expanded="false" aria-controls="handoff-menu">Request human support</button>
       <div id="handoff-menu" class="handoff-menu" role="group" aria-label="Ways to request human support" hidden>

@@ -1,7 +1,7 @@
 import {
   canonicalEmail, keys, parentOrigin, retrySeconds, validCreation, validEscalationEmail,
   validEscalationNote, validEscalationTicket, validHistory, validInit, validOrigin, validText,
-  validTurn,
+  validTurn, validRatingComment, validRatingResult,
 } from './protocol.mjs';
 
 // Public construction takes a browser-like platform, not credentials. Conversation
@@ -10,7 +10,8 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
   const { document } = platform;
   const element = (id) => document.getElementById(id);
   const ui = Object.fromEntries(['status', 'error', 'retry', 'older', 'messages', 'question', 'send', 'transmission', 'message-form',
-    'escalate-toggle', 'handoff-menu', 'handoff-email', 'handoff-whatsapp', 'escalation-form', 'escalate-email', 'escalate-note', 'escalate-consent', 'escalate-error', 'escalate-outcome', 'escalate-send']
+    'escalate-toggle', 'handoff-menu', 'handoff-email', 'handoff-whatsapp', 'escalation-form', 'escalate-email', 'escalate-note', 'escalate-consent', 'escalate-error', 'escalate-outcome', 'escalate-send',
+    'rating-section', 'rating-comment', 'rating-error', 'rating-outcome', 'rating-send', ...[1, 2, 3, 4, 5].map((value) => `rating-choice-${value}`)]
     .map((id) => [id, element(id)]));
   const origin = platform.location.origin;
   const parent = parentOrigin(platform.location.hash);
@@ -39,6 +40,10 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
   let escalateCooldownTimer = null;
   const escalateStoredTickets = new Map();
   const messages = new Map();
+  let ratingBusy = false;
+  let ratingCooldownUntil = 0;
+  let ratingCooldownTimer = null;
+  let savedRating = null;
   // Tracking every in-flight controller lets pagehide abort chat and
   // escalation requests together without widening any permission.
   const inFlight = new Set();
@@ -46,7 +51,7 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
   // under 1 MiB; a 256 KiB cap could reject a legitimate bounded history page.
   const responseLimit = 1048576;
 
-  ui.transmission.textContent = 'Questions and recent chat go to the app server; approved excerpts may go to the configured AI provider.';
+  ui.transmission.textContent = 'Questions and recent chat go to the app server; bounded approved excerpts may go to the configured AI provider.';
   const resize = () => {
     if (!parent || stopped) return;
     platform.parent.postMessage({ type: 'assistant:resize', version: 1,
@@ -79,6 +84,11 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
     ui['escalate-note'].disabled = stopped;
     ui['escalate-consent'].disabled = stopped;
     ui['escalate-send'].disabled = stopped || escalateBusy || Date.now() < escalateCooldownUntil;
+    ui['rating-section'].hidden = stopped || !conversation || !historyReady
+      || ![...messages.values()].some((message) => message.role === 'assistant'
+        && (message.status === 'answered' || message.status === 'needs_clarification'));
+    ui['rating-send'].disabled = ui['rating-section'].hidden || ratingBusy || Date.now() < ratingCooldownUntil;
+    ui['rating-section'].setAttribute('aria-busy', String(ratingBusy));
     resize();
   }
   function status(text) { ui.status.textContent = text; }
@@ -279,6 +289,7 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
       historyReady = true;
       if (before !== undefined || messages.size === page.messages.length) nextBefore = page.next_before;
       render();
+      controls();
     } catch {
       if (stopped) return;
       status('History unavailable.');
@@ -308,6 +319,7 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
         ui.question.value = '';
         status(response.data.messages[1].status === 'answered' ? 'AI answer received. Check the approved sources.' : 'Clarification received: approved knowledge is limited.');
         render();
+        controls();
       } else {
         const code = errorCode(response);
         if (response.status === 409 && code === 'conversation_full') {
@@ -343,6 +355,57 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
     catch { terminal('Secure question IDs are unavailable in this browser. Use an up-to-date secure browser.'); return; }
     void sendPending();
   }
+  function ratingNotice(kind, text) {
+    ui[`rating-${kind}`].textContent = text;
+    ui[`rating-${kind}`].hidden = !text;
+    resize();
+  }
+  async function submitRating() {
+    if (stopped || !conversation || ui['rating-section'].hidden || ratingBusy || Date.now() < ratingCooldownUntil) return;
+    const selected = [1, 2, 3, 4, 5].find((value) => ui[`rating-choice-${value}`].checked);
+    const comment = ui['rating-comment'].value;
+    ratingNotice('error', '');
+    ratingNotice('outcome', '');
+    if (!selected || !validRatingComment(comment)) {
+      ratingNotice('error', 'Choose a rating from 1 to 5 and keep the optional comment within 1,000 characters and 2,000 bytes without control characters.');
+      return;
+    }
+    const canonical = comment.trim();
+    ratingBusy = true;
+    ratingNotice('outcome', 'Saving your rating…');
+    controls();
+    try {
+      const response = await request(`/api/v1/conversations/${conversation.conversation_id}/rating`, {
+        method: 'POST', body: { rating: selected, comment: canonical },
+      });
+      if (stopped) return;
+      ratingNotice('outcome', '');
+      if (rejectAccess(response)) return;
+      if (response.status === 200 && validRatingResult(response.data)
+        && response.data.rating === selected && response.data.comment === canonical) {
+        const revised = savedRating !== null && (savedRating.rating !== selected || savedRating.comment !== canonical);
+        savedRating = response.data;
+        ratingNotice('outcome', `Your conversation rating was ${revised ? 'updated' : 'recorded'}. You can revise it while this guest chat is open.`);
+        return;
+      }
+      if (response.status === 429 && errorCode(response) === 'rate_limited') {
+        ratingCooldownUntil = Date.now() + response.wait * 1000;
+        platform.clearTimeout(ratingCooldownTimer);
+        ratingCooldownTimer = platform.setTimeout(() => { ratingCooldownUntil = 0; controls(); }, response.wait * 1000);
+        ratingNotice('error', 'Too many rating attempts. Please wait before trying again.');
+      } else if (response.status === 409 && errorCode(response) === 'rating_requires_turn') {
+        ratingNotice('error', 'A completed reply or clarification is required before rating. No rating was saved.');
+      } else if (response.status === 400) {
+        ratingNotice('error', 'The rating could not be validated. Check your selection and comment, then try again.');
+      } else ratingNotice('error', 'Your rating could not be confirmed. Please try again; the same feedback is safe to retry.');
+    } catch {
+      if (!stopped) {
+        ratingNotice('outcome', '');
+        ratingNotice('error', 'Your rating was not confirmed. Please try again; the same feedback is safe to retry.');
+      }
+    } finally { ratingBusy = false; controls(); }
+  }
+  ui['rating-send'].addEventListener('click', () => { void submitRating(); });
   // Native submission is blocked before the submit event in our deliberately
   // forms-disabled sandbox. A type=button also gets native Enter/Space clicks.
   ui.send.addEventListener('click', submitQuestion);
@@ -423,6 +486,7 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
   function escalateCooldown(seconds) {
     escalateCooldownUntil = Date.now() + seconds * 1000;
     platform.clearTimeout(escalateCooldownTimer);
+    platform.clearTimeout(ratingCooldownTimer);
     escalateCooldownTimer = platform.setTimeout(() => { escalateCooldownUntil = 0; controls(); }, seconds * 1000);
   }
   async function submitEscalation() {
