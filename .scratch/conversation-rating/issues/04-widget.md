@@ -1,7 +1,11 @@
 # RATE-03: accessible guest rating controls
 
-Status: ready-for-agent
+Status: implemented; awaiting integration review
 Blocked by: 02
 Owner: chat-widget worker. Allowed paths: `web/**`, this issue. Depends on RATE-01 contract (issue 02, not backend implementation); coordinate parallel backend work through published contract.
 
+Claimed by: rating-widget worker on `rating-widget` (2026-10-21). Goal: expose conversation-level feedback only after a completed turn. Invariants: capability stays in iframe memory; strict response envelope; canonical comment limits and explicit retry; preserve existing origin, disclosure, chat, handoff and sandbox boundaries. Acceptance: answered/clarification/history unlock; 1–5 and optional bounded comment with revision and safe status/errors; DISC-01 bounded-excerpts wording. Checks: Node unit/contract, actual-browser interaction where available, `make format lint static unit contract`, `git diff --check`.
+
 Show 1–5 accessible choices and optional comment only after at least one completed turn; let guest submit and revise, render waiting/success/error honestly, keep private capability in iframe memory, validate responses and avoid duplicate clicks. Preserve chat history/retry, handoff consent, disclosures, CSP, sandbox, host protocol and mobile pinned composer. The DISC-01 review found that provider excerpts are not explicitly called "bounded"; make that detail accurate in the pre-send More information copy. Keep the user-approved compact disclosure, but ensure both guest-reload and sharing facts remain keyboard-accessible before submission. Keep build-free vanilla CSS rather than introducing Tailwind or build tooling. Add Node unit/contract and real-browser interaction checks. No provider/mail/staff calls. Call tdd skill where useful. Checks: focused Node tests, `make format lint static unit contract`, browser evidence, `git diff --check`.
+
+Evidence: `web/tests/rating.test.mjs` exercises contract validation, answered/clarification history gates, revision/retry, cooldown, double-click and 401 handling. `node web/tests/rating.browser.mjs` exercises Chromium with a local mock API, real iframe sandbox, completed clarification, rating/revision, pinned composer and keyboard disclosure; no external provider. `make format lint static unit contract` and `git diff --check` passed in this worktree. No staff review claim or cross-frame rating messages.
