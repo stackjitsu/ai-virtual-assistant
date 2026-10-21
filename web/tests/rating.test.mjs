@@ -88,6 +88,33 @@ test('rating double-click is locked, cooldown is bounded, and chat remains avail
   assert.match(fixture.ui['rating-outcome'].textContent, /recorded/iu);
 });
 
+test('overlapping rating and escalation cooldown timers expire independently', async () => {
+  const fixture = widgetFixture([json(creation, 201), json({ messages: turn().messages, next_before: null }),
+    fail('rate_limited', 429, 'ignored', { 'Retry-After': '60' }),
+    fail('rate_limited', 429, 'ignored', { 'Retry-After': '30' })]);
+  fixture.init(); await settle();
+  fixture.ui['rating-choice-3'].checked = true;
+  fixture.ui['rating-send'].dispatch('click'); await settle();
+  const ratingTimer = [...fixture.timers.entries()].find(([, timer]) => timer.delay === 60000);
+  assert.ok(ratingTimer);
+  fixture.ui['escalate-toggle'].dispatch('click');
+  fixture.ui['handoff-email'].dispatch('click');
+  fixture.ui['escalate-email'].value = 'visitor@example.org';
+  fixture.ui['escalate-consent'].checked = true;
+  fixture.ui['escalate-send'].dispatch('click'); await settle();
+  const escalationTimer = [...fixture.timers.entries()].find(([, timer]) => timer.delay === 30000);
+  assert.ok(escalationTimer);
+  assert.equal(fixture.timers.has(ratingTimer[0]), true, 'escalation must not clear the rating timer');
+  assert.equal(fixture.ui['rating-send'].disabled, true);
+  assert.equal(fixture.ui['escalate-send'].disabled, true);
+  escalationTimer[1].fn();
+  assert.equal(fixture.ui['escalate-send'].disabled, false);
+  assert.equal(fixture.ui['rating-send'].disabled, true);
+  ratingTimer[1].fn();
+  assert.equal(fixture.ui['rating-send'].disabled, false);
+  assert.equal(fixture.ui.send.disabled, false);
+});
+
 test('rating unauthorized response is terminal and never reuses guest access', async () => {
   const fixture = widgetFixture([json(creation, 201), json({ messages: turn().messages, next_before: null }), fail('unauthorized', 401)]);
   fixture.init(); await settle();

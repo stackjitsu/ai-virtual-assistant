@@ -486,7 +486,6 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
   function escalateCooldown(seconds) {
     escalateCooldownUntil = Date.now() + seconds * 1000;
     platform.clearTimeout(escalateCooldownTimer);
-    platform.clearTimeout(ratingCooldownTimer);
     escalateCooldownTimer = platform.setTimeout(() => { escalateCooldownUntil = 0; controls(); }, seconds * 1000);
   }
   async function submitEscalation() {
@@ -568,6 +567,7 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
     platform.clearTimeout(cooldownTimer);
     platform.clearTimeout(handshakeTimer);
     platform.clearTimeout(escalateCooldownTimer);
+    platform.clearTimeout(ratingCooldownTimer);
     conversation = null;
     pending = null;
     messages.clear();
