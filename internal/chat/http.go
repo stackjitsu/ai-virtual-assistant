@@ -36,6 +36,7 @@ type rateWindow struct {
 	creates     int
 	messages    int
 	escalations int
+	ratings     int
 }
 type server struct {
 	store     Store
@@ -91,6 +92,7 @@ func newServer(store Store, provider Provider, cfg HTTPConfig, assets fs.FS, out
 	api.Post("/conversations/{id}/messages", s.message)
 	// Additive slice-2 route; the three routes above are byte-for-byte unchanged.
 	api.Post("/conversations/{id}/escalation", s.escalate)
+	api.Post("/conversations/{id}/rating", s.rateConversation)
 	api.NotFound(func(w http.ResponseWriter, r *http.Request) { apiError(w, 404, "not_found") })
 	api.MethodNotAllowed(func(w http.ResponseWriter, r *http.Request) { apiError(w, 405, "method_not_allowed") })
 	r := chi.NewRouter()
@@ -145,6 +147,11 @@ func (s *server) apiMiddleware(next http.Handler) http.Handler {
 		}()
 		origin, has := r.Header["Origin"]
 		if has && (len(origin) != 1 || origin[0] != s.config.AssistantOrigin) {
+			if r.Method == http.MethodPost && strings.HasPrefix(r.URL.Path, "/api/v1/conversations/") && strings.HasSuffix(r.URL.Path, "/rating") {
+				if !s.rateRating(w, r) {
+					return
+				}
+			}
 			apiError(w, 403, "origin_not_allowed")
 			return
 		}
