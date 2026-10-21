@@ -1,6 +1,18 @@
 # DISC-01: verify existing guest/privacy disclosures
 
-Status: ready-for-agent
+Status: resolved
 Owner: project-foundation validation; context: coordination. Allowed paths: this issue only. Depends on: none.
 
 Read spec, `web/assets/widget.html`, `web/assets/widget-core.mjs`, widget tests and chat contract. Verify before-submit visibility and wording: reload loses access while history persists; questions/history go to app server and bounded approved excerpts may reach configured AI provider. Record file/test evidence; if a gap exists, report it, do not silently expand scope. No runtime change. Check `make contract` and relevant Node tests. Do not touch external services or parent academic documents.
+
+## Validation result (2026-10-21)
+
+- Before send, `web/assets/widget.html:18-25,55-59` places the always-visible AI-risk/sensitive-data/sample-content warning and a labelled native `More information` control above the question form. The sharing and reload facts are inside that `<details>`; they are available by opening it, **not displayed by default**. Send starts disabled and is enabled only after creation/history (`web/assets/widget-core.mjs:55-59,226-250,251-287`).
+- The static sentence in `web/assets/widget.html:23` says reloading loses **guest access** while the server keeps chat history. Capability is kept in iframe memory, cleared on `pagehide`, and a new mount starts a new guest chat (`web/assets/widget-core.mjs:19,226-244,500-510`); this agrees with `docs/contracts/chat.md:15,66` and does not promise guest recovery or deletion of stored history.
+- On mount, `web/assets/widget-core.mjs:49` sets the disclosure to “Questions and recent chat go to the app server; approved excerpts may go to the configured AI provider.” It names no origin/port or fixed provider brand. Backend actually caps current approved material to three complete documents / 12,000 bytes (`internal/chat/records.go:210-250`), recent provider history to ten messages / 12,000 bytes (`internal/chat/records.go:253-264`), and sends bounded question/history/excerpts only when relevant approved material exists (`internal/chat/http.go:497-515`, `internal/chat/provider.go:74-106`; `docs/contracts/backend.md:85-87`). Configurable OpenAI-compatible endpoint exists (`internal/chat/provider.go:32-37`), so provider-neutral “may” is appropriate.
+- Evidence: `web/tests/widget.test.mjs:13-23` checks pre-send text and absence of origin/port; `web/tests/embedding.contract.test.mjs:106-120` checks warning/HTML order, `More information`, reload wording and initially disabled send. `web/tests/widget-visual.browser.mjs:154` contains an opt-in offline browser assertion for pre-send disclosure text (not run for this ticket). `make format lint static unit contract` passed locally (55 Node unit tests; 14 Node contract tests; Go/check-adapter checks passed). No live services used.
+
+## Gaps to report (no runtime edits in DISC-01)
+
+- If “before-submit visibility” requires **both full sharing and guest-reload sentences shown without interaction**, this UI does not meet it: `<details>` lacks `open`, and the current unit/contract tests check markup and `textContent`, not default visual exposure of those two sentences. The opt-in browser assertion checks `.disclosure` visibility and `textContent`, not whether the inner `<details>` is expanded. Product owner should decide whether opening `More information` before sending is sufficient; widget owner would own any change.
+- Visitor copy says “approved excerpts” rather than explicitly “bounded approved excerpts”; the backend enforces bounds, but a literal copy requirement for the word “bounded” is not met. Also “recent chat” describes the provider history, whereas the server receives each question and serves history to the widget. Raise a wording adjustment with the widget owner only if the product owner requires explicit bounds or more precise server/history language.
