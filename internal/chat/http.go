@@ -21,7 +21,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-const clarification = "I need more information: the currently approved support material does not support an answer to that question. Please clarify what you need help with. Demo knowledge describes a fictional sample organization, not real organization policies."
+const clarification = "I need more information: the currently approved material does not support an answer to that question. Please clarify what you need help with. Jitihada University (Chuo Kikuu cha Jitihada) is fictional, not a real or accredited institution; this demo cannot confirm real policies, fees, dates, contacts, student records or visa requirements."
 
 type HTTPConfig struct {
 	AssistantOrigin string

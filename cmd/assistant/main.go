@@ -3,7 +3,10 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"flag"
+	"fmt"
 	"io/fs"
 	"log"
 	"net"
@@ -25,6 +28,24 @@ func env(key, fallback string) string {
 	return fallback
 }
 
+// importSummary is the bounded, deterministic result of an import command. It
+// reports counts and record identifiers only; record text is never printed.
+type importSummary struct {
+	Mode   string             `json:"mode"`
+	Plan   *chat.ImportPlan   `json:"plan,omitempty"`
+	Result *chat.ImportResult `json:"result,omitempty"`
+}
+
+// printImportSummary writes the import summary as one deterministic JSON
+// document on standard output.
+func printImportSummary(summary importSummary) {
+	encoded, err := json.MarshalIndent(summary, "", "  ")
+	if err != nil {
+		log.Fatal("import summary failed")
+	}
+	fmt.Println(string(encoded))
+}
+
 func main() {
 	// Only a running command reads credential environment variables. Tests/builds
 	// never execute main and have no ambient-service or credential dependency.
@@ -34,13 +55,34 @@ func main() {
 		command, args = args[0], args[1:]
 	}
 	flags := flag.NewFlagSet("assistant "+command, flag.ExitOnError)
-	seed := flags.Bool("seed-demo", false, "explicitly seed fictional sample knowledge (local SQLite only)")
-	allowRemote := flags.Bool("allow-remote", false, "authorize remote schema migration, only with migrate command")
+	seed := flags.Bool("seed-demo", false, "explicitly seed fictional Jitihada FAQ knowledge (local SQLite only)")
+	allowRemote := flags.Bool("allow-remote", false, "authorize remote schema migration or remote knowledge import")
+	file := flags.String("file", "", "JSONL knowledge import file")
+	preview := flags.Bool("preview", false, "plan the knowledge import without writing anything")
+	approve := flags.Bool("approve", false, "permit approved:true records in the knowledge import")
 	_ = flags.Parse(args)
-	if flags.NArg() != 0 || (command != "serve" && command != "seed-demo" && command != "migrate") || (*allowRemote && command != "migrate") {
+	if flags.NArg() != 0 || (command != "serve" && command != "seed-demo" && command != "migrate" && command != "import-faq") || (*allowRemote && command != "migrate" && command != "import-faq") || (command == "import-faq" && *seed) {
 		log.Fatal("invalid command or flags")
 	}
 	mode := env("STORE_MODE", "sqlite")
+	if mode != "sqlite" && mode != "turso" {
+		log.Fatal("invalid STORE_MODE")
+	}
+	var records []chat.ImportRecord
+	if command == "import-faq" {
+		if *file == "" {
+			log.Fatal("import file required")
+		}
+		// A remote import is refused before any network I/O happens.
+		if mode == "turso" && !*allowRemote {
+			log.Fatal("remote import requires import-faq --allow-remote")
+		}
+		var err error
+		records, err = chat.ReadImportFile(*file)
+		if err != nil {
+			log.Fatal("import file is invalid")
+		}
+	}
 	var store *chat.SQLStore
 	var err error
 	if mode == "sqlite" {
@@ -50,7 +92,7 @@ func main() {
 			log.Fatal("local storage could not be opened")
 		}
 		defer func() { _ = closeStore() }()
-	} else if mode == "turso" {
+	} else {
 		if *seed || command == "seed-demo" {
 			log.Fatal("demo seed is local-only")
 		}
@@ -58,8 +100,6 @@ func main() {
 		if err != nil {
 			log.Fatal("invalid remote storage configuration")
 		}
-	} else {
-		log.Fatal("invalid STORE_MODE")
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	if mode == "sqlite" || command == "migrate" {
@@ -74,6 +114,31 @@ func main() {
 		if store.SeedDemo(ctx) != nil {
 			log.Fatal("local demo seed failed")
 		}
+	}
+	if command == "import-faq" {
+		// An import may read and write up to 100 records over the network, so
+		// it gets its own bounded deadline instead of the start-up deadline.
+		cancel()
+		importCtx, importCancel := context.WithTimeout(context.Background(), 5*time.Minute)
+		defer importCancel()
+		// A preview never writes: it only reports what the import would do.
+		if *preview {
+			plan, err := store.PlanImport(importCtx, records, *approve)
+			if err != nil {
+				log.Fatal("import plan failed")
+			}
+			printImportSummary(importSummary{Mode: "preview", Plan: &plan})
+			return
+		}
+		result, err := store.ImportKnowledge(importCtx, records, *approve)
+		if err != nil {
+			if errors.Is(err, chat.ErrInvalid) {
+				log.Fatal("import rejected")
+			}
+			log.Fatal("import failed")
+		}
+		printImportSummary(importSummary{Mode: "applied", Result: &result})
+		return
 	}
 	cancel()
 	if command != "serve" {

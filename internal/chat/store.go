@@ -427,20 +427,29 @@ func (s *SQLStore) CreateEscalation(ctx context.Context, t Escalation) (Escalati
 	return Escalation{}, ErrUnavailable
 }
 
-// SeedDemo is deliberately local-only and explicit; these are fictional policies.
+// SeedDemo is deliberately local-only and explicit. Existing approval decisions
+// are preserved when refreshing seed content, including withdrawn legacy rows.
 func (s *SQLStore) SeedDemo(ctx context.Context) error {
 	if s.remote != nil {
 		return ErrInvalid
 	}
 	docs := []Knowledge{
-		{"demo-start", "Sample organization: getting started", "https://example.org/help/start", "Fictional sample organization onboarding: to start the demo, open the sample support widget and ask an onboarding question. This demonstration is not real organization policy.", true},
-		{"demo-support", "Sample organization: support hours", "https://example.org/help/support", "Fictional sample organization support hours: this demo describes a sample support team available Monday through Friday. These hours are fictional, not real organization policy.", true},
+		{"demo-start", "Jitihada applications and onboarding", "https://example.org/jitihada/help/applications", "Jitihada University (Chuo Kikuu cha Jitihada) is fictional, not a real or accredited institution. For a mock application, choose an illustrative programme, make a private checklist of your education history and questions about entry requirements, and review your draft before any submission. This demo has no admissions portal, document upload, deadline or working contact; do not send real documents or fees here.", true},
+		{"demo-programmes", "Jitihada programmes", "https://example.org/jitihada/help/programmes", "Fictional Jitihada University illustrates two learning paths: digital design explores accessible interfaces and prototype testing; community research explores interviews, ethical consent and interpreting local evidence. Compare those topics to your interests when drafting a mock programme choice. These are examples, not offered or accredited qualifications; duration, entry requirements and availability are unspecified.", true},
+		{"demo-fees", "Jitihada fees", "https://example.org/jitihada/help/fees", "Fictional Jitihada University fee planning exercise: separate possible tuition, housing, materials and travel in a private budget, then ask what each charge covers, when it would be due and whether any refund rules apply. There is no real Jitihada fee schedule, amount, bank account or payment channel; never send money based on this demo.", true},
+		{"demo-scholarships", "Jitihada scholarships", "https://example.org/jitihada/help/scholarships", "Fictional Jitihada University scholarship exercise: draft questions about who could qualify, what costs an award might cover, what evidence a review might need and when decisions would be communicated. Keep any mock statement of interest on your own device. No actual award, funding amount, eligibility rule, application route or deadline is offered here; this does not describe any real funding scheme.", true},
+		{"demo-dates", "Jitihada academic dates", "https://example.org/jitihada/help/academic-dates", "Fictional Jitihada University calendar exercise: when comparing a hypothetical programme, look separately for intake, registration, teaching, assessments and breaks; record dates only after checking a real institution's own current calendar. This demo publishes no term, exam or application dates and cannot confirm when any real institution is open.", true},
+		{"demo-housing", "Jitihada housing", "https://example.org/jitihada/help/housing", "Fictional Jitihada University housing enquiry exercise: list your preferred room type, accessibility needs and budget, then ask a real housing provider about availability, location, contract terms, deposits and safety before deciding. No Jitihada rooms, booking form, rent or contact are available through this demo; do not pay a deposit here.", true},
+		{"demo-international", "Jitihada international applicants", "https://example.org/jitihada/help/international", "Fictional Jitihada University international planning exercise: make separate questions about programme eligibility, language evidence, document review, living costs and travel permissions. Verify actual immigration requirements with the relevant official authority rather than this chat. The demo has no international admission route, document upload or visa advice and cannot approve travel or study.", true},
+		{"demo-accessibility", "Jitihada accessibility", "https://example.org/jitihada/help/accessibility", "Fictional Jitihada University accessibility exercise: describe the learning format or barrier you want help with, such as readable materials, captions or step-free access, and ask a real institution which adjustments it can arrange and how to request them privately. No Jitihada accommodation, service contact or response time is confirmed; do not share medical records here.", true},
+		{"demo-transcripts", "Jitihada transcripts", "https://example.org/jitihada/help/transcripts", "Fictional Jitihada University transcript exercise: in a real institution, ask its verified records office how to request a transcript, prove identity securely, choose a recipient and confirm processing time and any fee before ordering. This demo has no student records, records office or transcript request channel; do not upload IDs or academic records here.", true},
+		{"demo-support", "Jitihada IT support", "https://example.org/jitihada/help/it-support", "Fictional Jitihada University IT support exercise: for a hypothetical login problem, note the device, browser and error wording without including passwords; a real institution's verified helpdesk could then guide recovery through its official channel. This demo has no working student portal, password reset, helpdesk contact or support hours; never share credentials in chat.", true},
 	}
 	if validateKnowledge(docs) != nil {
 		return ErrInvalid
 	}
 	for _, d := range docs {
-		if _, err := s.query(ctx, `INSERT INTO knowledge(id,title,url,text,approved) VALUES(?,?,?,?,1) ON CONFLICT(id) DO UPDATE SET title=excluded.title,url=excluded.url,text=excluded.text,approved=1`, d.ID, d.Title, d.URL, d.Text); err != nil {
+		if _, err := s.query(ctx, `INSERT INTO knowledge(id,title,url,text,approved) VALUES(?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET title=excluded.title,url=excluded.url,text=excluded.text`, d.ID, d.Title, d.URL, d.Text, d.Approved); err != nil {
 			return err
 		}
 	}

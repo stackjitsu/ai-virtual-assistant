@@ -103,11 +103,19 @@ test('capability is only a bearer in iframe-owned API calls, never URL/DOM/paren
   }
 });
 
-test('disclosure names actual server, recent context, AI risk and memory-only reload limitation before send', () => {
+test('disclosure keeps the safety warning visible and names app server and configurable provider without displaying origin before send', async () => {
   const fixture = widgetFixture();
-  assert.match(fixture.ui.transmission.textContent, /https:\/\/assistant.example/u);
-  assert.match(fixture.ui.transmission.textContent, /Questions and recent chat context/u);
-  assert.match(fixture.ui.transmission.textContent, /OpenAI/u);
+  const html = await readFile(new URL('../assets/widget.html', import.meta.url), 'utf8');
+  assert.match(fixture.ui.transmission.textContent, /Questions and recent chat go to the app server/u);
+  assert.match(fixture.ui.transmission.textContent, /app server/u);
+  assert.match(fixture.ui.transmission.textContent, /approved excerpts may go to the configured AI provider/u);
+  assert.doesNotMatch(fixture.ui.transmission.textContent, /https?:\/\/|localhost|127\.0\.0\.1|:\d{2,5}\b|OpenAI/iu);
+  assert.ok(!fixture.ui.transmission.textContent.includes(fixture.platform.location.origin));
+  // Immediate safety warning stays visible; sharing and guest facts sit in More information.
+  assert.match(html, /AI may be wrong/u);
+  assert.match(html, /avoid sensitive data/u);
+  assert.match(html, /Sample content isn't official guidance/u);
+  assert.match(html, /<details class="more-info">[\s\S]*?<summary>More information<\/summary>[\s\S]*?<p id="transmission"><\/p>[\s\S]*?Reloading loses guest access to this chat, but the server keeps its history\.<\/p>[\s\S]*?<\/details>/u);
   assert.equal(fixture.ui.send.disabled, true);
 });
 
@@ -165,10 +173,15 @@ test('published assets use local external files, semantic form and actual sample
   assert.match(html, /aria-describedby="compose-hint" aria-keyshortcuts="Control\+Enter Meta\+Enter"/u);
   assert.match(html, /id="compose-hint">[^<]*Enter adds a line/u);
   assert.match(html, /AI may be wrong/u);
-  assert.match(html, /Do not share sensitive data/u);
-  assert.match(html, /Reloading loses access/u);
+  assert.match(html, /avoid sensitive data/u);
+  assert.match(html, /Sample content isn't official guidance/u);
+  assert.match(html, /<summary>More information<\/summary>/u);
+  assert.doesNotMatch(html, /DEMO \/ AI SUPPORT|fictional demo/u);
   assert.doesNotMatch(html, /<style| style=| on(?:click|load|submit)=/u);
   assert.match(sample, /<script src="loader.js" data-page-path="\/demo\/getting-started" data-locale="en" defer><\/script>/u);
+  assert.match(sample, /Preview only: the knowledge is fictional, not official guidance or a staffed support service/u);
+  assert.match(sample, /no email is sent/u);
+  assert.doesNotMatch(sample, /assistant demo|FICTIONAL DEMO|demo onboarding/u);
   assert.doesNotMatch(sample, /<iframe|message-form|id="messages"/u);
   // Real mount already exercises control listeners and text-only DOM; these are
   // packaging checks, not a replacement for behavioral or browser tests.
@@ -176,11 +189,15 @@ test('published assets use local external files, semantic form and actual sample
   assert.equal(walk(fixture.document.body).filter((node) => node.tagName === 'IFRAME').length, 1);
 });
 
-test('escalation affordance is additive markup: explicit consent, bounded fields, no submit', async () => {
+test('handoff menu is additive markup: By email available, By WhatsApp disabled, no phone field', async () => {
   const html = await readFile(new URL('../assets/widget.html', import.meta.url), 'utf8');
-  // The additively inserted section sits beside, never inside, the chat form.
-  assert.match(html, /<\/form>\s*<section class="escalation" aria-label="Request human support by email">/u);
-  assert.match(html, /<button id="escalate-toggle" type="button" disabled>Request human support by email<\/button>/u);
+  // The menu and email form are in the scrollable pane, never nested inside the pinned chat form.
+  assert.match(html, /<section class="escalation" aria-label="Request human support">[\s\S]*?<\/section>[\s\S]*?<\/div>\s*<form id="message-form"/u);
+  assert.match(html, /<button id="escalate-toggle" type="button" disabled aria-expanded="false" aria-controls="handoff-menu">Request human support<\/button>/u);
+  assert.match(html, /<div id="handoff-menu" class="handoff-menu" role="group" aria-label="Ways to request human support" hidden>/u);
+  assert.match(html, /<button id="handoff-email" type="button" aria-expanded="false" aria-controls="escalation-form" aria-pressed="false">By email<\/button>/u);
+  assert.match(html, /<button id="handoff-whatsapp" type="button" disabled aria-describedby="whatsapp-reason" aria-pressed="false">By WhatsApp<\/button>/u);
+  assert.match(html, /<p id="whatsapp-reason">Unavailable: this support service has not enabled WhatsApp\.<\/p>/u);
   assert.match(html, /<form id="escalation-form" aria-label="Request human support by email" hidden>/u);
   assert.match(html, /<label for="escalate-email">Your email<\/label>/u);
   assert.match(html, /<input id="escalate-email" name="email" type="text" inputmode="email" autocomplete="email" placeholder="you@example\.org" aria-describedby="escalate-hint" required disabled>/u);
@@ -188,11 +205,13 @@ test('escalation affordance is additive markup: explicit consent, bounded fields
   assert.match(html, /<textarea id="escalate-note" name="question_note" rows="2"/u);
   // Consent is a standalone, never pre-checked checkbox with its own label.
   assert.match(html, /<input id="escalate-consent" name="consent" type="checkbox">/u);
-  assert.match(html, /<label class="consent" for="escalate-consent">I agree to store this request and note for human support by email\. No email is sent while delivery is not configured\.<\/label>/u);
+  assert.match(html, /<label class="consent"><input id="escalate-consent" name="consent" type="checkbox"><span>I agree to store this request and note for human support by email\. No email is sent while delivery is not configured\.<\/span><\/label>/u);
   assert.match(html, /<p id="escalate-error" role="alert" hidden><\/p>/u);
   assert.match(html, /<p id="escalate-outcome" role="status" aria-live="polite" hidden><\/p>/u);
   assert.match(html, /<button id="escalate-send" type="button" disabled>Send request<\/button>/u);
   assert.match(html, /id="escalate-hint">Consent is required before a request is recorded\. Email ≤254 bytes; note ≤1,000 characters \(2,000 bytes\)\.<\/span>/u);
+  // WhatsApp never appears to be an operational channel and no phone input exists.
+  assert.doesNotMatch(html, /type="tel"|inputmode="tel"|name="phone"|name="whatsapp"|wa\.me|api\.whatsapp/iu);
   assert.doesNotMatch(html, /checked(?!=)/u);
   assert.doesNotMatch(html, /type="submit"/u);
   assert.doesNotMatch(html, /<style| style=| on(?:click|load|submit)=/u);
@@ -202,7 +221,24 @@ test('escalation affordance is additive markup: explicit consent, bounded fields
   // Widget core actually wires the additive controls; handler coverage lives in the unit tests.
   const core = await readFile(new URL('../assets/widget-core.mjs', import.meta.url), 'utf8');
   assert.match(core, /ui\['escalate-toggle'\]\.addEventListener\('click', /u);
+  assert.match(core, /ui\['handoff-email'\]\.addEventListener\('click', /u);
   assert.match(core, /ui\['escalate-send'\]\.addEventListener\('click', submitEscalation\)/u);
   assert.match(core, /ui\['escalation-form'\]\.addEventListener\('submit', \(event\) => \{/u);
   assert.doesNotMatch(core, /innerHTML/u);
+});
+
+test('only the visitor opens the handoff menu, and the composer stays pinned outside it', async () => {
+  const core = await readFile(new URL('../assets/widget-core.mjs', import.meta.url), 'utf8');
+  // No server, provider or history event can open the menu: the only write is
+  // the visitor toggle, and the unavailable channel is never selected.
+  assert.match(core, /handoffOpen = !handoffOpen;/u);
+  assert.doesNotMatch(core, /handoffOpen\s*=\s*true/u);
+  assert.match(core, /ui\['handoff-whatsapp'\]\.setAttribute\('aria-pressed', 'false'\)/u);
+  // Escape is the only key that closes the disclosure.
+  assert.match(core, /if \(event\.key !== 'Escape'\) return;/u);
+  assert.doesNotMatch(core, /event\.key === 'q'/u);
+  // The handoff panel lives in the scrollable pane; the composer stays outside
+  // it, so the question and Send controls remain visible on a small screen.
+  const html = await readFile(new URL('../assets/widget.html', import.meta.url), 'utf8');
+  assert.match(html, /<div class="chat-content"[^>]*>[\s\S]*?<section class="escalation"[\s\S]*?<\/div>\s*<form id="message-form"/u);
 });

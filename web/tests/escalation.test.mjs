@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import { canonicalEmail, validEscalationEmail, validEscalationNote, validEscalationTicket } from '../assets/protocol.mjs';
 import { creation, emptyHistory, fail, json, settle, turn, walk, widgetFixture } from './harness.mjs';
 
@@ -14,6 +15,7 @@ const ready = (responses = [], options = {}) => {
 };
 const openForm = async (fixture, { email = 'Visitor@Example.COM', note = 'Email me at that address, please', consent = true } = {}) => {
   fixture.ui['escalate-toggle'].dispatch('click');
+  fixture.ui['handoff-email'].dispatch('click');
   fixture.ui['escalate-email'].value = email;
   fixture.ui['escalate-note'].value = note;
   fixture.ui['escalate-consent'].checked = consent;
@@ -22,23 +24,146 @@ const openForm = async (fixture, { email = 'Visitor@Example.COM', note = 'Email 
 const send = async (fixture) => { fixture.ui['escalate-send'].dispatch('click'); await settle(); };
 const escalationRequests = (fixture) => fixture.requests.filter((request) => request.url.includes('/escalation'));
 
-test('escalation affordance appears only with a live conversation and toggles a compact form', async () => {
+test('handoff affordance appears only with a live conversation and opens a compact channel menu', async () => {
   const fixture = widgetFixture();
   assert.equal(fixture.ui['escalate-toggle'].hidden, true);
   fixture.init(); await settle();
   assert.equal(fixture.ui['escalate-toggle'].hidden, false);
   assert.equal(fixture.ui['escalate-toggle'].disabled, false);
+  assert.equal(fixture.ui['handoff-menu'].hidden, true);
   assert.equal(fixture.ui['escalation-form'].hidden, true);
   assert.equal(fixture.ui['escalate-toggle'].getAttribute('aria-expanded'), 'false');
   fixture.ui['escalate-toggle'].dispatch('click');
-  assert.equal(fixture.ui['escalation-form'].hidden, false);
+  assert.equal(fixture.ui['handoff-menu'].hidden, false);
   assert.equal(fixture.ui['escalate-toggle'].getAttribute('aria-expanded'), 'true');
+  // By email is the only available channel; By WhatsApp is disabled.
+  assert.equal(fixture.ui['handoff-email'].disabled, false);
+  assert.equal(fixture.ui['handoff-whatsapp'].disabled, true);
+  fixture.ui['handoff-email'].dispatch('click');
+  assert.equal(fixture.ui['escalation-form'].hidden, false);
+  assert.equal(fixture.ui['handoff-email'].getAttribute('aria-pressed'), 'true');
+  fixture.ui['handoff-email'].dispatch('click');
+  assert.equal(fixture.ui['escalation-form'].hidden, true);
+  assert.equal(fixture.ui['handoff-email'].getAttribute('aria-pressed'), 'false');
   fixture.ui['escalate-toggle'].dispatch('click');
+  assert.equal(fixture.ui['handoff-menu'].hidden, true);
   assert.equal(fixture.ui['escalation-form'].hidden, true);
   assert.equal(fixture.ui['escalate-toggle'].getAttribute('aria-expanded'), 'false');
   const closed = widgetFixture([], { location: { hash: '#parent_origin=https%3A%2F%2Fwrong.example' } });
   closed.init(); await settle();
   assert.equal(closed.ui['escalate-toggle'].hidden, true);
+});
+
+test('By WhatsApp is visibly unavailable, disabled, and collects no phone number', async () => {
+  const fixture = ready(); await settle();
+  fixture.ui['escalate-toggle'].dispatch('click');
+  const whatsapp = fixture.ui['handoff-whatsapp'];
+  assert.equal(whatsapp.hidden, false);
+  assert.equal(whatsapp.disabled, true);
+  whatsapp.dispatch('click'); await settle();
+  assert.equal(escalationRequests(fixture).length, 0);
+  assert.equal(fixture.ui['escalation-form'].hidden, true);
+  // The unavailable channel is never exposed as the selected one.
+  assert.equal(whatsapp.getAttribute('aria-pressed'), 'false');
+  assert.equal(fixture.ui['handoff-email'].getAttribute('aria-pressed'), 'false');
+  assert.equal(fixture.ui['handoff-menu'].hidden, false);
+  // No phone collection exists anywhere in the widget markup.
+  const html = await readFile(new URL('../assets/widget.html', import.meta.url), 'utf8');
+  assert.doesNotMatch(html, /type="tel"|inputmode="tel"|name="phone"|name="whatsapp"|wa\.me|api\.whatsapp/iu);
+  assert.equal(fixture.ui['escalate-email'].value, '');
+});
+
+test('the handoff menu opens only after a conversation exists and no server event opens it', async () => {
+  const fixture = widgetFixture([json(creation, 201), emptyHistory(), json(turn())]);
+  assert.equal(fixture.ui['escalate-toggle'].hidden, true);
+  assert.equal(fixture.ui['handoff-menu'].hidden, true);
+  fixture.init(); await settle();
+  // Readiness is a server event; the visitor still has to ask for the menu.
+  assert.equal(fixture.ui['handoff-menu'].hidden, true);
+  assert.equal(fixture.ui['escalate-toggle'].getAttribute('aria-expanded'), 'false');
+  // A completed answer is a server event too and leaves the menu closed.
+  fixture.submit(); await settle();
+  assert.equal(fixture.ui['messages'].children.length, 2);
+  assert.equal(fixture.ui['handoff-menu'].hidden, true);
+  assert.equal(fixture.ui['escalation-form'].hidden, true);
+});
+
+test('Escape closes the handoff menu and returns focus to its trigger, and no other key closes it', async () => {
+  const fixture = ready(); await settle();
+  fixture.ui['escalate-toggle'].dispatch('click');
+  fixture.ui['handoff-email'].dispatch('click');
+  assert.equal(fixture.ui['handoff-menu'].hidden, false);
+  assert.equal(fixture.ui['escalation-form'].hidden, false);
+  assert.equal(fixture.ui['handoff-email'].focused, true);
+  // A typed letter must never dismiss the menu.
+  fixture.emit('keydown', { key: 'q', target: {}, preventDefault() {} });
+  assert.equal(fixture.ui['handoff-menu'].hidden, false);
+  fixture.emit('keydown', { key: 'Escape', target: {}, preventDefault() {} });
+  assert.equal(fixture.ui['handoff-menu'].hidden, true);
+  assert.equal(fixture.ui['escalation-form'].hidden, true);
+  assert.equal(fixture.ui['escalate-toggle'].getAttribute('aria-expanded'), 'false');
+  assert.equal(fixture.ui['escalate-toggle'].focused, true);
+});
+
+test('an outside click closes the handoff menu while a click inside the handoff region does not', async () => {
+  const fixture = ready(); await settle();
+  fixture.ui['escalate-toggle'].dispatch('click');
+  assert.equal(fixture.ui['handoff-menu'].hidden, false);
+  // The trigger belongs to the handoff region, so its click does not close it.
+  fixture.ui['escalate-toggle'].selectors = ['.escalation'];
+  fixture.emit('click', { target: fixture.ui['escalate-toggle'] });
+  assert.equal(fixture.ui['handoff-menu'].hidden, false);
+  // An unrelated click closes the whole disclosure.
+  fixture.emit('click', { target: fixture.ui['status'] });
+  assert.equal(fixture.ui['handoff-menu'].hidden, true);
+  assert.equal(fixture.ui['escalation-form'].hidden, true);
+});
+
+test('an open handoff menu never disables or mutates the chat send path', async () => {
+  const fixture = ready([json(turn())]); await settle();
+  fixture.ui['escalate-toggle'].dispatch('click');
+  fixture.ui['handoff-email'].dispatch('click');
+  assert.equal(fixture.ui['handoff-menu'].hidden, false);
+  assert.equal(fixture.ui['escalation-form'].hidden, false);
+  assert.equal(fixture.ui.send.disabled, false);
+  fixture.submit(); await settle();
+  assert.equal(fixture.ui['messages'].children.length, 2);
+  assert.equal(fixture.ui['handoff-menu'].hidden, false);
+  assert.equal(fixture.ui['escalation-form'].hidden, false);
+  assert.equal(escalationRequests(fixture).length, 0);
+  // A chat interaction closes the disclosure without discarding what the
+  // visitor already typed for human support.
+  fixture.ui['escalate-email'].value = 'visitor@example.org';
+  fixture.emit('click', { target: fixture.ui['question'] });
+  assert.equal(fixture.ui['handoff-menu'].hidden, true);
+  assert.equal(fixture.ui['escalation-form'].hidden, true);
+  assert.equal(fixture.ui['escalate-email'].value, 'visitor@example.org');
+  fixture.ui['escalate-toggle'].dispatch('click');
+  fixture.ui['handoff-email'].dispatch('click');
+  assert.equal(fixture.ui['escalation-form'].hidden, false);
+  assert.equal(fixture.ui['escalate-email'].value, 'visitor@example.org');
+});
+
+test('handoff menu closes on Escape and outside click, and never auto-opens on a provider failure', async () => {
+  const fixture = ready([fail('provider_unavailable', 503, 'DO NOT RENDER'), emptyHistory()]); await settle();
+  fixture.ui['escalate-toggle'].dispatch('click');
+  fixture.ui['handoff-email'].dispatch('click');
+  assert.equal(fixture.ui['handoff-menu'].hidden, false);
+  assert.equal(fixture.ui['escalation-form'].hidden, false);
+  fixture.emit('keydown', { key: 'Escape', target: {}, preventDefault() {} });
+  assert.equal(fixture.ui['handoff-menu'].hidden, true);
+  assert.equal(fixture.ui['escalation-form'].hidden, true);
+  // An outside click closes the disclosure too.
+  fixture.ui['escalate-toggle'].dispatch('click');
+  assert.equal(fixture.ui['handoff-menu'].hidden, false);
+  fixture.emit('click', { target: {} });
+  assert.equal(fixture.ui['handoff-menu'].hidden, true);
+  assert.equal(fixture.ui['escalation-form'].hidden, true);
+  // A provider failure never opens the menu or form.
+  fixture.submit(); await settle();
+  assert.match(fixture.ui.error.textContent, /AI service is unavailable/u);
+  assert.equal(fixture.ui['handoff-menu'].hidden, true);
+  assert.equal(fixture.ui['escalation-form'].hidden, true);
 });
 
 test('email mirror validation equals the server canonical rules', () => {
@@ -152,7 +277,9 @@ test('a recorded request renders the server message verbatim with a visitor-sane
   assert.match(fixture.ui.status.textContent, /Ready/u);
   assert.equal(fixture.ui.send.disabled, false);
   assert.equal(fixture.ui.messages.children.length, 0);
-  assert.match(fixture.ui.transmission.textContent, /Questions and recent chat context/u);
+  assert.match(fixture.ui.transmission.textContent, /Questions and recent chat go to the app server/u);
+  assert.match(fixture.ui.transmission.textContent, /approved excerpts may go to the configured AI provider/u);
+  assert.ok(!fixture.ui.transmission.textContent.includes(fixture.platform.location.origin));
 });
 
 test('every server value stays inert text without markup interpretation', async () => {
@@ -288,6 +415,7 @@ test('401 follows the existing terminal handling for the whole widget', async ()
   assert.match(fixture.ui.status.textContent, /Chat unavailable/u);
   assert.equal(fixture.ui.send.disabled, true);
   assert.equal(fixture.ui['escalate-toggle'].hidden, true);
+  assert.equal(fixture.ui['handoff-menu'].hidden, true);
   assert.equal(fixture.ui['escalation-form'].hidden, true);
   assert.equal(fixture.ui['escalate-send'].disabled, true);
   assert.equal(escalationRequests(fixture).length, 1);

@@ -10,7 +10,7 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
   const { document } = platform;
   const element = (id) => document.getElementById(id);
   const ui = Object.fromEntries(['status', 'error', 'retry', 'older', 'messages', 'question', 'send', 'transmission', 'message-form',
-    'escalate-toggle', 'escalation-form', 'escalate-email', 'escalate-note', 'escalate-consent', 'escalate-error', 'escalate-outcome', 'escalate-send']
+    'escalate-toggle', 'handoff-menu', 'handoff-email', 'handoff-whatsapp', 'escalation-form', 'escalate-email', 'escalate-note', 'escalate-consent', 'escalate-error', 'escalate-outcome', 'escalate-send']
     .map((id) => [id, element(id)]));
   const origin = platform.location.origin;
   const parent = parentOrigin(platform.location.hash);
@@ -29,6 +29,10 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
   // Escalation state is additive: the panel never mutates the send path,
   // history or disclosures. Session memory of stored tickets only marks a
   // replayed response; the server decides what is stored or replayed.
+  // The handoff menu is a separate, visitor-opened disclosure: the selected
+  // channel is By email (which reveals the consent form) while By WhatsApp is
+  // permanently unavailable. No server event ever opens either.
+  let handoffOpen = false;
   let escalateOpen = false;
   let escalateBusy = false;
   let escalateCooldownUntil = 0;
@@ -42,7 +46,7 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
   // under 1 MiB; a 256 KiB cap could reject a legitimate bounded history page.
   const responseLimit = 1048576;
 
-  ui.transmission.textContent = `Questions and recent chat context go to ${origin}; bounded excerpts go to OpenAI to compose AI answers.`;
+  ui.transmission.textContent = 'Questions and recent chat go to the app server; approved excerpts may go to the configured AI provider.';
   const resize = () => {
     if (!parent || stopped) return;
     platform.parent.postMessage({ type: 'assistant:resize', version: 1,
@@ -56,11 +60,20 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
     ui.retry.disabled = busy || Date.now() < cooldownUntil;
     ui.older.hidden = nextBefore === null;
     ui.older.disabled = busy || pending !== null || stopped;
-    // Escalation affordance: visible only once a conversation exists, closed
+    // Handoff affordance: visible only once a conversation exists, closed
     // again when the chat is terminal. Chat controls above stay untouched.
+    // The menu is the outer disclosure; By email is the only available
+    // channel and toggles the consent form inside it. By WhatsApp stays
+    // disabled, so its channel state is never exposed as selected.
     ui['escalate-toggle'].hidden = !conversation || stopped;
     ui['escalate-toggle'].disabled = false;
-    ui['escalate-toggle'].setAttribute('aria-expanded', String(escalateOpen));
+    ui['escalate-toggle'].setAttribute('aria-expanded', String(handoffOpen));
+    ui['handoff-menu'].hidden = !handoffOpen || stopped;
+    ui['handoff-email'].setAttribute('aria-expanded', String(escalateOpen));
+    ui['handoff-email'].setAttribute('aria-pressed', String(escalateOpen));
+    // The unavailable channel stays permanently disabled and never selected.
+    ui['handoff-whatsapp'].disabled = true;
+    ui['handoff-whatsapp'].setAttribute('aria-pressed', 'false');
     ui['escalation-form'].hidden = !escalateOpen || stopped;
     ui['escalate-email'].disabled = stopped;
     ui['escalate-note'].disabled = stopped;
@@ -350,18 +363,48 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
   ui.older.addEventListener('click', () => {
     if (!busy && !pending && nextBefore !== null) void loadHistory(nextBefore);
   });
-  // Escalation: the visitor opts in deliberately; no provider failure or
-  // server state ever opens this form automatically.
+  // Handoff: the visitor opts in deliberately; no provider failure or other
+  // server state ever opens the menu. The outer toggle only reveals the
+  // channel menu. By email is the only available channel and opens the
+  // consent form; By WhatsApp is permanently disabled and collects nothing.
   ui['escalate-toggle'].addEventListener('click', () => {
+    handoffOpen = !handoffOpen;
+    if (!handoffOpen) escalateOpen = false;
+    controls();
+    if (handoffOpen) ui['handoff-email'].focus?.();
+  });
+  ui['handoff-email'].addEventListener('click', () => {
     escalateOpen = !escalateOpen;
     controls();
     if (escalateOpen) ui['escalate-email'].focus?.();
+  });
+  // An outside click closes the whole handoff disclosure. The click target is
+  // real DOM in the browser; the guard keeps synthetic/test events harmless.
+  platform.addEventListener('click', (event) => {
+    if (stopped || !handoffOpen) return;
+    const target = event.target;
+    if (target && typeof target.closest === 'function' && target.closest('.escalation')) return;
+    handoffOpen = false;
+    escalateOpen = false;
+    controls();
   });
   ui['escalate-send'].addEventListener('click', submitEscalation);
   // Defensive only; native submission is blocked in the forms-disabled sandbox.
   ui['escalation-form'].addEventListener('submit', (event) => {
     event.preventDefault();
     submitEscalation();
+  });
+  // Escape closes the handoff disclosure and returns focus to its trigger, so
+  // a keyboard visitor never loses their place. No other key closes it: a
+  // letter typed in the email form must never dismiss the menu.
+  platform.addEventListener('keydown', (event) => {
+    if (!handoffOpen || stopped) return;
+    if (event.key !== 'Escape') return;
+    event.preventDefault();
+    handoffOpen = false;
+    escalateOpen = false;
+    controls();
+    ui['escalate-toggle'].focus?.();
   });
   // The stored recorded_at is already contract-validated; render it in a
   // visitor-sane UTC form with the server's own truthful sentence verbatim.

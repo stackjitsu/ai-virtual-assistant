@@ -16,7 +16,7 @@ env STORE_MODE=sqlite SQLITE_PATH=./data/assistant.db \
   go run ./cmd/assistant serve --seed-demo
 ```
 
-`go mod download` fetches pinned public dependencies on a fresh clone. The start command explicitly clears service credentials for this run, creates/migrates `./data/assistant.db`, and seeds fictional approved demo knowledge. It does not need an API key or remote database. **Reseeding updates and reapproves both demo documents**; use it deliberately for this local demo, not as normal production startup.
+`go mod download` fetches pinned public dependencies on a fresh clone. The start command explicitly clears service credentials for this run, creates/migrates `./data/assistant.db`, and seeds ten fictional Jitihada University (Chuo Kikuu cha Jitihada) FAQ records in local SQLite. Jitihada is not a real or accredited institution. This setup does not need an API key or remote database. **Reseeding refreshes the ten demo records without changing existing approval flags**, including withdrawn demo records; it neither deletes nor reapproves unrelated records. Use it deliberately for this local demo, not as normal production startup.
 
 1. Open <http://127.0.0.1:8080/widget/sample-host.html> and open the assistant launcher.
 2. Read the disclosure, enter a free-text question, and select **Send question** (or keyboard-submit). This is AI-first chat, not a direct FAQ-answer lookup.
@@ -24,14 +24,22 @@ env STORE_MODE=sqlite SQLITE_PATH=./data/assistant.db \
 4. Try an unrelated question such as “Explain photosynthesis.” No relevant knowledge produces an honest clarification without inference. Completed turns appear in chat; **Load older messages** appears when more history is available.
 5. Reloading creates a new guest conversation: access is kept only in iframe memory. Stored history is not deleted. Stop the server with Ctrl+C.
 
-The seed contains exactly two fictional documents, not real organization policies:
+On a fresh local database, the seed contains exactly these ten approved fictional FAQ records, not real university policies:
 
-| Document | Sample fact | Question to try |
+| Document | Seeded demo detail | Question to try |
 |---|---|---|
-| `demo-start` | Start the demo by opening the sample support widget and asking an onboarding question. | “How do I start demo onboarding?” |
-| `demo-support` | The fictional sample support team is available Monday through Friday; no clock times are specified. | “What are the sample support hours?” |
+| `demo-start` — Jitihada applications and onboarding | For a mock application, choose an illustrative programme and make a private checklist; there is no admissions portal or deadline. | “How do I plan a mock application?” |
+| `demo-programmes` — Jitihada programmes | Example learning paths are digital design and community research, not offered qualifications; duration and entry requirements are unspecified. | “What are the example Jitihada programmes?” |
+| `demo-fees` — Jitihada fees | Draft a private budget for possible tuition, housing, materials and travel; no real fee schedule or payment channel exists. | “How should I plan a fictional Jitihada fee budget?” |
+| `demo-scholarships` — Jitihada scholarships | Draft questions about hypothetical eligibility and coverage; no actual award or application route exists. | “What should I ask about fictional scholarships?” |
+| `demo-dates` — Jitihada academic dates | Compare hypothetical intake, registration, teaching, assessments and breaks; no term or application dates are published. | “Does Jitihada publish academic dates?” |
+| `demo-housing` — Jitihada housing | List room preferences and ask a real provider about terms; there are no Jitihada rooms or booking forms. | “How can I plan a fictional housing enquiry?” |
+| `demo-international` — Jitihada international applicants | Plan questions about eligibility and travel permissions; this demo offers no international admission route or visa advice. | “How can international applicants plan their questions?” |
+| `demo-accessibility` — Jitihada accessibility | Describe a learning barrier and ask a real institution about adjustments; no Jitihada accommodation or contact is confirmed. | “What accessibility questions could I prepare?” |
+| `demo-transcripts` — Jitihada transcripts | Ask a real institution's verified records office about secure transcript requests; this demo has no student records or request channel. | “How should I prepare a transcript enquiry?” |
+| `demo-support` — Jitihada IT support | Note device, browser and error wording without passwords; there is no working Jitihada portal, helpdesk or support hours. | “How should I describe a hypothetical login problem to IT support?” |
 
-These questions exercise retrieval; an AI-composed answer still requires separately authorized provider configuration and is not guaranteed. Seed source URLs use `example.org`, not a real support service.
+These questions exercise lexical retrieval, not guaranteed AI answers. With the key cleared above, relevant questions return `503 provider_unavailable`; an AI-composed answer requires separately authorized provider configuration, and no live-corpus answer is verified here. Seed source URLs under `https://example.org/jitihada/help/` are reserved placeholders for proposed future FAQ routes, **not resolving demo citations**. The mock university website and its FAQ pages do not yet exist. This local seed does not populate assistant-staging or any remote Turso database; importing reviewed content with real, resolving HTTPS source URLs would be a separate future operation.
 
 ## Configuration and normal workflow
 

@@ -10,6 +10,18 @@ test('origin and optional context boundaries accept only bounded declared values
   for (const context of [null, [], { page_path: '//host/path' }, { page_path: '/a?token=secret' }, { page_path: '/a#x' }, { page_path: '/a\\b' }, { page_path: '/a\u0085' }, { page_path: `/${'é'.repeat(128)}` }, { locale: 'en_US' }, { account_id: 'secret' }]) assert.equal(validContext(context), false);
 });
 
+test('pre-send transmission text identifies server and possible provider without rendering an origin or port', () => {
+  for (const origin of ['https://assistant.example', 'http://127.0.0.1:8765', 'http://localhost:8080']) {
+    const fixture = widgetFixture([], { location: { origin } });
+    const notice = fixture.ui.transmission.textContent;
+    assert.match(notice, /Questions and recent chat go to the app server/u);
+    assert.match(notice, /approved excerpts may go to the configured AI provider/u);
+    assert.doesNotMatch(notice, /localhost|127\.0\.0\.1|https?:\/\/|:\d{2,5}\b/iu);
+    assert.ok(!notice.includes(origin));
+    assert.equal(fixture.ui.send.disabled, true);
+  }
+});
+
 test('message, sources and text validation reject unsafe or incoherent envelopes', () => {
   const pair = turn();
   assert.equal(validMessage(pair.messages[1]), true);

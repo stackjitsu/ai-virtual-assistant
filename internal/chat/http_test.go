@@ -269,14 +269,29 @@ func TestContractHTTPClarificationWithdrawalAndNoHalfTurn(t *testing.T) {
 	if w.Code != 200 || calls.Load() != before || !strings.Contains(w.Body.String(), "needs_clarification") {
 		t.Fatal("withdrawn knowledge reached inference", w.Body)
 	}
-	// A real empty-key adapter must not invent a successful answer when knowledge exists.
+	// Re-seeding cannot reapprove withdrawn documents.
 	if err = s.SeedDemo(context.Background()); err != nil {
 		t.Fatal(err)
 	}
-	h = testHandler(t, s, NewOpenAI("", "fixture-model"))
-	assertCode(t, perform(h, "POST", path, capability, postBody("request_004", "start onboarding")), 503, "provider_unavailable")
+	w = perform(h, "POST", path, capability, postBody("request_004", "start onboarding"))
+	if w.Code != 200 || calls.Load() != before || !strings.Contains(w.Body.String(), "needs_clarification") {
+		t.Fatal("seed reapproved withdrawn material", w.Body)
+	}
 	history, err = s.History(context.Background(), id, 100, nil)
-	if err != nil || len(history.Messages) != 6 {
+	if err != nil || len(history.Messages) != 8 {
+		t.Fatal("clarification persistence", err)
+	}
+	// A real empty-key adapter must not invent a successful answer when
+	// relevant knowledge exists in a newly seeded local store.
+	fresh := testStore(t)
+	if err = fresh.SeedDemo(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	h = testHandler(t, fresh, NewOpenAI("", "fixture-model"))
+	freshID, freshCapability := createHTTP(t, h, `{}`)
+	assertCode(t, perform(h, "POST", "/api/v1/conversations/"+freshID+"/messages", freshCapability, postBody("request_004", "start onboarding")), 503, "provider_unavailable")
+	history, err = fresh.History(context.Background(), freshID, 100, nil)
+	if err != nil || len(history.Messages) != 0 {
 		t.Fatal("missing-key half-turn", err)
 	}
 }

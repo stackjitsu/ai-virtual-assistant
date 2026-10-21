@@ -68,3 +68,27 @@ Append atomic, factual observations using the schema in `docs/agents/observation
   context: live provider evaluation
   fact: Live composition was verified once at revision 190ffe4 against the Gemini OpenAI-compatible endpoint with an operator-held credential: browser-trusted input produced an answered turn grounded in the seeded onboarding entry with its matching approved source; the credential stayed outside the repository and was never printed; no deployment, Turso storage or email transport was involved.
   evidence: .scratch/ai-chat/evidence/live-evaluation.md; /tmp/opencode/live3/evidence/chat-live-answer.png
+- id: OBS-20261020-012
+  observed_at: 2026-10-20
+  source: Turso CLI read-only verification after user-authorized creation
+  context: staging database setup
+  fact: Created assistant-staging in the stackjitsu organization's default group at aws-ap-northeast-1 on the starter plan with overages disabled; sqlite_master reported no tables. No migration, knowledge seeding, database token creation or app configuration was performed.
+  evidence: turso db list; turso db show assistant-staging; turso db shell assistant-staging "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;"
+- id: OBS-20261020-013
+  observed_at: 2026-10-20
+  source: backend and foundation worker handoffs plus primary gate review
+  context: JITI-01 and JITI-02
+  fact: Explicit local-only seed now contains ten fictional Jitihada University FAQ records; provider grounding and clarification identify the fictional institution, and repeat seeding preserves withdrawn approvals. README marks reserved example.org citation links unresolved. No Jitihada material was imported into assistant-staging, which still has no tables. Primary independently ran format, lint, static, unit, contract and fuzz-smoke checks successfully.
+  evidence: .scratch/jitihada-faq/issues/01-backend-content.md; .scratch/jitihada-faq/issues/02-run-docs.md; internal/chat/store.go; README.md
+- id: OBS-20261021-014
+  observed_at: 2026-10-21
+  source: worker handoff plus primary independent CLI verification
+  context: JITI-03 controlled FAQ import
+  fact: A preview-first import-faq command now applies a reviewed JSONL corpus through one parameterized multi-row upsert, so a batch commits completely or not at all; a lost acknowledgement is resolved by reading stored rows back rather than guessing. Approval requires an explicit operator flag, existing withdrawal is never overwritten, and the summary prints counts and IDs only. Primary confirmed preview writes nothing, apply without --approve is refused, apply with --approve stores approved rows, and turso mode without --allow-remote fails before network I/O. assistant-staging still has no tables.
+  evidence: .scratch/jitihada-faq/issues/03-staging-import.md; internal/chat/import.go; cmd/assistant/main_test.go
+- id: OBS-20261021-015
+  observed_at: 2026-10-21
+  source: local preview and one authorized live provider request
+  context: manual Jitihada review
+  fact: Two local previews ran for manual review: a no-key instance that correctly reported provider unavailable for matching FAQ questions, and a Gemini-backed instance using the operator-held key file, which produced one grounded answered turn citing demo-programmes. The cited example.org URLs do not resolve, and both preview servers were stopped when the session restarted.
+  evidence: .scratch/ai-chat/evidence/live-evaluation.md; internal/chat/provider.go

@@ -16,6 +16,18 @@ Status: slices 1–2 and the provider endpoint seam complete and pushed; live co
 | 10 | Independently validate escalation flow end to end | validation owner | completed; ESC-03 15/15 scenarios PASS accepted after primary evidence review | 08, 09 |
 | 11 | Add provider endpoint configuration seam for zero-cost live evaluation | backend owner | completed; LLM-01 accepted after primary diff + gate review | 08 |
 | 12 | Verify live composition against a compatible hosted endpoint at zero cost | orchestrator / validation evidence | completed; one grounded answered turn with matching approved source recorded in `.scratch/ai-chat/evidence/live-evaluation.md` | 11 |
+| 13 | Refine the visitor corner widget UI and verify responsive/browser states | chat-widget owner; orchestrator review | completed visual pass (UI-01); awaiting user visual feedback, mobile composer not sticky | 05, 09 |
+| 14 | Audit production release scope and blockers for visitor support | independent validation owner; orchestrator review | completed (PROD-01); public release is no-go | 13 |
+| 15 | Redesign corner chat layout with composer in view at mobile size | chat-widget owner; orchestrator review | completed (UX-01); live local preview on 8080 awaiting user feedback | 13 |
+| 16 | Refine corner-widget surfaces to user's preferred white formal UI | chat-widget owner; orchestrator review | completed (UX-01B); updated preview on 8080 for user feedback | 15 |
+| 17 | Remove OS dark-mode override so requested white UI stays white | chat-widget owner; orchestrator review | completed (UX-01C), white dark-preference preview on 18096 | 16 |
+| 18 | Develop fictional Jitihada University approved FAQ and grounded AI wording locally | chat-backend owner; orchestrator review | completed (JITI-01); 10 local FAQs, no staging import | 04 |
+| 19 | Document current local FAQ behavior and provisional citations | project-foundation owner; orchestrator review | completed (JITI-02); mock pages and staging import remain blocked | 18 |
+| 20 | Increase white corner-widget typography one step without losing mobile Send | chat-widget owner; orchestrator review | completed (UX-01D), plain preview on 18097 awaiting visual feedback | 17 |
+| 21 | Shorten pre-send disclosure and remove demo branding without hiding sample status | chat-widget owner; orchestrator review | completed (UX-01E), preview on 18098 for user feedback | 20 |
+| 22 | Remove technical localhost/port URL from visitor disclosure | chat-widget owner; orchestrator review | completed (UX-01F), plain preview on 18099 awaiting visual feedback | 21 |
+| 23 | Build controlled preview-first FAQ import path | chat-backend owner; orchestrator review | completed (JITI-03); staging still empty, no remote write | 18, 19 |
+| 24 | Add accessible human-support action menu and concise disclosure | chat-widget owner; orchestrator review | completed (UX-01G), plain preview on 18100 awaiting user feedback | 22 |
 
 ## Decision log
 
@@ -35,4 +47,14 @@ Status: slices 1–2 and the provider endpoint seam complete and pushed; live co
 
 ## Next decision
 
-Both slices, the endpoint seam and the live evaluation are closed; no task is dispatched. The user's next decisions are deployment (hosted Turso/libSQL plus production provider configuration), real email delivery, and the conditional WhatsApp channel, each requiring separate setup, credentials and authorization.
+UX-01C reproduced the dark-preference bug, made white surfaces unconditional, and serves the fixed build at local port 18096; older preview ports are closed. Ask user to confirm the white display before any next UI/UX step. Chat-state/email-form UX later; PROD-01 release blockers unchanged. No commit or push without explicit authorization.
+
+UX-01D increased white-widget base type to 16px and small supporting copy proportionally; actual browser checks pass and a fresh plain preview URL is running on port 18097. Await user visual feedback before further UI/UX changes.
+
+UX-01E condensed visible copy, removed demo-facing branding, and kept truthful safety, transmission, guest persistence and fictional knowledge warnings. Current plain local preview on port 18098; await user wording approval. Do not imply real knowledge or email delivery.
+
+User asked to remove the displayed origin URL/port from the disclosure; UX-01F changes visitor copy only and retains actual origin checks and data-sharing semantics.
+
+JITI-01 was confined to backend-owned paths; review its provisional source routes before a separate controlled Turso staging import or widget mock-site task. The existing UX-01C and uncommitted widget work remain untouched.
+
+JITI-01 local backend changes have now passed all required gates; JITI-02 corrects README. Staging remains empty, so source pages and a safe import are future reviewed tasks rather than a performed migration.

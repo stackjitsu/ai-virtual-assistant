@@ -20,6 +20,11 @@ export class Element {
   setAttribute(key, value) { this.attributes[key] = String(value); }
   getAttribute(key) { return this.attributes[key] ?? null; }
   hasAttribute(key) { return Object.hasOwn(this.attributes, key); }
+  // Focus and selector matching are observable so tests can assert where the
+  // widget sends focus and whether a click landed inside the handoff region.
+  focus() { this.focused = true; }
+  matches(selector) { return (this.selectors ?? []).includes(selector); }
+  closest(selector) { return this.matches(selector) ? this : null; }
   append(...nodes) { this.children.push(...nodes); }
   prepend(...nodes) { this.children.unshift(...nodes); }
   replaceChildren(...nodes) { this._text = ''; this.children = nodes; }
@@ -32,8 +37,8 @@ export class Element {
 export const walk = (element) => [element, ...element.children.flatMap(walk)];
 export function documentFixture() {
   const ids = ['status', 'error', 'retry', 'older', 'messages', 'question', 'send', 'transmission', 'message-form',
-    'escalate-toggle', 'escalation-form', 'escalate-email', 'escalate-note', 'escalate-consent', 'escalate-error', 'escalate-outcome', 'escalate-send'];
-  const tags = { form: 'form', 'escalate-toggle': 'button', 'escalate-send': 'button', 'escalate-email': 'input', 'escalate-consent': 'input', 'escalate-note': 'textarea', 'escalate-error': 'p', 'escalate-outcome': 'p' };
+    'escalate-toggle', 'handoff-menu', 'handoff-email', 'handoff-whatsapp', 'escalation-form', 'escalate-email', 'escalate-note', 'escalate-consent', 'escalate-error', 'escalate-outcome', 'escalate-send'];
+  const tags = { form: 'form', 'escalate-toggle': 'button', 'handoff-email': 'button', 'handoff-whatsapp': 'button', 'escalate-send': 'button', 'escalate-email': 'input', 'escalate-consent': 'input', 'escalate-note': 'textarea', 'escalate-error': 'p', 'escalate-outcome': 'p' };
   const elements = Object.fromEntries(ids.map((id) => [id, new Element(tags[id] ?? 'div')]));
   elements.retry.hidden = true;
   elements.older.hidden = true;

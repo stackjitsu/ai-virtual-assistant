@@ -1,6 +1,6 @@
 # Pinned Goal
 
-Status: slices 1–2 and the provider endpoint seam are committed and pushed (slice-2 896ed7a/8915abc, seam e4bdf39/190ffe4); live composition was verified once locally on 2026-10-20; Milestone 3 and 4 report figures are complete; nothing is deployed
+Status: slices 1–2 and the provider endpoint seam are committed and pushed (slice-2 896ed7a/8915abc, seam e4bdf39/190ffe4); live composition was verified once locally on 2026-10-20; Milestone 3 and 4 report figures are complete; nothing is deployed. UI-01 local visual pass remains uncommitted. User selected a production-ready visitor-support release; PROD-01 audit completed with a public-release no-go.
 
 ## Goal
 
@@ -25,4 +25,4 @@ Testing approach is decided: tests-alongside development, not strict TDD (ADR 00
 
 ## Next decision
 
-No implementation is dispatched. The next decisions are the user's: whether to prepare deployment (hosted database and production provider configuration under separately authorised accounts), whether to wire real email delivery, and whether the conditional WhatsApp channel proceeds. No new commit or push without explicit user authorization.
+User approved an accessible Request human support menu with By email available, By WhatsApp explicitly unavailable, and a compact More information disclosure. UX-01G is complete and previewed at plain local port 18100; await user feedback before further UI/UX work. PROD-01 no-go blockers remain unresolved; no production claim, commit or push without explicit user authorization.

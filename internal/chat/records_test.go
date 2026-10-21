@@ -77,6 +77,19 @@ func TestHistoryAndCompositionBounds(t *testing.T) {
 	}
 }
 
+func TestProvisionalFAQSourceURLValidation(t *testing.T) {
+	valid := Source{"demo-start", "Jitihada applications", "https://example.org/jitihada/help/applications"}
+	if !validSource(valid) {
+		t.Fatal("reserved HTTPS citation rejected")
+	}
+	for _, raw := range []string{"http://example.org/jitihada/help/applications", "https://user@example.org/jitihada/help/applications", "https://example.org/\nsecret"} {
+		valid.URL = raw
+		if validSource(valid) {
+			t.Fatal("unsafe citation accepted", raw)
+		}
+	}
+}
+
 // Property: accepted messages are canonical, bounded, valid UTF-8 and stable
 // under validation; arbitrary malformed/oversized input never panics.
 func FuzzValidateMessage(f *testing.F) {

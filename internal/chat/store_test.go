@@ -204,19 +204,110 @@ func TestKnowledgeSeedIsExplicitAndWithdrawal(t *testing.T) {
 		t.Fatal(err)
 	}
 	docs, err = s.ApprovedKnowledge(ctx)
-	if err != nil || len(docs) != 2 {
+	if err != nil || len(docs) != 10 {
 		t.Fatal("seed", err)
 	}
+	// Every topic must give the User a concrete demo exercise or planning
+	// step, not merely a disclaimer. These are not claims of live services.
+	useful := map[string]string{
+		"demo-start":         "make a private checklist",
+		"demo-programmes":    "accessible interfaces and prototype testing",
+		"demo-fees":          "tuition, housing, materials and travel",
+		"demo-scholarships":  "what costs an award might cover",
+		"demo-dates":         "intake, registration, teaching, assessments and breaks",
+		"demo-housing":       "contract terms, deposits and safety",
+		"demo-international": "language evidence, document review, living costs and travel permissions",
+		"demo-accessibility": "readable materials, captions or step-free access",
+		"demo-transcripts":   "prove identity securely, choose a recipient",
+		"demo-support":       "device, browser and error wording",
+	}
+	ids := map[string]bool{}
 	for _, d := range docs {
-		if !strings.Contains(strings.ToLower(d.Text), "fictional") {
-			t.Fatal("unlabelled sample")
+		if !strings.Contains(strings.ToLower(d.Text), "fictional") || !strings.Contains(d.Text, useful[d.ID]) || len(d.Text) > 8000 || !strings.HasPrefix(d.URL, "https://example.org/jitihada/help/") || !validSource(Source{d.ID, d.Title, d.URL}) || ids[d.ID] {
+			t.Fatal("unlabelled, invalid or duplicate fictional FAQ", d.ID)
 		}
+		ids[d.ID] = true
 	}
 	if _, err = s.db.Exec(`UPDATE knowledge SET approved=0 WHERE id=?`, "demo-start"); err != nil {
 		t.Fatal(err)
 	}
+	if err = s.SeedDemo(ctx); err != nil {
+		t.Fatal(err)
+	}
 	docs, err = s.ApprovedKnowledge(ctx)
-	if err != nil || len(docs) != 1 || docs[0].ID != "demo-support" {
+	if err != nil || len(docs) != 9 {
 		t.Fatal("withdrawal ignored", err)
+	}
+	for _, d := range docs {
+		if d.ID == "demo-start" {
+			t.Fatal("repeat seed reapproved withdrawn FAQ")
+		}
+	}
+}
+
+func TestKnowledgeSeedReopenLegacyAndRetrieval(t *testing.T) {
+	ctx := context.Background()
+	path := filepath.Join(t.TempDir(), "knowledge.db")
+	s, closeStore, err := OpenSQLite(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = s.Migrate(ctx); err != nil {
+		t.Fatal(err)
+	}
+	// Existing local installations retain withdrawn choices while the two
+	// old seed IDs receive current Jitihada text. Unrelated rows are untouched.
+	if _, err = s.db.Exec(`INSERT INTO knowledge(id,title,url,text,approved) VALUES(?,?,?,?,0)`, "demo-start", "Old sample", "https://example.org/old", "Old fictional text"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = s.db.Exec(`INSERT INTO knowledge(id,title,url,text,approved) VALUES(?,?,?,?,0)`, "custom", "Custom", "https://example.org/custom", "Custom withdrawn text"); err != nil {
+		t.Fatal(err)
+	}
+	if err = s.SeedDemo(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if err = closeStore(); err != nil {
+		t.Fatal(err)
+	}
+	s, closeStore, err = OpenSQLite(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = closeStore() }()
+	if err = s.SeedDemo(ctx); err != nil {
+		t.Fatal(err)
+	}
+	var title, url string
+	var approved int
+	if err = s.db.QueryRow(`SELECT title,url,approved FROM knowledge WHERE id='demo-start'`).Scan(&title, &url, &approved); err != nil || approved != 0 || !strings.Contains(title, "Jitihada") || url != "https://example.org/jitihada/help/applications" {
+		t.Fatal("legacy refresh reapproved or failed", title, url, approved, err)
+	}
+	if err = s.db.QueryRow(`SELECT approved FROM knowledge WHERE id='custom'`).Scan(&approved); err != nil || approved != 0 {
+		t.Fatal("unrelated record changed", approved, err)
+	}
+	docs, err := s.ApprovedKnowledge(ctx)
+	if err != nil || len(docs) != 9 {
+		t.Fatal("reopened seed count", len(docs), err)
+	}
+	for _, tc := range []struct{ question, id string }{
+		{"Which programmes cover digital design?", "demo-programmes"},
+		{"Are there scholarship eligibility details?", "demo-scholarships"},
+		{"How do I request a transcript?", "demo-transcripts"},
+		{"Where can I ask about accessible learning formats?", "demo-accessibility"},
+		{"What are the housing booking rules?", "demo-housing"},
+	} {
+		found := false
+		for _, d := range Retrieve(tc.question, docs) {
+			found = found || d.ID == tc.id
+			if d.ID == "demo-start" {
+				t.Fatal("withdrawn material retrieved", tc.question)
+			}
+		}
+		if !found {
+			t.Fatal("missing relevant FAQ", tc.question)
+		}
+	}
+	if len(Retrieve("quasar pineapple nebula", docs)) != 0 {
+		t.Fatal("unrelated query matched")
 	}
 }
