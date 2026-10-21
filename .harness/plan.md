@@ -6,9 +6,9 @@
 |---|---|---|---|
 | DISC-01 pre-send disclosure verification | independent validator | completed; wording gap assigned RATE-03 | baseline |
 | RATE-01 additive rating contract | foundation | completed | baseline |
-| RATE-02 SQLite/Turso rating API | backend | delegated | RATE-01 |
-| RATE-03 accessible rating widget | widget | delegated | RATE-01 |
-| RATE-04 integrated browser/gate review | independent validator | pending | RATE-02, RATE-03 |
+| RATE-02 SQLite/Turso rating API | backend | completed; merged, concurrent identical/differing tested | RATE-01 |
+| RATE-03 accessible rating widget | widget | completed; merged, timer fix tested | RATE-01 |
+| RATE-04 integrated browser/gate review | independent validator | claimed | RATE-02, RATE-03 |
 
 Baseline local work was committed separately as `611d3fa`, with baseline gates passing. Next decision is contract review, then parallel context-owner dispatch. No provider, mail, Turso or production deployment is authorized.
 
