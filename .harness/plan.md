@@ -1,5 +1,17 @@
 # Active Plan
 
+## Rating slice — integration branch feat/conversation-rating
+
+| Step | Owner | State | Depends on |
+|---|---|---|---|
+| DISC-01 pre-send disclosure verification | independent validator | delegated | baseline |
+| RATE-01 additive rating contract | foundation | delegated | baseline |
+| RATE-02 SQLite/Turso rating API | backend | pending | RATE-01 |
+| RATE-03 accessible rating widget | widget | pending | RATE-01 |
+| RATE-04 integrated browser/gate review | independent validator | pending | RATE-02, RATE-03 |
+
+Baseline local work was committed separately as `611d3fa`, with baseline gates passing. Next decision is contract review, then parallel context-owner dispatch. No provider, mail, Turso or production deployment is authorized.
+
 Status: slices 1–2 and the provider endpoint seam complete and pushed; live composition verified locally; no deployment
 
 | Step | Outcome | Owner | Status | Depends on |

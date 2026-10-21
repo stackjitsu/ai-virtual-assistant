@@ -1,5 +1,7 @@
 # Pinned Goal
 
+Current integration goal (2026-10-21): verify existing guest/data-sharing disclosures and implement guest conversation rating (1–5 with optional comment and revision) on `feat/conversation-rating`. `DISC-01` and `RATE-01` are delegated; `RATE-02/03` await the contract; `RATE-04` awaits both implementations. Staff/admin, live email and WhatsApp remain deferred; never claim production readiness. Next decision: review the additive rating contract before dispatching backend/widget work.
+
 Status: slices 1–2 and the provider endpoint seam are committed and pushed (slice-2 896ed7a/8915abc, seam e4bdf39/190ffe4); live composition was verified once locally on 2026-10-20; Milestone 3 and 4 report figures are complete; nothing is deployed. UI-01 local visual pass remains uncommitted. User selected a production-ready visitor-support release; PROD-01 audit completed with a public-release no-go.
 
 ## Goal
