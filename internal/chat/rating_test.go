@@ -200,6 +200,58 @@ func TestSQLiteRatingAtomicRestartAndMigration(t *testing.T) {
 	}
 }
 
+func TestSQLiteRatingConcurrentIdenticalWritesReplaySingleTimestamp(t *testing.T) {
+	ctx := context.Background()
+	path := filepath.Join(t.TempDir(), "same-rating.db")
+	firstStore, closeFirst, err := OpenSQLite(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = closeFirst() }()
+	if err := firstStore.Migrate(ctx); err != nil {
+		t.Fatal(err)
+	}
+	secondStore, closeSecond, err := OpenSQLite(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = closeSecond() }()
+	c := testConversation(t, firstStore, strings.Repeat("a", 32))
+	if _, err := firstStore.CompleteTurn(ctx, testTurn(c, "request_001", "start", 1), 0); err != nil {
+		t.Fatal(err)
+	}
+	for attempt := 0; attempt < 20; attempt++ {
+		comment := fmt.Sprintf("same canonical comment %d", attempt)
+		start := make(chan struct{})
+		type outcome struct {
+			rating Rating
+			err    error
+		}
+		results := make(chan outcome, 2)
+		for _, store := range []*SQLStore{firstStore, secondStore} {
+			go func(s *SQLStore) {
+				<-start
+				r, err := s.SaveRating(ctx, Rating{c.ID, 5, comment, time.Now().UTC()})
+				results <- outcome{r, err}
+			}(store)
+		}
+		close(start)
+		left, right := <-results, <-results
+		if left.err != nil || right.err != nil {
+			t.Fatalf("identical race %d: %v, %v", attempt, left.err, right.err)
+		}
+		if left.rating.Value != 5 || right.rating.Value != 5 || left.rating.Comment != comment || right.rating.Comment != comment ||
+			left.rating.RatedAt.IsZero() || !left.rating.RatedAt.Equal(right.rating.RatedAt) {
+			t.Fatalf("identical race %d did not replay one timestamp: %+v %+v", attempt, left.rating, right.rating)
+		}
+		var count int
+		var storedAt string
+		if err := firstStore.db.QueryRowContext(ctx, `SELECT COUNT(*), MAX(rated_at) FROM ratings WHERE conversation_id=?`, c.ID).Scan(&count, &storedAt); err != nil || count != 1 || storedAt != ratingTimestamp(left.rating.RatedAt) {
+			t.Fatalf("identical race %d did not persist one returned row: count=%d time=%q err=%v", attempt, count, storedAt, err)
+		}
+	}
+}
+
 func TestContractRatingAuthorizationBeforeStorage(t *testing.T) {
 	spy := &ratingSpyStore{Store: testStore(t)}
 	h := escalationHandler(t, spy, nil)
