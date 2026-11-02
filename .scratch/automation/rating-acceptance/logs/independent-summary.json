@@ -1,0 +1,39 @@
+{
+  "rating": {
+    "passed": 52,
+    "failed": 0
+  },
+  "ratingTrustedEventCount": 58,
+  "sandboxSend": {
+    "passed": 22,
+    "failed": 0
+  },
+  "widgetVisual": {
+    "passed": 113,
+    "failed": 0
+  },
+  "backendPIDs": [
+    34478,
+    34625
+  ],
+  "persistedRating": {
+    "rating": 2,
+    "comment": "Revised by trusted input",
+    "rated_at": "2026-11-02T10:39:31.418736209Z"
+  },
+  "readOnlySQLiteCounts": {
+    "conversations": 2,
+    "turns": 1,
+    "ratings": 1
+  },
+  "ratingRepeatTestPassCounts": {
+    "TestContractHTTPRatingValidationAuthorizationAndRevision": 10,
+    "TestSQLiteRatingAtomicRestartAndMigration": 10,
+    "TestSQLiteRatingConcurrentIdenticalWritesReplaySingleTimestamp": 10,
+    "TestContractRatingAuthorizationBeforeStorage": 10,
+    "TestContractHTTPRatingStorageFailureReturnsSafe503": 10,
+    "TestContractRatingRejectedAttemptsShareBoundedWindow": 10,
+    "TestContractRatingTursoLoopbackAndUncertainCommit": 10,
+    "TestSQLiteRatingUpgradeFromV2AndMissingRemoteSchema": 10
+  }
+}

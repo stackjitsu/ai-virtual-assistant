@@ -1,0 +1,13 @@
+Auto-merging .harness/plan.md
+Auto-merging .harness/tasks.json
+CONFLICT (content): Merge conflict in .harness/tasks.json
+Auto-merging web/assets/widget-core.mjs
+CONFLICT (content): Merge conflict in web/assets/widget-core.mjs
+Auto-merging web/assets/widget.css
+Auto-merging web/assets/widget.html
+Auto-merging web/tests/harness.mjs
+CONFLICT (content): Merge conflict in web/tests/harness.mjs
+Recorded preimage for '.harness/tasks.json'
+Recorded preimage for 'web/assets/widget-core.mjs'
+Recorded preimage for 'web/tests/harness.mjs'
+Automatic merge failed; fix conflicts and then commit the result.

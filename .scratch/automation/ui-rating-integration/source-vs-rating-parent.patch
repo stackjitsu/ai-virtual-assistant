@@ -1,0 +1,473 @@
+diff --git c/docs/contracts/chat.md w/docs/contracts/chat.md
+index 8b91442..8bcff01 100644
+--- c/docs/contracts/chat.md
++++ w/docs/contracts/chat.md
+@@ -65,0 +66 @@ Host integration example:
++- Escape in the initialized, active iframe closes the whole host chat window, including when the handoff menu or email form is open: the iframe first closes those disclosures, then sends exactly `{type:"assistant:close",version:1}` to its validated fragment parent origin. It sends no close message before initialization or after the widget stops, and no guest data or extra fields accompany it. The loader accepts `assistant:close` only after its ready/init handshake, from its mounted iframe `contentWindow` at the exact configured assistant origin, with exactly the `type` and `version` keys and version `1`; wrong versions, extra keys, other sources or origins are ignored. On an accepted close, the loader hides the iframe without removing or reloading it, restores the launcher's closed label/state, and focuses the launcher; reopening reuses the same iframe and its in-memory guest chat. Escape on the launcher also closes a visible frame and returns focus to the launcher.
+diff --git c/web/README.md w/web/README.md
+index be8ff90..f23bc16 100644
+--- c/web/README.md
++++ w/web/README.md
+@@ -33,2 +33,2 @@ Once a conversation exists, an explicit **Request human support** affordance app
+-- **By email** — available; selects the channel (`aria-pressed`) and reveals the consent-required email form.
+-- **By WhatsApp** — visibly unavailable and `disabled`, labelled "Unavailable: this support service has not enabled WhatsApp." It is never an operational channel: no phone number is requested and no message is implied.
++- **Request via email** — available; selects the channel (`aria-pressed`) and reveals the consent-required email form.
++- **Request via WhatsApp** — visibly unavailable and `disabled`, labelled "Unavailable: this support service has not enabled WhatsApp." It is never an operational channel: no phone number is requested and no message is implied.
+@@ -36 +36 @@ Once a conversation exists, an explicit **Request human support** affordance app
+-Escape and an outside click both dismiss the whole handoff disclosure and return focus to the trigger; no other key closes it, so a typed letter never cancels a request in progress. Closing the disclosure hides the email form without discarding what the visitor typed, so reopening it restores the same details. The panel lives in the scrollable conversation pane, never in the pinned composer, so the question and **Send question** controls stay visible at 360×640.
++The header's **Close chat** button (44×44 CSS-pixel pointer target with visible keyboard focus, native Enter/Space activation) and **Escape** inside the initialized, active iframe close the whole widget window, including from the email form. Both reuse exactly `{type:"assistant:close",version:1}` at the validated parent origin; neither sends before initialization or after stopping. The host hides, never reloads, the iframe and focuses its launcher. Reopening preserves the conversation, unsent question and email/note/consent drafts, with the handoff disclosure closed. An outside click only dismisses the handoff disclosure; it does not close the widget window. No other key closes it, so a typed letter never cancels a request in progress. The panel lives in the scrollable conversation pane, never in the pinned composer, so the question and **Send question** controls stay visible at 360×640.
+@@ -97 +97 @@ After backend integration, use `make run`, open `http://127.0.0.1:8080/widget/sa
+-For opt-in visual review without live credentials, build a local binary and run `node web/tests/widget-visual.browser.mjs /absolute/path/to/assistant /absolute/fresh/evidence-dir`. This starts a separate-origin host with deliberately conflicting CSS variables, a local SQLite backend and offline Chromium. It checks the launcher, desktop/360×640 mobile/dark/180×320 compact viewport geometry after readiness, white header/conversation/disclosure/composer and light controls even under an emulated dark browser preference, the actual sample host under dark preference, the independently scrollable long transcript, unbroken text, consent gate, real chat clarification and the recorded-not-sent support outcome. The handoff menu is driven with real mouse and key input: it opens with `aria-expanded`, keeps every channel unselected until the visitor chooses one, ignores a click on the disabled WhatsApp channel, closes on Escape and on an outside click, reopens after a chat interaction with the typed details intact, and never pushes the pinned composer out of view. Ready, synthetic long-history and unfilled consent-error screenshots contain no visitor input; keep the browser profile/database private. The 180×320 viewport approximates 200% zoom of a 360×640 CSS viewport, not a browser zoom-setting test; other host stylesheets are not exhaustively tested.
++For opt-in visual review without live credentials, build a local binary and run `node web/tests/widget-visual.browser.mjs /absolute/path/to/assistant /absolute/fresh/evidence-dir`. This starts a separate-origin host with deliberately conflicting CSS variables, a local SQLite backend and offline Chromium. It checks the launcher, desktop/360×640 mobile/dark/180×320 compact viewport geometry after readiness, white header/conversation/disclosure/composer and light controls even under an emulated dark browser preference, the actual sample host under dark preference, the independently scrollable long transcript, unbroken text, consent gate, real chat clarification and the recorded-not-sent support outcome. The handoff menu is driven with real mouse and key input: it opens with `aria-expanded`, keeps every channel unselected until the visitor chooses one, ignores a click on the disabled WhatsApp channel, closes the window on Escape (restoring launcher focus) and dismisses the disclosure on an outside click, reopens after a chat interaction with the typed details intact, and never pushes the pinned composer out of view. Ready, synthetic long-history and unfilled consent-error screenshots contain no visitor input; keep the browser profile/database private. The 180×320 viewport approximates 200% zoom of a 360×640 CSS viewport, not a browser zoom-setting test; other host stylesheets are not exhaustively tested.
+diff --git c/web/assets/loader.js w/web/assets/loader.js
+index d5995ad..25f1889 100644
+--- c/web/assets/loader.js
++++ w/web/assets/loader.js
+@@ -57,0 +58,8 @@
++  const close = () => {
++    if (frame.hidden) return;
++    frame.hidden = true;
++    launcher.setAttribute('aria-expanded', 'false');
++    launcher.setAttribute('aria-label', 'Open support assistant');
++    launcher.textContent = 'Ask the assistant';
++    launcher.focus();
++  };
+@@ -66,0 +75,3 @@
++    } else if (initialized && knownKeys(data, ['type', 'version'])
++      && data.type === 'assistant:close' && data.version === 1) {
++      close();
+@@ -68,0 +80,5 @@
++  launcher.addEventListener('keydown', (event) => {
++    if (event.key !== 'Escape' || frame.hidden) return;
++    event.preventDefault();
++    close();
++  });
+@@ -75 +91,2 @@
+-    frame.hidden = !frame.hidden;
++    if (!frame.hidden) { close(); return; }
++    frame.hidden = false;
+diff --git c/web/assets/widget-core.mjs w/web/assets/widget-core.mjs
+index 40436bb..a082173 100644
+--- c/web/assets/widget-core.mjs
++++ w/web/assets/widget-core.mjs
+@@ -12 +12 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
+-  const ui = Object.fromEntries(['status', 'error', 'retry', 'older', 'messages', 'question', 'send', 'transmission', 'message-form',
++  const ui = Object.fromEntries(['status', 'error', 'retry', 'older', 'messages', 'question', 'send', 'transmission', 'message-form', 'chat-close',
+@@ -34 +34 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
+-  // channel is By email (which reveals the consent form) while By WhatsApp is
++  // channel is Request via email (which reveals the consent form) while Request via WhatsApp is
+@@ -70,2 +70,2 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
+-    // The menu is the outer disclosure; By email is the only available
+-    // channel and toggles the consent form inside it. By WhatsApp stays
++    // The menu is the outer disclosure; Request via email is the only available
++    // channel and toggles the consent form inside it. Request via WhatsApp stays
+@@ -431,2 +431,2 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
+-  // channel menu. By email is the only available channel and opens the
+-  // consent form; By WhatsApp is permanently disabled and collects nothing.
++  // channel menu. Request via email is the only available channel and opens the
++  // consent form; Request via WhatsApp is permanently disabled and collects nothing.
+@@ -460,7 +460,4 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
+-  // Escape closes the handoff disclosure and returns focus to its trigger, so
+-  // a keyboard visitor never loses their place. No other key closes it: a
+-  // letter typed in the email form must never dismiss the menu.
+-  platform.addEventListener('keydown', (event) => {
+-    if (!handoffOpen || stopped) return;
+-    if (event.key !== 'Escape') return;
+-    event.preventDefault();
++  // Both controls close the host window without changing chat or form drafts.
++  // The host returns focus to its launcher; nothing in this iframe is reloaded.
++  function closeChat() {
++    if (stopped || !initialized) return;
+@@ -470 +467,7 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
+-    ui['escalate-toggle'].focus?.();
++    platform.parent.postMessage({ type: 'assistant:close', version: 1 }, parent);
++  }
++  ui['chat-close'].addEventListener('click', closeChat);
++  platform.addEventListener('keydown', (event) => {
++    if (event.key !== 'Escape' || stopped || !initialized) return;
++    event.preventDefault();
++    closeChat();
+diff --git c/web/assets/widget.css w/web/assets/widget.css
+index 11875f8..783f84c 100644
+--- c/web/assets/widget.css
++++ w/web/assets/widget.css
+@@ -455,0 +456,4 @@ html, body.widget-page { height: 100%; min-height: 0; }
++  display: flex;
++  align-items: flex-start;
++  justify-content: space-between;
++  gap: var(--space-2);
+@@ -461,0 +466,17 @@ html, body.widget-page { height: 100%; min-height: 0; }
++.widget-page .chat-heading { min-width: 0; overflow-wrap: anywhere; }
++.widget-page .chat-close {
++  flex: 0 0 44px;
++  width: 44px;
++  min-height: 44px;
++  padding: 0;
++  border-color: transparent;
++  border-radius: var(--radius-sm);
++  background: transparent;
++  color: var(--fg);
++  font-size: 1.75rem;
++  font-weight: 400;
++  line-height: 1;
++  touch-action: manipulation;
++}
++.widget-page .chat-close:not(:disabled):hover { background: var(--card-hover); border-color: var(--border); }
++.widget-page .chat-close:not(:disabled):active { background: var(--accent-muted); transform: none; }
+diff --git c/web/assets/widget.html w/web/assets/widget.html
+index d8b2bca..6036dab 100644
+--- c/web/assets/widget.html
++++ w/web/assets/widget.html
+@@ -13,3 +13,6 @@
+-      <p class="eyebrow">AI SUPPORT</p>
+-      <h1 id="chat-title">Ask a question</h1>
+-      <p>Find relevant information here.</p>
++      <div class="chat-heading">
++        <p class="eyebrow">AI SUPPORT</p>
++        <h1 id="chat-title">Ask a question</h1>
++        <p>Find relevant information here.</p>
++      </div>
++      <button id="chat-close" type="button" class="chat-close" aria-label="Close chat">×</button>
+@@ -52 +55 @@
+-          <button id="handoff-email" type="button" aria-expanded="false" aria-controls="escalation-form" aria-pressed="false">By email</button>
++          <button id="handoff-email" type="button" aria-expanded="false" aria-controls="escalation-form" aria-pressed="false">Request via email</button>
+@@ -65 +68 @@
+-          <button id="handoff-whatsapp" type="button" disabled aria-describedby="whatsapp-reason" aria-pressed="false">By WhatsApp</button>
++          <button id="handoff-whatsapp" type="button" disabled aria-describedby="whatsapp-reason" aria-pressed="false">Request via WhatsApp</button>
+diff --git c/web/tests/embedding.contract.test.mjs w/web/tests/embedding.contract.test.mjs
+index 6e8863b..5f3f65c 100644
+--- c/web/tests/embedding.contract.test.mjs
++++ w/web/tests/embedding.contract.test.mjs
+@@ -105,0 +106,29 @@ test('capability is only a bearer in iframe-owned API calls, never URL/DOM/paren
++test('close control uses exact versioned shape, source and origin; invalid messages cannot close', async () => {
++  const fixture = await loaderFixture(); fixture.open();
++  const frame = fixture.frame();
++  const close = { type: 'assistant:close', version: 1 };
++  fixture.message(close); // No close before handshake.
++  assert.equal(frame.hidden, false);
++  fixture.message({ type: 'assistant:ready', version: 1 });
++  for (const [data, origin, source] of [
++    [close, 'https://assistant.example.evil', frame.contentWindow],
++    [close, 'https://assistant.example', {}],
++    [{ ...close, version: 2 }, 'https://assistant.example', frame.contentWindow],
++    [{ ...close, capability: 'bad' }, 'https://assistant.example', frame.contentWindow],
++    [{ ...close, height: 300 }, 'https://assistant.example', frame.contentWindow],
++    [{ type: 'assistant:resize', version: 1 }, 'https://assistant.example', frame.contentWindow],
++  ]) {
++    fixture.message(data, origin, source);
++    assert.equal(frame.hidden, false);
++  }
++  fixture.message(close);
++  assert.equal(frame.hidden, true);
++  assert.equal(fixture.launcher.focused, true);
++  assert.equal(fixture.launcher.getAttribute('aria-expanded'), 'false');
++  assert.equal(fixture.launcher.getAttribute('aria-label'), 'Open support assistant');
++  fixture.open();
++  assert.equal(fixture.frame(), frame);
++  assert.equal(frame.hidden, false);
++  assert.equal(frame.contentWindow.sent.length, 1);
++});
++
+@@ -192 +221 @@ test('published assets use local external files, semantic form and actual sample
+-test('handoff menu is additive markup: By email available, By WhatsApp disabled, no phone field', async () => {
++test('handoff menu is additive markup: Request via email available, Request via WhatsApp disabled, no phone field', async () => {
+@@ -198,2 +227,2 @@ test('handoff menu is additive markup: By email available, By WhatsApp disabled,
+-  assert.match(html, /<button id="handoff-email" type="button" aria-expanded="false" aria-controls="escalation-form" aria-pressed="false">By email<\/button>/u);
+-  assert.match(html, /<button id="handoff-whatsapp" type="button" disabled aria-describedby="whatsapp-reason" aria-pressed="false">By WhatsApp<\/button>/u);
++  assert.match(html, /<button id="handoff-email" type="button" aria-expanded="false" aria-controls="escalation-form" aria-pressed="false">Request via email<\/button>/u);
++  assert.match(html, /<button id="handoff-whatsapp" type="button" disabled aria-describedby="whatsapp-reason" aria-pressed="false">Request via WhatsApp<\/button>/u);
+@@ -237,2 +266,6 @@ test('only the visitor opens the handoff menu, and the composer stays pinned out
+-  // Escape is the only key that closes the disclosure.
+-  assert.match(core, /if \(event\.key !== 'Escape'\) return;/u);
++  // The header button and Escape share the initialized/non-stopped close path.
++  assert.match(core, /ui\['chat-close'\]\.addEventListener\('click', closeChat\)/u);
++  assert.match(core, /function closeChat\(\) \{\s*if \(stopped \|\| !initialized\) return;/u);
++  // Escape is the only key requesting host close, including with this disclosure open.
++  assert.match(core, /if \(event\.key !== 'Escape' \|\| stopped \|\| !initialized\) return;/u);
++  assert.match(core, /platform\.parent\.postMessage\(\{ type: 'assistant:close', version: 1 \}, parent\)/u);
+@@ -243,0 +277 @@ test('only the visitor opens the handoff menu, and the composer stays pinned out
++  assert.match(html, /<header class="chat-header">[\s\S]*?<button id="chat-close" type="button" class="chat-close" aria-label="Close chat">×<\/button>\s*<\/header>/u);
+diff --git c/web/tests/escalation.test.mjs w/web/tests/escalation.test.mjs
+index 9689289..39db7c1 100644
+--- c/web/tests/escalation.test.mjs
++++ w/web/tests/escalation.test.mjs
+@@ -91 +91 @@ test('the handoff menu opens only after a conversation exists and no server even
+-test('Escape closes the handoff menu and returns focus to its trigger, and no other key closes it', async () => {
++test('Escape requests window close even with handoff form open; other keys leave it open', async () => {
+@@ -101 +101,4 @@ test('Escape closes the handoff menu and returns focus to its trigger, and no ot
+-  fixture.emit('keydown', { key: 'Escape', target: {}, preventDefault() {} });
++  let prevented = false;
++  fixture.ui['escalate-email'].value = 'visitor@example.org';
++  fixture.emit('keydown', { key: 'Escape', target: fixture.ui['escalate-email'], preventDefault() { prevented = true; } });
++  assert.equal(prevented, true);
+@@ -105 +108,3 @@ test('Escape closes the handoff menu and returns focus to its trigger, and no ot
+-  assert.equal(fixture.ui['escalate-toggle'].focused, true);
++  assert.equal(fixture.ui['escalate-toggle'].focused, undefined);
++  assert.deepEqual(fixture.sent.at(-1), { data: { type: 'assistant:close', version: 1 }, origin: 'https://host.example' });
++  assert.equal(fixture.ui['escalate-email'].value, 'visitor@example.org');
+@@ -155,0 +161 @@ test('handoff menu closes on Escape and outside click, and never auto-opens on a
++  assert.equal(fixture.sent.at(-1).data.type, 'assistant:close');
+diff --git c/web/tests/harness.mjs w/web/tests/harness.mjs
+index dbd5933..0d6f50e 100644
+--- c/web/tests/harness.mjs
++++ w/web/tests/harness.mjs
+@@ -39 +39 @@ export function documentFixture() {
+-  const ids = ['status', 'error', 'retry', 'older', 'messages', 'question', 'send', 'transmission', 'message-form',
++  const ids = ['status', 'error', 'retry', 'older', 'messages', 'question', 'send', 'transmission', 'message-form', 'chat-close',
+@@ -42 +42 @@ export function documentFixture() {
+-  const tags = { form: 'form', 'escalate-toggle': 'button', 'handoff-email': 'button', 'handoff-whatsapp': 'button', 'escalate-send': 'button', 'escalate-email': 'input', 'escalate-consent': 'input', 'escalate-note': 'textarea', 'escalate-error': 'p', 'escalate-outcome': 'p' };
++  const tags = { form: 'form', 'chat-close': 'button', 'escalate-toggle': 'button', 'handoff-email': 'button', 'handoff-whatsapp': 'button', 'escalate-send': 'button', 'escalate-email': 'input', 'escalate-consent': 'input', 'escalate-note': 'textarea', 'escalate-error': 'p', 'escalate-outcome': 'p' };
+diff --git c/web/tests/rating.browser.mjs w/web/tests/rating.browser.mjs
+index de0f129..bb93099 100644
+--- c/web/tests/rating.browser.mjs
++++ w/web/tests/rating.browser.mjs
+@@ -264 +264 @@ try {
+-    window.__ratingInputs=[];window.__hostMessages=[];
++    window.__ratingInputs=[];window.__hostMessages=[];window.__closeMessages=[];
+@@ -266 +266 @@ try {
+-      if(e.target.id==='question'||e.target.id==='send'||e.target.id.startsWith('rating-'))
++      if(['question','send','chat-close','escalate-email','escalate-note','escalate-consent'].includes(e.target.id)||e.target.id.startsWith('rating-'))
+@@ -269 +269 @@ try {
+-    addEventListener('message',e=>{if(window===parent)__hostMessages.push(e.data);});
++    addEventListener('message',e=>{if(window===parent){__hostMessages.push(e.data);if(e.data?.type==='assistant:close')__closeMessages.push({data:e.data,origin:e.origin,fromFrame:e.source===document.querySelector('iframe')?.contentWindow});}});
+@@ -338,0 +339,57 @@ try {
++  // Combined-tree regression: close a rated conversation with unsaved rating,
++  // question and support drafts. Observe only; drive every edit/close via CDP input.
++  await click(f, '#rating-choice-3', h);
++  await click(f, '#rating-comment', h);
++  await key('a', 'KeyA', 65, 2);
++  await cdp('Input.insertText', { text: 'Unsent rating draft' });
++  await click(f, '#question', h);
++  await cdp('Input.insertText', { text: 'Unsent question draft' });
++  await click(f, '#escalate-toggle', h);
++  await click(f, '#handoff-email', h);
++  check('Approved support labels retain available-email and unavailable-WhatsApp semantics', await evaluate(f, `(()=>{
++    const e=document.querySelector('#handoff-email'),w=document.querySelector('#handoff-whatsapp');
++    return e.textContent==='Request via email'&&!e.disabled&&e.getAttribute('aria-pressed')==='true'
++      &&w.textContent==='Request via WhatsApp'&&w.disabled&&w.getAttribute('aria-pressed')==='false'
++      &&document.querySelector('#whatsapp-reason').textContent.includes('not enabled WhatsApp');
++  })()`));
++  await click(f, '#escalate-email', h);
++  await cdp('Input.insertText', { text: 'draft@example.org' });
++  await click(f, '#escalate-note', h);
++  await cdp('Input.insertText', { text: 'Unsent support note' });
++  await click(f, '#escalate-consent', h);
++  const draftState = `(()=>{const q=s=>document.querySelector(s);return {
++    transcript:q('#messages').textContent,question:q('#question').value,comment:q('#rating-comment').value,
++    score:q('input[name="rating"]:checked').value,outcome:q('#rating-outcome').textContent,
++    email:q('#escalate-email').value,note:q('#escalate-note').value,consent:q('#escalate-consent').checked};})()`;
++  const beforeCloseDrafts = await evaluate(f, draftState);
++  const beforeClosePosts = report.requests.filter((r) => r.method === 'POST').length;
++  const beforeCloseGuests = guests.length;
++  for (const action of ['pointer close', 'email-form Escape']) {
++    const closes = await evaluate(h, '__closeMessages.length');
++    if (action === 'pointer close') await click(f, '#chat-close', h);
++    else {
++      await click(f, '#escalate-email', h);
++      await key('Escape', 'Escape', 27);
++    }
++    await wait(() => evaluate(h, `document.querySelector('iframe').hidden&&document.activeElement===document.querySelector('.assistant-launcher')`), `${action} returns launcher focus`);
++    check(`${action}: exact initialized close protocol from the mounted iframe`, await evaluate(h, `(()=>{
++      const m=__closeMessages.at(-1);return __closeMessages.length===${closes + 1}
++        &&JSON.stringify(m.data)==='{"type":"assistant:close","version":1}'&&m.origin===${JSON.stringify(origin)}&&m.fromFrame;
++    })()`));
++    await click(h, '.assistant-launcher');
++    check(`${action}: same rated iframe preserves transcript and all unsent drafts`,
++      JSON.stringify(await evaluate(f, draftState)) === JSON.stringify(beforeCloseDrafts) && guests.length === beforeCloseGuests);
++    check(`${action}: disclosures reset but rating stays eligible and editable`, await evaluate(f, `
++      document.querySelector('#handoff-menu').hidden&&document.querySelector('#escalation-form').hidden
++      &&!document.querySelector('#rating-section').hidden&&!document.querySelector('#rating-send').disabled`));
++    check(`${action}: no creation, message, rating or escalation POST`, report.requests.filter((r) => r.method === 'POST').length === beforeClosePosts);
++    await click(f, '#escalate-toggle', h);
++    await click(f, '#handoff-email', h);
++  }
++  await screenshot('rated-reopened-drafts');
++  // Restore the saved feedback with trusted controls; the unchanged replay below
++  // independently confirms neither close nor draft edits changed the durable row.
++  await click(f, '#rating-choice-2', h);
++  await click(f, '#rating-comment', h);
++  await key('a', 'KeyA', 65, 2);
++  await cdp('Input.insertText', { text: 'Revised by trusted input' });
+diff --git c/web/tests/sandbox-send.browser.mjs w/web/tests/sandbox-send.browser.mjs
+index 9fc6ac8..68f1f56 100644
+--- c/web/tests/sandbox-send.browser.mjs
++++ w/web/tests/sandbox-send.browser.mjs
+@@ -144 +144 @@ try {
+-  await cdp('Page.addScriptToEvaluateOnNewDocument', { source: `window.__inputs=[];for(const type of ['click','keydown'])addEventListener(type,e=>{if(['send','question','retry'].includes(e.target.id))__inputs.push({type,id:e.target.id,key:e.key,trusted:e.isTrusted});});` });
++  await cdp('Page.addScriptToEvaluateOnNewDocument', { source: `window.__inputs=[];window.__closeMessages=[];addEventListener('message',e=>{if(e.data?.type==='assistant:close')__closeMessages.push({data:e.data,origin:e.origin,fromFrame:e.source===document.querySelector('iframe')?.contentWindow});});for(const type of ['click','keydown'])addEventListener(type,e=>{if(['send','question','retry','chat-close'].includes(e.target.id))__inputs.push({type,id:e.target.id,key:e.key,trusted:e.isTrusted});});` });
+@@ -205,0 +206,67 @@ try {
++  // Real keyboard events inside the iframe must close the host window in one
++  // press, even when focus is in the expanded email form. Hiding must not
++  // reload the iframe or discard the conversation and unsent draft.
++  const { h, f } = await open();
++  const priorPosts = posts().length;
++  const creations = () => report.requests.filter((request) => request.method === 'POST' && request.url.endsWith('/conversations')).length;
++  const initialCreations = creations();
++  await click(f, '#question', h);
++  await cdp('Input.insertText', { text: 'Can you explain quantum entanglement?' });
++  await click(f, '#send', h);
++  await wait(() => evaluate(f, `document.querySelector('#messages').children.length===2&&!document.querySelector('#send').disabled`), 'completed turn before close');
++  const transcript = await evaluate(f, `document.querySelector('#messages').textContent`);
++  await click(f, '#question', h);
++  await cdp('Input.insertText', { text: 'Unsent draft stays here' });
++  await key('q', 'KeyQ', 81, 0, 'q');
++  check('Other iframe key does not close window', await evaluate(h, `!document.querySelector('iframe').hidden`));
++  await key('Escape', 'Escape', 27);
++  await wait(() => evaluate(h, `document.querySelector('iframe').hidden`), 'iframe Escape closes window');
++  check('Iframe Escape returns focus and closed launcher state', await evaluate(h, `document.activeElement===document.querySelector('.assistant-launcher')&&document.querySelector('.assistant-launcher').getAttribute('aria-expanded')==='false'&&document.querySelector('.assistant-launcher').getAttribute('aria-label')==='Open support assistant'`));
++  await click(h, '.assistant-launcher');
++  check('Reopen preserves iframe and unsent draft without new creation', await evaluate(f, `document.querySelector('#question').value.startsWith('Unsent draft stays here')`) && creations() === initialCreations);
++  await click(f, '#escalate-toggle', h);
++  await click(f, '#handoff-email', h);
++  await click(f, '#escalate-email', h);
++  await cdp('Input.insertText', { text: 'visitor@example.org' });
++  check('Email form open before Escape', await evaluate(f, `!document.querySelector('#handoff-menu').hidden&&!document.querySelector('#escalation-form').hidden`));
++  await key('Escape', 'Escape', 27);
++  await wait(() => evaluate(h, `document.querySelector('iframe').hidden`), 'email form Escape closes window');
++  check('Email form Escape focuses launcher', await evaluate(h, `document.activeElement===document.querySelector('.assistant-launcher')`));
++  await click(h, '.assistant-launcher');
++  check('Email draft and conversation survive reopening', await evaluate(f, `document.querySelector('#escalate-email').value==='visitor@example.org'&&document.querySelector('#question').value.startsWith('Unsent draft stays here')`) && creations() === initialCreations);
++  await click(f, '#escalate-toggle', h);
++  await click(f, '#handoff-email', h);
++  await click(f, '#escalate-note', h);
++  await cdp('Input.insertText', { text: 'Unsent support note' });
++  await click(f, '#escalate-consent', h);
++  for (const action of ['mouse', 'enter', 'space']) {
++    const beforeClose = await evaluate(h, '__closeMessages.length');
++    if (action === 'mouse') await click(f, '#chat-close', h);
++    else {
++      // Reach the header button by actual keyboard traversal, not DOM focus/click.
++      await click(f, '#question', h);
++      for (let n = 0; n < 20 && !await evaluate(f, `document.activeElement.id==='chat-close'`); n++) await key('Tab', 'Tab', 9, 8);
++      check(`${action}: keyboard reaches Close chat`, await evaluate(f, `document.activeElement.id==='chat-close'`));
++      check(`${action}: visible unobscured focus ring`, await evaluate(f, `(()=>{const b=document.querySelector('#chat-close'),s=getComputedStyle(b),r=b.getBoundingClientRect();return b.matches(':focus-visible')&&s.outlineStyle==='solid'&&parseFloat(s.outlineWidth)>=3&&r.top>=6&&r.right+6<=innerWidth})()`));
++      await pause(180);
++      await screenshot(`close-${action}-focus.png`);
++      await key(action === 'enter' ? 'Enter' : ' ', action === 'enter' ? 'Enter' : 'Space', action === 'enter' ? 13 : 32, 0, action === 'enter' ? '\r' : ' ');
++    }
++    await wait(() => evaluate(h, `document.querySelector('iframe').hidden`), `${action} closes widget`);
++    check(`${action}: one exact close message from initialized iframe`, await evaluate(h, `(()=>{const m=__closeMessages.at(-1);return __closeMessages.length===${beforeClose + 1}&&JSON.stringify(m.data)==='{"type":"assistant:close","version":1}'&&m.origin===${JSON.stringify(origin)}&&m.fromFrame})()`));
++    check(`${action}: host restores launcher focus`, await evaluate(h, `document.activeElement===document.querySelector('.assistant-launcher')&&document.querySelector('.assistant-launcher').getAttribute('aria-expanded')==='false'`));
++    await click(h, '.assistant-launcher');
++    check(`${action}: same iframe preserves completed chat and question draft`, await evaluate(f, `document.querySelector('#messages').textContent===${JSON.stringify(transcript)}&&document.querySelector('#question').value.startsWith('Unsent draft stays here')`) && creations() === initialCreations);
++    check(`${action}: close collapses disclosures without discarding support drafts`, await evaluate(f, `document.querySelector('#handoff-menu').hidden&&document.querySelector('#escalation-form').hidden&&document.querySelector('#escalate-email').value==='visitor@example.org'&&document.querySelector('#escalate-note').value==='Unsent support note'&&document.querySelector('#escalate-consent').checked`));
++    await click(f, '#escalate-toggle', h);
++    await click(f, '#handoff-email', h);
++  }
++  const closeInputs = await evaluate(f, `__inputs.filter(e=>e.id==='chat-close')`);
++  report.trustedInputs.push({ action: 'header-close-pointer-enter-space', events: closeInputs });
++  check('Close button received three browser-trusted clicks', closeInputs.filter((event) => event.type === 'click' && event.trusted).length === 3);
++  await click(h, '.assistant-launcher');
++  // Launcher has focus after the real pointer click; reopen then Escape there.
++  await click(h, '.assistant-launcher');
++  await key('Escape', 'Escape', 27);
++  check('Trusted host launcher Escape closes and keeps focus', await evaluate(h, `document.querySelector('iframe').hidden&&document.activeElement===document.querySelector('.assistant-launcher')&&document.querySelector('.assistant-launcher').getAttribute('aria-expanded')==='false'`));
++  check('Close and Escape do not submit questions or escalation', posts().length === priorPosts + 1 && !report.requests.some((request) => request.url.endsWith('/escalation')));
+diff --git c/web/tests/widget-visual.browser.mjs w/web/tests/widget-visual.browser.mjs
+index 5d7c819..0a5edbf 100644
+--- c/web/tests/widget-visual.browser.mjs
++++ w/web/tests/widget-visual.browser.mjs
+@@ -109 +109 @@ try {
+-  for (const [name, width, height, dark] of [['mobile-dark', 360, 640, true], ['desktop', 1280, 900, false], ['mobile', 360, 640, false], ['zoom-200', 180, 320, false]]) {
++  for (const [name, width, height, dark] of [['mobile-dark', 360, 640, true], ['desktop', 1440, 900, false], ['tablet', 768, 900, false], ['mobile', 390, 640, false], ['small-phone', 375, 640, false], ['landscape', 640, 360, false], ['zoom-200', 180, 320, false]]) {
+@@ -132 +132,6 @@ try {
+-    check(`${name}: frame fits`, await evaluate(h, `(()=>{const r=document.querySelector('iframe').getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight})()`));
++    if (name === 'landscape') {
++      // Existing loader.css reserves 75px but its desktop bottom/gap/launcher
++      // need about 81px. Record, do not silently fix, the inherited 6px clip.
++      const frameTop = await evaluate(h, `(()=>{const f=document.querySelector('iframe');return f.getBoundingClientRect().top+f.clientTop})()`);
++      check(`${name}: inherited host top clip bounded to 8px; close target remains visible`, await evaluate(h, `(()=>{const r=document.querySelector('iframe').getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&r.top>=-8&&r.bottom<=innerHeight})()`) && await evaluate(f, `document.querySelector('#chat-close').getBoundingClientRect().top+${frameTop}>=0`));
++    } else check(`${name}: frame fits`, await evaluate(h, `(()=>{const r=document.querySelector('iframe').getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight})()`));
+@@ -155,0 +161 @@ try {
++    check(`${name}: close target is at least 44 by 44 and never overlaps heading`, await evaluate(f, `(()=>{const b=document.querySelector('#chat-close'),r=b.getBoundingClientRect(),h=document.querySelector('.chat-heading').getBoundingClientRect(),s=getComputedStyle(b);return b.tagName==='BUTTON'&&b.type==='button'&&b.getAttribute('aria-label')==='Close chat'&&r.width>=44&&r.height>=44&&r.left>=h.right+7&&r.top>=0&&r.bottom<=document.querySelector('.chat-header').getBoundingClientRect().bottom&&r.right<=innerWidth&&s.color==='rgb(26, 31, 30)'})()`));
+@@ -164,0 +171 @@ try {
++    check(`${name}: requested channel labels render`, await evaluate(f, `document.querySelector('#handoff-email').textContent==='Request via email'&&document.querySelector('#handoff-whatsapp').textContent==='Request via WhatsApp'`));
+@@ -171 +178 @@ try {
+-    // Escape closes the disclosure and gives focus back to its trigger.
++    // Escape closes the entire host window and restores launcher focus.
+@@ -175,2 +182,3 @@ try {
+-    check(`${name}: Escape returns focus to the trigger`, await evaluate(f, `document.activeElement.id==='escalate-toggle'`));
+-    // A click outside the handoff region closes it as well.
++    check(`${name}: Escape closes window and returns launcher focus`, await wait(() => evaluate(h, `document.querySelector('iframe').hidden&&document.activeElement===document.querySelector('.assistant-launcher')`), 'Escape host close'));
++    await click(h, '.assistant-launcher');
++    // A click outside the handoff region closes only the disclosure.
+@@ -183 +191 @@ try {
+-    check(`${name}: By email opens form and consent starts unchecked`, await evaluate(f, `!document.querySelector('#escalation-form').hidden&&!document.querySelector('#escalate-consent').checked&&document.querySelector('#handoff-email').getAttribute('aria-pressed')==='true'`));
++    check(`${name}: Request via email opens form and consent starts unchecked`, await evaluate(f, `!document.querySelector('#escalation-form').hidden&&!document.querySelector('#escalate-consent').checked&&document.querySelector('#handoff-email').getAttribute('aria-pressed')==='true'`));
+diff --git c/web/tests/widget.test.mjs w/web/tests/widget.test.mjs
+index 85e2420..69b4725 100644
+--- c/web/tests/widget.test.mjs
++++ w/web/tests/widget.test.mjs
+@@ -336,0 +337,72 @@ test('loader toggle reuses one iframe, accessible control and conversation hands
++test('launcher Escape closes an open window and focuses launcher; other keys do nothing', async () => {
++  const fixture = await loaderFixture(); fixture.open();
++  const frame = fixture.frame();
++  let prevented = 0;
++  fixture.launcher.dispatch('keydown', { key: 'q', preventDefault() { prevented++; } });
++  assert.equal(frame.hidden, false);
++  fixture.launcher.dispatch('keydown', { key: 'Escape', preventDefault() { prevented++; } });
++  assert.equal(prevented, 1);
++  assert.equal(frame.hidden, true);
++  assert.equal(fixture.launcher.focused, true);
++  assert.equal(fixture.launcher.getAttribute('aria-expanded'), 'false');
++  assert.equal(fixture.launcher.textContent, 'Ask the assistant');
++  fixture.launcher.dispatch('keydown', { key: 'Escape', preventDefault() { prevented++; } });
++  assert.equal(prevented, 1);
++  fixture.open();
++  assert.equal(fixture.frame(), frame);
++  assert.equal(frame.hidden, false);
++});
++
++test('iframe Escape requests host close without a menu or a send, only after init', async () => {
++  const fixture = widgetFixture();
++  let prevented = 0;
++  fixture.emit('keydown', { key: 'Escape', preventDefault() { prevented++; } });
++  assert.equal(prevented, 0);
++  assert.equal(fixture.sent.filter((message) => message.data.type === 'assistant:close').length, 0);
++  fixture.init(); await settle();
++  fixture.ui.question.value = 'Keep this draft';
++  fixture.emit('keydown', { key: 'x', preventDefault() { prevented++; } });
++  fixture.emit('keydown', { key: 'Escape', preventDefault() { prevented++; } });
++  assert.equal(prevented, 1);
++  assert.equal(fixture.ui.question.value, 'Keep this draft');
++  assert.deepEqual(fixture.sent.at(-1), { data: { type: 'assistant:close', version: 1 }, origin: 'https://host.example' });
++  assert.equal(fixture.requests.length, 2);
++});
++
++test('header close click uses exact initialized close message and preserves transcript and drafts', async () => {
++  const fixture = widgetFixture([json(creation, 201), json({ messages: turn().messages, next_before: null })]);
++  fixture.ui['chat-close'].dispatch('click');
++  assert.equal(fixture.sent.some(({ data }) => data.type === 'assistant:close'), false);
++  fixture.init(); await settle();
++  fixture.ui.question.value = 'Unsent question';
++  fixture.ui['escalate-toggle'].dispatch('click');
++  fixture.ui['handoff-email'].dispatch('click');
++  fixture.ui['escalate-email'].value = 'draft@example.org';
++  fixture.ui['escalate-note'].value = 'Unsent note';
++  fixture.ui['escalate-consent'].checked = true;
++  const transcript = fixture.ui.messages.textContent;
++  fixture.ui['chat-close'].dispatch('click');
++  assert.deepEqual(fixture.sent.at(-1), { data: { type: 'assistant:close', version: 1 }, origin: 'https://host.example' });
++  assert.equal(fixture.sent.filter(({ data }) => data.type === 'assistant:close').length, 1);
++  assert.equal(fixture.ui['handoff-menu'].hidden, true);
++  assert.equal(fixture.ui['escalation-form'].hidden, true);
++  assert.equal(fixture.ui.messages.textContent, transcript);
++  assert.equal(fixture.ui.question.value, 'Unsent question');
++  assert.equal(fixture.ui['escalate-email'].value, 'draft@example.org');
++  assert.equal(fixture.ui['escalate-note'].value, 'Unsent note');
++  assert.equal(fixture.ui['escalate-consent'].checked, true);
++  assert.equal(fixture.requests.length, 2);
++});
++
++test('both close triggers are inert after terminal failure or pagehide', async () => {
++  for (const stop of ['terminal', 'pagehide']) {
++    const fixture = widgetFixture(stop === 'terminal' ? [fail('unauthorized', 401)] : undefined);
++    fixture.init(); await settle();
++    if (stop === 'pagehide') fixture.emit('pagehide', {});
++    const sent = fixture.sent.length;
++    fixture.ui['chat-close'].dispatch('click');
++    fixture.emit('keydown', { key: 'Escape', preventDefault() { assert.fail('stopped key must be ignored'); } });
++    assert.equal(fixture.sent.length, sent);
++  }
++});
++

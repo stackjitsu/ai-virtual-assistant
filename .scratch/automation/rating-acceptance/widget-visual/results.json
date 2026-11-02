@@ -1,0 +1,454 @@
+[
+  {
+    "label": "mobile-dark: browser preference emulated",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: host stays white",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: independent launcher color",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: launcher text is readable",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: frame fits",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: ready composer visible without scrolling",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: base and essential text sizes",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: browser preference reaches iframe",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: white window surfaces and light form controls",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: loader frame stays white",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: concise disclosure present before send without origin or port",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: restricted sandbox",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: message metadata remains legible",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: long conversation scrolls independently",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: handoff menu opens with aria-expanded",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: WhatsApp is unavailable and disabled, never an operational channel",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: no channel is selected before the visitor chooses one",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: clicking WhatsApp does nothing",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: Escape closes the handoff menu",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: Escape returns focus to the trigger",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: handoff menu reopens",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: outside click closes the handoff menu",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: By email opens form and consent starts unchecked",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: composer stays visible with the handoff panel open",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: consent gate",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: handoff button reachable by scrolling",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: launcher closes",
+    "pass": true
+  },
+  {
+    "label": "desktop: browser preference emulated",
+    "pass": true
+  },
+  {
+    "label": "desktop: host stays white",
+    "pass": true
+  },
+  {
+    "label": "desktop: independent launcher color",
+    "pass": true
+  },
+  {
+    "label": "desktop: launcher text is readable",
+    "pass": true
+  },
+  {
+    "label": "desktop: frame fits",
+    "pass": true
+  },
+  {
+    "label": "desktop: ready composer visible without scrolling",
+    "pass": true
+  },
+  {
+    "label": "desktop: base and essential text sizes",
+    "pass": true
+  },
+  {
+    "label": "desktop: browser preference reaches iframe",
+    "pass": true
+  },
+  {
+    "label": "desktop: white window surfaces and light form controls",
+    "pass": true
+  },
+  {
+    "label": "desktop: loader frame stays white",
+    "pass": true
+  },
+  {
+    "label": "desktop: concise disclosure present before send without origin or port",
+    "pass": true
+  },
+  {
+    "label": "desktop: restricted sandbox",
+    "pass": true
+  },
+  {
+    "label": "desktop: message metadata remains legible",
+    "pass": true
+  },
+  {
+    "label": "desktop: long conversation scrolls independently",
+    "pass": true
+  },
+  {
+    "label": "desktop: handoff menu opens with aria-expanded",
+    "pass": true
+  },
+  {
+    "label": "desktop: WhatsApp is unavailable and disabled, never an operational channel",
+    "pass": true
+  },
+  {
+    "label": "desktop: no channel is selected before the visitor chooses one",
+    "pass": true
+  },
+  {
+    "label": "desktop: clicking WhatsApp does nothing",
+    "pass": true
+  },
+  {
+    "label": "desktop: Escape closes the handoff menu",
+    "pass": true
+  },
+  {
+    "label": "desktop: Escape returns focus to the trigger",
+    "pass": true
+  },
+  {
+    "label": "desktop: handoff menu reopens",
+    "pass": true
+  },
+  {
+    "label": "desktop: outside click closes the handoff menu",
+    "pass": true
+  },
+  {
+    "label": "desktop: By email opens form and consent starts unchecked",
+    "pass": true
+  },
+  {
+    "label": "desktop: composer stays visible with the handoff panel open",
+    "pass": true
+  },
+  {
+    "label": "desktop: consent gate",
+    "pass": true
+  },
+  {
+    "label": "desktop: handoff button reachable by scrolling",
+    "pass": true
+  },
+  {
+    "label": "real click: clarification turn",
+    "pass": true
+  },
+  {
+    "label": "handoff reopens after a chat interaction",
+    "pass": true
+  },
+  {
+    "label": "real click: recorded, no email sent",
+    "pass": true
+  },
+  {
+    "label": "typed support details survive a close and reopen",
+    "pass": true
+  },
+  {
+    "label": "desktop: launcher closes",
+    "pass": true
+  },
+  {
+    "label": "mobile: browser preference emulated",
+    "pass": true
+  },
+  {
+    "label": "mobile: host stays white",
+    "pass": true
+  },
+  {
+    "label": "mobile: independent launcher color",
+    "pass": true
+  },
+  {
+    "label": "mobile: launcher text is readable",
+    "pass": true
+  },
+  {
+    "label": "mobile: frame fits",
+    "pass": true
+  },
+  {
+    "label": "mobile: ready composer visible without scrolling",
+    "pass": true
+  },
+  {
+    "label": "mobile: base and essential text sizes",
+    "pass": true
+  },
+  {
+    "label": "mobile: browser preference reaches iframe",
+    "pass": true
+  },
+  {
+    "label": "mobile: white window surfaces and light form controls",
+    "pass": true
+  },
+  {
+    "label": "mobile: loader frame stays white",
+    "pass": true
+  },
+  {
+    "label": "mobile: concise disclosure present before send without origin or port",
+    "pass": true
+  },
+  {
+    "label": "mobile: restricted sandbox",
+    "pass": true
+  },
+  {
+    "label": "mobile: message metadata remains legible",
+    "pass": true
+  },
+  {
+    "label": "mobile: long conversation scrolls independently",
+    "pass": true
+  },
+  {
+    "label": "mobile: handoff menu opens with aria-expanded",
+    "pass": true
+  },
+  {
+    "label": "mobile: WhatsApp is unavailable and disabled, never an operational channel",
+    "pass": true
+  },
+  {
+    "label": "mobile: no channel is selected before the visitor chooses one",
+    "pass": true
+  },
+  {
+    "label": "mobile: clicking WhatsApp does nothing",
+    "pass": true
+  },
+  {
+    "label": "mobile: Escape closes the handoff menu",
+    "pass": true
+  },
+  {
+    "label": "mobile: Escape returns focus to the trigger",
+    "pass": true
+  },
+  {
+    "label": "mobile: handoff menu reopens",
+    "pass": true
+  },
+  {
+    "label": "mobile: outside click closes the handoff menu",
+    "pass": true
+  },
+  {
+    "label": "mobile: By email opens form and consent starts unchecked",
+    "pass": true
+  },
+  {
+    "label": "mobile: composer stays visible with the handoff panel open",
+    "pass": true
+  },
+  {
+    "label": "mobile: consent gate",
+    "pass": true
+  },
+  {
+    "label": "mobile: handoff button reachable by scrolling",
+    "pass": true
+  },
+  {
+    "label": "mobile: launcher closes",
+    "pass": true
+  },
+  {
+    "label": "zoom-200: browser preference emulated",
+    "pass": true
+  },
+  {
+    "label": "zoom-200: host stays white",
+    "pass": true
+  },
+  {
+    "label": "zoom-200: independent launcher color",
+    "pass": true
+  },
+  {
+    "label": "zoom-200: launcher text is readable",
+    "pass": true
+  },
+  {
+    "label": "zoom-200: frame fits",
+    "pass": true
+  },
+  {
+    "label": "zoom-200: ready composer visible without scrolling",
+    "pass": true
+  },
+  {
+    "label": "zoom-200: base and essential text sizes",
+    "pass": true
+  },
+  {
+    "label": "zoom-200: browser preference reaches iframe",
+    "pass": true
+  },
+  {
+    "label": "zoom-200: white window surfaces and light form controls",
+    "pass": true
+  },
+  {
+    "label": "zoom-200: loader frame stays white",
+    "pass": true
+  },
+  {
+    "label": "zoom-200: concise disclosure present before send without origin or port",
+    "pass": true
+  },
+  {
+    "label": "zoom-200: restricted sandbox",
+    "pass": true
+  },
+  {
+    "label": "zoom-200: message metadata remains legible",
+    "pass": true
+  },
+  {
+    "label": "zoom-200: long conversation scrolls independently",
+    "pass": true
+  },
+  {
+    "label": "zoom-200: handoff menu opens with aria-expanded",
+    "pass": true
+  },
+  {
+    "label": "zoom-200: WhatsApp is unavailable and disabled, never an operational channel",
+    "pass": true
+  },
+  {
+    "label": "zoom-200: no channel is selected before the visitor chooses one",
+    "pass": true
+  },
+  {
+    "label": "zoom-200: clicking WhatsApp does nothing",
+    "pass": true
+  },
+  {
+    "label": "zoom-200: Escape closes the handoff menu",
+    "pass": true
+  },
+  {
+    "label": "zoom-200: Escape returns focus to the trigger",
+    "pass": true
+  },
+  {
+    "label": "zoom-200: handoff menu reopens",
+    "pass": true
+  },
+  {
+    "label": "zoom-200: outside click closes the handoff menu",
+    "pass": true
+  },
+  {
+    "label": "zoom-200: By email opens form and consent starts unchecked",
+    "pass": true
+  },
+  {
+    "label": "zoom-200: composer stays visible with the handoff panel open",
+    "pass": true
+  },
+  {
+    "label": "zoom-200: consent gate",
+    "pass": true
+  },
+  {
+    "label": "zoom-200: handoff button reachable by scrolling",
+    "pass": true
+  },
+  {
+    "label": "zoom-200: launcher closes",
+    "pass": true
+  },
+  {
+    "label": "dark preference: actual sample host stays white with light controls",
+    "pass": true
+  }
+]

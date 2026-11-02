@@ -1,0 +1,95 @@
+python3 scripts/check.py unit
+test_command_failure_propagates_and_live_credentials_are_not_inherited (test_check.CheckAdapterTests.test_command_failure_propagates_and_live_credentials_are_not_inherited) ... ok
+test_format_is_nonmutating_and_checks_newline (test_check.CheckAdapterTests.test_format_is_nonmutating_and_checks_newline) ... ok
+test_fuzz_discovers_exact_targets_and_budgets (test_check.CheckAdapterTests.test_fuzz_discovers_exact_targets_and_budgets) ... ok
+test_go_target_listing_ignores_package_output (test_check.CheckAdapterTests.test_go_target_listing_ignores_package_output) ... ok
+test_gofmt_failure_does_not_write_source (test_check.CheckAdapterTests.test_gofmt_failure_does_not_write_source) ... ok
+test_manifest_accepts_baseline (test_check.CheckAdapterTests.test_manifest_accepts_baseline) ... ok
+test_manifest_rejects_missing_command_and_overlap (test_check.CheckAdapterTests.test_manifest_rejects_missing_command_and_overlap) ... ok
+test_missing_packages_is_failure (test_check.CheckAdapterTests.test_missing_packages_is_failure) ... ok
+test_node_suites_require_real_owned_test_files (test_check.CheckAdapterTests.test_node_suites_require_real_owned_test_files) ... ok
+test_source_discovery_excludes_shared_state (test_check.CheckAdapterTests.test_source_discovery_excludes_shared_state) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.055s
+
+OK
+ok  	ai-virtual-assistant/cmd/assistant	8.439s
+?   	ai-virtual-assistant/database	[no test files]
+ok  	ai-virtual-assistant/internal/chat	6.656s
+ok  	ai-virtual-assistant/web	1.015s
+✔ handoff affordance appears only with a live conversation and opens a compact channel menu (112.887354ms)
+✔ By WhatsApp is visibly unavailable, disabled, and collects no phone number (11.408925ms)
+✔ the handoff menu opens only after a conversation exists and no server event opens it (7.135435ms)
+✔ Escape requests window close even with handoff form open; other keys leave it open (10.533518ms)
+✔ an outside click closes the handoff menu while a click inside the handoff region does not (3.428618ms)
+✔ an open handoff menu never disables or mutates the chat send path (3.031859ms)
+✔ handoff menu closes on Escape and outside click, and never auto-opens on a provider failure (4.109327ms)
+✔ email mirror validation equals the server canonical rules (1.451101ms)
+✔ note mirror validation trims once and enforces code points and bytes (1.084906ms)
+✔ ticket envelope validation accepts only the honest slice-2 shape (0.806518ms)
+✔ consent gate fails closed and only a literally checked box sends one validated POST (9.278598ms)
+✔ client bounds block guaranteed-invalid requests before any fetch, values keep visitor case (6.694326ms)
+✔ a recorded request renders the server message verbatim with a visitor-sane time and keeps chat intact (4.369446ms)
+✔ every server value stays inert text without markup interpretation (4.603713ms)
+✔ a non-contract 201 claim (sent outcome or broken envelope) fails closed (5.737589ms)
+✔ 400 shows safe local wording with no automatic resend, then retries explicitly (3.642335ms)
+✔ 409 explains the 5-request bound and that a matching repeat replays the stored ticket (3.472692ms)
+✔ 429 honors bounded Retry-After on its own cooldown without touching the chat send path (5.282219ms)
+✔ 503 offers an explicit retry only; transport loss never auto-resends (6.781957ms)
+✔ 401 follows the existing terminal handling for the whole widget (3.413958ms)
+✔ resubmitting a stored pair replays the stored ticket as a feature, not an error (3.852715ms)
+✔ a differently cased repeat of the same canonical pair replays the same stored ticket (3.780924ms)
+✔ submitting a second pair appends, and resubmitting the first replays its own ticket (12.014963ms)
+✔ escalation runs without disabling or mutating the chat send path, both directions (5.973332ms)
+✔ pagehide aborts an in-flight escalation request like any chat request (2.412167ms)
+✔ defensive form submission shares the identical validated consent path (2.717609ms)
+✔ rating response requires exact server fields, canonical comment and UTC timestamp (6.431989ms)
+✔ comment bounds are applied after trimming in Unicode code points and UTF-8 bytes (1.556569ms)
+✔ rating stays hidden before a completed turn and is available after clarification, including history (121.731741ms)
+✔ rating revision, transport retry and malformed 200 do not invent success (7.772788ms)
+✔ rating double-click is locked, cooldown is bounded, and chat remains available (11.082371ms)
+✔ overlapping rating and escalation cooldown timers expire independently (8.818761ms)
+✔ rating unauthorized response is terminal and never reuses guest access (5.633911ms)
+✔ origin and optional context boundaries accept only bounded declared values (7.873776ms)
+✔ pre-send transmission text identifies server and possible provider without rendering an origin or port (8.299626ms)
+✔ message, sources and text validation reject unsafe or incoherent envelopes (4.159659ms)
+✔ bounded retry-after parsing never produces an infinite or huge wait (0.610825ms)
+✔ loading disables form, then a validated creation and initial history enable sends (97.23579ms)
+✔ Send click validates and sends directly without a native form submit event (16.406701ms)
+✔ Textarea ctrlKey+Enter uses the shared validated send path exactly once (8.343584ms)
+✔ Textarea metaKey+Enter uses the shared validated send path exactly once (9.435147ms)
+✔ Textarea Enter preserves newlines and ignores composition, repeats and unrelated shortcuts (3.00987ms)
+✔ AI answer and dynamic source titles render as text, never HTML (3.975948ms)
+✔ clarification is visibly not an AI answer and has no invented sources (3.027777ms)
+✔ double submit is locked and a rejected text does not allocate a request (3.365891ms)
+✔ only a genuinely new submission allocates a new cryptographic UUID (5.272633ms)
+✔ ambiguous transport first reads history and recovers a completed turn with no repost (2.976852ms)
+✔ uncommitted transport failure retries identical ID and trimmed text without duplicate bubbles (3.429246ms)
+✔ uncertain delivery plus failed history blocks new sends until history is checked (2.736534ms)
+✔ provider 503 is unavailable, not fake success, and raw server message is ignored (3.372143ms)
+✔ busy response reconciles GET and enforces bounded cooldown with no automatic paid retry (3.43027ms)
+✔ 429 holds same question and does not automatically retry or fetch new history (2.383306ms)
+✔ invalid response source fails before any answer or link enters DOM (3.938903ms)
+✔ initial history failure blocks sending and provides a history-only retry (1.949713ms)
+✔ history is ascending with load-older pagination and no duplicate rendering (2.553413ms)
+✔ creation retry is explicit and starts fresh without storing a capability externally (1.906815ms)
+✔ authorization failure and conversation-full are terminal safe failures (4.941053ms)
+✔ bounded timeout aborts an in-flight POST and triggers history reconciliation only (2.083086ms)
+✔ pagehide aborts the request and clears private access without further fetches (2.872361ms)
+✔ loader invalid context is visible and does not create iframe or messages (4.070027ms)
+✔ loader toggle reuses one iframe, accessible control and conversation handshake (3.638017ms)
+✔ launcher Escape closes an open window and focuses launcher; other keys do nothing (2.313727ms)
+✔ iframe Escape requests host close without a menu or a send, only after init (2.362391ms)
+✔ header close click uses exact initialized close message and preserves transcript and drafts (3.287759ms)
+✔ both close triggers are inert after terminal failure or pagehide (2.434307ms)
+✔ bounded property sweep: arbitrary malformed boundary values never fetch or crash (24.161207ms)
+ℹ tests 66
+ℹ suites 0
+ℹ pass 66
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 519.672649
+unit: PASS

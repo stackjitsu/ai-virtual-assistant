@@ -76,6 +76,7 @@ type Store interface {
 	CreateEscalation(context.Context, Escalation) (Escalation, error)
 	FindEscalation(context.Context, string, string, string) (Escalation, error)
 	EscalationCount(context.Context, string) (int, error)
+	SaveRating(context.Context, Rating) (Rating, error)
 }
 type ComposeInput struct {
 	Question  string      `json:"question"`

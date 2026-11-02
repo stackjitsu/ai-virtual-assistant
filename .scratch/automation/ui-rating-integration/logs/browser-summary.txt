@@ -1,0 +1,3 @@
+rating-round1 exit=0
+sandbox-send-round1 exit=0
+widget-visual-round1 exit=0

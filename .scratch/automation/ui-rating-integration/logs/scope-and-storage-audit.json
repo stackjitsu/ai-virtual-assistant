@@ -1,0 +1,83 @@
+{
+  "ui_parent": "6507570e70151d14f68f8e89944b54514613a055",
+  "rating_parent": "eface12be8e508a31efa6a8d1ceb7bd2daf07be5",
+  "backend_byte_identical_to_rating": [
+    "cmd/assistant/main.go",
+    "cmd/assistant/main_test.go",
+    "database/embed.go",
+    "database/migrations/001_initial.sql",
+    "database/migrations/002_escalation.sql",
+    "database/migrations/003_ratings.sql",
+    "internal/chat/escalation.go",
+    "internal/chat/escalation_test.go",
+    "internal/chat/http.go",
+    "internal/chat/http_test.go",
+    "internal/chat/import.go",
+    "internal/chat/import_test.go",
+    "internal/chat/provider.go",
+    "internal/chat/provider_test.go",
+    "internal/chat/rating.go",
+    "internal/chat/rating_store.go",
+    "internal/chat/rating_test.go",
+    "internal/chat/records.go",
+    "internal/chat/records_test.go",
+    "internal/chat/store.go",
+    "internal/chat/store_test.go",
+    "internal/chat/turso.go",
+    "internal/chat/turso_test.go"
+  ],
+  "coordinator_harness_byte_identical_to_ui": [
+    ".harness/blockers.md",
+    ".harness/goal.md",
+    ".harness/observations/INBOX.md",
+    ".harness/plan.md",
+    ".harness/tasks.json",
+    ".harness/tasks.schema.json"
+  ],
+  "rating_web_byte_identical_to_rating": [
+    "web/assets/protocol.mjs",
+    "web/tests/rating.test.mjs"
+  ],
+  "approved_ui_web_byte_identical_to_ui": [
+    "web/README.md",
+    "web/assets/loader.js",
+    "web/tests/embedding.contract.test.mjs",
+    "web/tests/escalation.test.mjs",
+    "web/tests/widget.test.mjs",
+    "web/tests/sandbox-send.browser.mjs",
+    "web/tests/widget-visual.browser.mjs"
+  ],
+  "chat_contract_byte_identical_to_ui": [
+    "docs/contracts/chat.md"
+  ],
+  "approved_close_path_preserved_verbatim": true,
+  "rating_database": {
+    "counts": {
+      "conversations": 2,
+      "turns": 1,
+      "ratings": 1,
+      "escalation_tickets": 0
+    },
+    "final_row": {
+      "rating": 2,
+      "comment": "Revised by trusted input",
+      "rated_at": "2026-11-02T11:29:23.272467807Z"
+    },
+    "replay_and_process_restart_envelopes_unchanged": true
+  },
+  "browser_checks": {
+    "rating": {
+      "passed": 61,
+      "failed": 0
+    },
+    "sandbox-send": {
+      "passed": 48,
+      "failed": 0
+    },
+    "widget-visual": {
+      "passed": 208,
+      "failed": 0
+    }
+  },
+  "source_manifest_sha256": "43b848f978bac49043b31e0be40337aa72d653775fb0befaf05404fdb3f0169f"
+}
