@@ -1,0 +1,13 @@
+2026-11-02T10:33:30Z
+12532877e0e4f3ed2e4f7a880567c98a6dfce29e
+?? .scratch/automation/
+98bc40d3700374850f3c8bdc29a2122a418d2c37c2bad6c2fd9625912adb1ad6  .scratch/automation/acceptance-inputs/backend.patch
+dab81ae7b84b3517a48eadc3ed8fa4278df50eb008a634ddb910086ae4b3efbc  .scratch/automation/acceptance-inputs/browser.patch
+ internal/chat/rating_test.go |  211 ++++++++++++++++++++++++++++++++++++------
+ 1 file changed, 183 insertions(+), 28 deletions(-)
+ web/tests/rating.browser.mjs |  499 +++++++++++++++++++++++++++++++-----------
+ 1 file changed, 374 insertions(+), 125 deletions(-)
+go version go1.26.3 linux/amd64
+v26.1.0
+Chromium 154.0.8037.97 Arch Linux
+tmpdir_exists_exit=0

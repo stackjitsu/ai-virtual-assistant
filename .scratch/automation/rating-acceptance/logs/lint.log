@@ -1,0 +1,2 @@
+python3 scripts/check.py lint
+lint: PASS

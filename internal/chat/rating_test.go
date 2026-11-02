@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
+	"reflect"
 	"strings"
-	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -111,6 +111,82 @@ func TestContractHTTPRatingValidationAuthorizationAndRevision(t *testing.T) {
 	assertCode(t, perform(h, "POST", ratingPath(id), otherCap, `{"rating":5}`), 401, "unauthorized")
 }
 
+// Read the persisted columns directly, independently of SaveRating's RETURNING
+// decoder, so durability checks cannot accidentally perform another write.
+func persistedRating(t *testing.T, s *SQLStore, id string) Rating {
+	t.Helper()
+	var r Rating
+	var timestamp string
+	if err := s.db.QueryRow(`SELECT conversation_id,rating,comment,rated_at FROM ratings WHERE conversation_id=?`, id).
+		Scan(&r.ConversationID, &r.Value, &r.Comment, &timestamp); err != nil {
+		t.Fatal("read persisted rating", err)
+	}
+	var err error
+	r.RatedAt, err = time.Parse(time.RFC3339Nano, timestamp)
+	if err != nil || timestamp != ratingTimestamp(r.RatedAt) {
+		t.Fatalf("noncanonical persisted timestamp %q: %v", timestamp, err)
+	}
+	return r
+}
+
+func assertSameRating(t *testing.T, got, want Rating) {
+	t.Helper()
+	if got.ConversationID != want.ConversationID || got.Value != want.Value || got.Comment != want.Comment ||
+		got.RatedAt.IsZero() || !got.RatedAt.Equal(want.RatedAt) {
+		t.Fatalf("rating mismatch: got %+v, want %+v", got, want)
+	}
+}
+
+// Every submission has a unique comment and the same old proposed clock. Thus
+// distinct serialized replacements must advance the stored clock, and the
+// greatest returned timestamp identifies the last committed row, not merely the
+// goroutine whose response happened to arrive last.
+func concurrentDistinctRatings(t *testing.T, stores []*SQLStore, initial Rating) Rating {
+	t.Helper()
+	type outcome struct {
+		submitted Rating
+		stored    Rating
+		err       error
+	}
+	const writes = 24
+	start := make(chan struct{})
+	results := make(chan outcome, writes)
+	for i := 0; i < writes; i++ {
+		proposed := Rating{initial.ConversationID, (i % 5) + 1, fmt.Sprintf("revision %d", i), time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)}
+		go func(s *SQLStore, submitted Rating) {
+			<-start
+			r, err := s.SaveRating(context.Background(), submitted)
+			results <- outcome{submitted, r, err}
+		}(stores[i%len(stores)], proposed)
+	}
+	close(start)
+	latest := initial
+	seen := make(map[string]bool, writes)
+	for i := 0; i < writes; i++ {
+		result := <-results
+		if result.err != nil {
+			t.Errorf("concurrent rating %+v: %v", result.submitted, result.err)
+			continue
+		}
+		r := result.stored
+		if r.ConversationID != result.submitted.ConversationID || r.Value != result.submitted.Value || r.Comment != result.submitted.Comment {
+			t.Errorf("concurrent response mixed/replaced fields: submitted %+v, returned %+v", result.submitted, r)
+		}
+		stamp := ratingTimestamp(r.RatedAt)
+		if !r.RatedAt.After(initial.RatedAt) || seen[stamp] {
+			t.Errorf("distinct revision reused/nonmonotonic timestamp: %+v", r)
+		}
+		seen[stamp] = true
+		if r.RatedAt.After(latest.RatedAt) {
+			latest = r
+		}
+	}
+	if t.Failed() {
+		t.FailNow()
+	}
+	return latest
+}
+
 func TestSQLiteRatingAtomicRestartAndMigration(t *testing.T) {
 	ctx := context.Background()
 	path := filepath.Join(t.TempDir(), "rating.db")
@@ -118,6 +194,7 @@ func TestSQLiteRatingAtomicRestartAndMigration(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer func() { _ = closeStore() }()
 	if err := s.Migrate(ctx); err != nil {
 		t.Fatal(err)
 	}
@@ -129,7 +206,8 @@ func TestSQLiteRatingAtomicRestartAndMigration(t *testing.T) {
 	turn := testTurn(c, "request_001", "start", 1)
 	turn.Assistant.Status = "needs_clarification"
 	turn.Assistant.Sources = []Source{}
-	if _, err := s.CompleteTurn(ctx, turn, 0); err != nil {
+	storedTurn, err := s.CompleteTurn(ctx, turn, 0)
+	if err != nil {
 		t.Fatal(err)
 	}
 	first, err := s.SaveRating(ctx, proposed)
@@ -155,30 +233,17 @@ func TestSQLiteRatingAtomicRestartAndMigration(t *testing.T) {
 	if _, err := s.db.Exec(`DROP TRIGGER reject_rating`); err != nil {
 		t.Fatal(err)
 	}
-	var wg sync.WaitGroup
-	results := make(chan Rating, 24)
-	errs := make(chan error, 24)
-	for i := 0; i < 24; i++ {
-		wg.Add(1)
-		go func(n int) {
-			defer wg.Done()
-			r, err := s.SaveRating(ctx, Rating{c.ID, (n % 5) + 1, fmt.Sprintf("revision %d", n), time.Now().UTC()})
-			results <- r
-			errs <- err
-		}(i)
+	assertSameRating(t, persistedRating(t, s, c.ID), second)
+	otherStore, closeOther, err := OpenSQLite(path)
+	if err != nil {
+		t.Fatal(err)
 	}
-	wg.Wait()
-	close(results)
-	close(errs)
-	for err := range errs {
-		if err != nil {
-			t.Fatal("concurrent rating", err)
-		}
-	}
-	for r := range results {
-		if !strings.HasPrefix(r.Comment, "revision ") || r.Value < 1 || r.Value > 5 {
-			t.Fatal("mixed row", r)
-		}
+	defer func() { _ = closeOther() }()
+	lastCommitted := concurrentDistinctRatings(t, []*SQLStore{s, otherStore}, second)
+	beforeRestart := persistedRating(t, s, c.ID)
+	assertSameRating(t, beforeRestart, lastCommitted)
+	if err := closeOther(); err != nil {
+		t.Fatal(err)
 	}
 	if err := closeStore(); err != nil {
 		t.Fatal(err)
@@ -187,9 +252,25 @@ func TestSQLiteRatingAtomicRestartAndMigration(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func() { _ = closeStore() }()
 	if err := s.Migrate(ctx); err != nil {
 		t.Fatal(err)
+	}
+	assertSameRating(t, persistedRating(t, s, c.ID), beforeRestart)
+	replayInput := beforeRestart
+	replayInput.RatedAt = time.Now().UTC().Add(time.Hour)
+	replayed, err := s.SaveRating(ctx, replayInput)
+	if err != nil {
+		t.Fatal("post-restart replay", err)
+	}
+	assertSameRating(t, replayed, beforeRestart)
+	assertSameRating(t, persistedRating(t, s, c.ID), beforeRestart)
+	reopenedTurn, err := s.FindTurn(ctx, c.ID, turn.RequestID)
+	if err != nil || !reflect.DeepEqual(reopenedTurn, storedTurn) {
+		t.Fatalf("rating writes changed completed turn: %+v, %v", reopenedTurn, err)
+	}
+	reopenedConversation, err := s.Conversation(ctx, c.ID)
+	if err != nil || !reflect.DeepEqual(reopenedConversation, c) {
+		t.Fatalf("rating writes changed conversation: %+v, %v", reopenedConversation, err)
 	}
 	var count int
 	if err := s.db.QueryRow(`SELECT COUNT(*) FROM ratings WHERE conversation_id=?`, c.ID).Scan(&count); err != nil || count != 1 {
@@ -275,6 +356,50 @@ func TestContractRatingAuthorizationBeforeStorage(t *testing.T) {
 	if spy.writes.Load() != 1 {
 		t.Fatal("authorized rating did not reach storage")
 	}
+}
+
+func TestContractHTTPRatingStorageFailureReturnsSafe503(t *testing.T) {
+	s := testStore(t)
+	h := escalationHandler(t, s, nil)
+	id, capability := createHTTP(t, h, `{}`)
+	turnPath := "/api/v1/conversations/" + id + "/messages"
+	turnResponse := perform(h, "POST", turnPath, capability, postBody("request_001", "unknown question"))
+	if turnResponse.Code != 200 {
+		t.Fatalf("completed clarification: %d %s", turnResponse.Code, turnResponse.Body)
+	}
+	path := ratingPath(id)
+	ratingResponse(t, perform(h, "POST", path, capability, `{"rating":5,"comment":"original"}`))
+	before := persistedRating(t, s, id)
+	historyBefore, err := s.History(context.Background(), id, 100, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Fail an actual authorized SQL write; do not substitute a canned HTTP
+	// response. Neither adapter diagnostics nor submitted private text may leak.
+	if _, err := s.db.Exec(`CREATE TRIGGER reject_rating BEFORE UPDATE ON ratings BEGIN SELECT RAISE(ABORT,'private SQL fixture-secret stack trace'); END`); err != nil {
+		t.Fatal(err)
+	}
+	w := perform(h, "POST", path, capability, `{"rating":1,"comment":"private rating comment"}`)
+	assertCode(t, w, 503, "storage_unavailable")
+	const safeBody = `{"error":{"code":"storage_unavailable","message":"The assistant is temporarily unavailable. Please retry."}}`
+	if strings.TrimSpace(w.Body.String()) != safeBody {
+		t.Fatalf("storage failure body is not the fixed safe envelope: %s", w.Body)
+	}
+	for _, private := range []string{capability, id, "private rating comment", "original", "private SQL", "fixture-secret", "stack trace"} {
+		if strings.Contains(w.Body.String(), private) {
+			t.Fatalf("storage error leaked %q", private)
+		}
+	}
+	assertSameRating(t, persistedRating(t, s, id), before)
+	historyAfter, err := s.History(context.Background(), id, 100, nil)
+	if err != nil || !reflect.DeepEqual(historyAfter, historyBefore) {
+		t.Fatalf("rating failure changed chat history: %+v, %v", historyAfter, err)
+	}
+	if _, err := s.db.Exec(`DROP TRIGGER reject_rating`); err != nil {
+		t.Fatal(err)
+	}
+	ratingResponse(t, perform(h, "POST", path, capability, `{"rating":5,"comment":"original"}`))
+	assertSameRating(t, persistedRating(t, s, id), before)
 }
 
 func TestContractRatingRejectedAttemptsShareBoundedWindow(t *testing.T) {
@@ -382,9 +507,39 @@ func TestContractRatingTursoLoopbackAndUncertainCommit(t *testing.T) {
 	if _, err := s.SaveRating(ctx, proposed); !errors.Is(err, ErrUnavailable) {
 		t.Fatal("uncertain commit claimed success", err)
 	}
+	// Observe the hidden committed row before retrying. A merely successful
+	// retry with a later timestamp would not prove replay rather than rewrite.
+	uncertain := persistedRating(t, backing, c.ID)
+	if uncertain.ConversationID != c.ID || uncertain.Value != proposed.Value || uncertain.Comment != proposed.Comment || !uncertain.RatedAt.After(first.RatedAt) {
+		t.Fatalf("uncertain write did not commit the proposed whole row: %+v", uncertain)
+	}
+	proposed.RatedAt = uncertain.RatedAt.Add(time.Hour)
 	confirmed, err := s.SaveRating(ctx, proposed)
-	if err != nil || confirmed.Comment != "updated" || !confirmed.RatedAt.After(first.RatedAt) {
-		t.Fatal("retry did not return stored revision", confirmed, err)
+	if err != nil {
+		t.Fatal("retry did not return stored revision", err)
+	}
+	assertSameRating(t, confirmed, uncertain)
+	assertSameRating(t, persistedRating(t, backing, c.ID), uncertain)
+
+	// Exercise concurrent HTTP pipelines, not just the SQLite adapter. Two
+	// clients share only the loopback primary fixture and disposable database.
+	other := newTurso(fixture.URL+"/v2/pipeline", "fixture-token", fixture.Client())
+	lastCommitted := concurrentDistinctRatings(t, []*SQLStore{s, other}, confirmed)
+	assertSameRating(t, persistedRating(t, backing, c.ID), lastCommitted)
+	replayInput := lastCommitted
+	replayInput.RatedAt = lastCommitted.RatedAt.Add(time.Hour)
+	replayed, err := other.SaveRating(ctx, replayInput)
+	if err != nil {
+		t.Fatal("remote concurrent final replay", err)
+	}
+	assertSameRating(t, replayed, lastCommitted)
+	assertSameRating(t, persistedRating(t, backing, c.ID), lastCommitted)
+	var ratings, turns int
+	if err := backing.db.QueryRow(`SELECT COUNT(*) FROM ratings WHERE conversation_id=?`, c.ID).Scan(&ratings); err != nil || ratings != 1 {
+		t.Fatal("remote single rating row", ratings, err)
+	}
+	if err := backing.db.QueryRow(`SELECT COUNT(*) FROM turns WHERE conversation_id=?`, c.ID).Scan(&turns); err != nil || turns != 1 {
+		t.Fatal("remote rating changed turns", turns, err)
 	}
 }
 

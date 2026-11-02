@@ -1,0 +1,5 @@
+Before cleanup 2026-11-02T10:41:35Z
+2.7M	/home/me/Documents/agent-worktrees/assistant-rating-acceptance/.scratch/automation/rating-acceptance/rating/chromium-profile
+2.7M	/home/me/Documents/agent-worktrees/assistant-rating-acceptance/.scratch/automation/rating-acceptance/sandbox-send/chromium-profile
+2.7M	/home/me/Documents/agent-worktrees/assistant-rating-acceptance/.scratch/automation/rating-acceptance/widget-visual/chromium-profile
+Removed only these three validator-owned disposable profiles; retained logs, SQLite fixtures, JSON and screenshots. No child processes matched evidence path.

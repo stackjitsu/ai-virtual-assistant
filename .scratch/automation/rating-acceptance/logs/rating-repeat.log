@@ -1,0 +1,342 @@
+=== RUN   TestContractHTTPRatingValidationAuthorizationAndRevision
+--- PASS: TestContractHTTPRatingValidationAuthorizationAndRevision (0.64s)
+=== RUN   TestSQLiteRatingAtomicRestartAndMigration
+--- PASS: TestSQLiteRatingAtomicRestartAndMigration (0.65s)
+=== RUN   TestSQLiteRatingConcurrentIdenticalWritesReplaySingleTimestamp
+--- PASS: TestSQLiteRatingConcurrentIdenticalWritesReplaySingleTimestamp (0.46s)
+=== RUN   TestContractRatingAuthorizationBeforeStorage
+--- PASS: TestContractRatingAuthorizationBeforeStorage (0.07s)
+=== RUN   TestContractHTTPRatingStorageFailureReturnsSafe503
+--- PASS: TestContractHTTPRatingStorageFailureReturnsSafe503 (0.12s)
+=== RUN   TestContractRatingRejectedAttemptsShareBoundedWindow
+--- PASS: TestContractRatingRejectedAttemptsShareBoundedWindow (0.07s)
+=== RUN   TestContractRatingTursoLoopbackAndUncertainCommit
+--- PASS: TestContractRatingTursoLoopbackAndUncertainCommit (0.44s)
+=== RUN   TestSQLiteRatingUpgradeFromV2AndMissingRemoteSchema
+--- PASS: TestSQLiteRatingUpgradeFromV2AndMissingRemoteSchema (0.09s)
+=== RUN   TestContractHTTPRatingValidationAuthorizationAndRevision
+--- PASS: TestContractHTTPRatingValidationAuthorizationAndRevision (0.26s)
+=== RUN   TestSQLiteRatingAtomicRestartAndMigration
+--- PASS: TestSQLiteRatingAtomicRestartAndMigration (0.30s)
+=== RUN   TestSQLiteRatingConcurrentIdenticalWritesReplaySingleTimestamp
+--- PASS: TestSQLiteRatingConcurrentIdenticalWritesReplaySingleTimestamp (0.38s)
+=== RUN   TestContractRatingAuthorizationBeforeStorage
+--- PASS: TestContractRatingAuthorizationBeforeStorage (0.11s)
+=== RUN   TestContractHTTPRatingStorageFailureReturnsSafe503
+--- PASS: TestContractHTTPRatingStorageFailureReturnsSafe503 (0.10s)
+=== RUN   TestContractRatingRejectedAttemptsShareBoundedWindow
+--- PASS: TestContractRatingRejectedAttemptsShareBoundedWindow (0.07s)
+=== RUN   TestContractRatingTursoLoopbackAndUncertainCommit
+--- PASS: TestContractRatingTursoLoopbackAndUncertainCommit (0.46s)
+=== RUN   TestSQLiteRatingUpgradeFromV2AndMissingRemoteSchema
+--- PASS: TestSQLiteRatingUpgradeFromV2AndMissingRemoteSchema (0.08s)
+=== RUN   TestContractHTTPRatingValidationAuthorizationAndRevision
+--- PASS: TestContractHTTPRatingValidationAuthorizationAndRevision (0.24s)
+=== RUN   TestSQLiteRatingAtomicRestartAndMigration
+--- PASS: TestSQLiteRatingAtomicRestartAndMigration (0.31s)
+=== RUN   TestSQLiteRatingConcurrentIdenticalWritesReplaySingleTimestamp
+--- PASS: TestSQLiteRatingConcurrentIdenticalWritesReplaySingleTimestamp (0.29s)
+=== RUN   TestContractRatingAuthorizationBeforeStorage
+--- PASS: TestContractRatingAuthorizationBeforeStorage (0.06s)
+=== RUN   TestContractHTTPRatingStorageFailureReturnsSafe503
+--- PASS: TestContractHTTPRatingStorageFailureReturnsSafe503 (0.12s)
+=== RUN   TestContractRatingRejectedAttemptsShareBoundedWindow
+--- PASS: TestContractRatingRejectedAttemptsShareBoundedWindow (0.07s)
+=== RUN   TestContractRatingTursoLoopbackAndUncertainCommit
+--- PASS: TestContractRatingTursoLoopbackAndUncertainCommit (0.49s)
+=== RUN   TestSQLiteRatingUpgradeFromV2AndMissingRemoteSchema
+--- PASS: TestSQLiteRatingUpgradeFromV2AndMissingRemoteSchema (0.17s)
+=== RUN   TestContractHTTPRatingValidationAuthorizationAndRevision
+--- PASS: TestContractHTTPRatingValidationAuthorizationAndRevision (0.19s)
+=== RUN   TestSQLiteRatingAtomicRestartAndMigration
+--- PASS: TestSQLiteRatingAtomicRestartAndMigration (0.32s)
+=== RUN   TestSQLiteRatingConcurrentIdenticalWritesReplaySingleTimestamp
+--- PASS: TestSQLiteRatingConcurrentIdenticalWritesReplaySingleTimestamp (0.29s)
+=== RUN   TestContractRatingAuthorizationBeforeStorage
+--- PASS: TestContractRatingAuthorizationBeforeStorage (0.06s)
+=== RUN   TestContractHTTPRatingStorageFailureReturnsSafe503
+--- PASS: TestContractHTTPRatingStorageFailureReturnsSafe503 (0.09s)
+=== RUN   TestContractRatingRejectedAttemptsShareBoundedWindow
+--- PASS: TestContractRatingRejectedAttemptsShareBoundedWindow (0.06s)
+=== RUN   TestContractRatingTursoLoopbackAndUncertainCommit
+--- PASS: TestContractRatingTursoLoopbackAndUncertainCommit (0.40s)
+=== RUN   TestSQLiteRatingUpgradeFromV2AndMissingRemoteSchema
+--- PASS: TestSQLiteRatingUpgradeFromV2AndMissingRemoteSchema (0.06s)
+=== RUN   TestContractHTTPRatingValidationAuthorizationAndRevision
+--- PASS: TestContractHTTPRatingValidationAuthorizationAndRevision (0.24s)
+=== RUN   TestSQLiteRatingAtomicRestartAndMigration
+--- PASS: TestSQLiteRatingAtomicRestartAndMigration (0.34s)
+=== RUN   TestSQLiteRatingConcurrentIdenticalWritesReplaySingleTimestamp
+--- PASS: TestSQLiteRatingConcurrentIdenticalWritesReplaySingleTimestamp (0.39s)
+=== RUN   TestContractRatingAuthorizationBeforeStorage
+--- PASS: TestContractRatingAuthorizationBeforeStorage (0.06s)
+=== RUN   TestContractHTTPRatingStorageFailureReturnsSafe503
+--- PASS: TestContractHTTPRatingStorageFailureReturnsSafe503 (0.09s)
+=== RUN   TestContractRatingRejectedAttemptsShareBoundedWindow
+--- PASS: TestContractRatingRejectedAttemptsShareBoundedWindow (0.06s)
+=== RUN   TestContractRatingTursoLoopbackAndUncertainCommit
+--- PASS: TestContractRatingTursoLoopbackAndUncertainCommit (0.61s)
+=== RUN   TestSQLiteRatingUpgradeFromV2AndMissingRemoteSchema
+--- PASS: TestSQLiteRatingUpgradeFromV2AndMissingRemoteSchema (0.17s)
+=== RUN   TestContractHTTPRatingValidationAuthorizationAndRevision
+--- PASS: TestContractHTTPRatingValidationAuthorizationAndRevision (0.16s)
+=== RUN   TestSQLiteRatingAtomicRestartAndMigration
+--- PASS: TestSQLiteRatingAtomicRestartAndMigration (0.20s)
+=== RUN   TestSQLiteRatingConcurrentIdenticalWritesReplaySingleTimestamp
+--- PASS: TestSQLiteRatingConcurrentIdenticalWritesReplaySingleTimestamp (0.29s)
+=== RUN   TestContractRatingAuthorizationBeforeStorage
+--- PASS: TestContractRatingAuthorizationBeforeStorage (0.06s)
+=== RUN   TestContractHTTPRatingStorageFailureReturnsSafe503
+--- PASS: TestContractHTTPRatingStorageFailureReturnsSafe503 (0.22s)
+=== RUN   TestContractRatingRejectedAttemptsShareBoundedWindow
+--- PASS: TestContractRatingRejectedAttemptsShareBoundedWindow (0.06s)
+=== RUN   TestContractRatingTursoLoopbackAndUncertainCommit
+--- PASS: TestContractRatingTursoLoopbackAndUncertainCommit (0.36s)
+=== RUN   TestSQLiteRatingUpgradeFromV2AndMissingRemoteSchema
+--- PASS: TestSQLiteRatingUpgradeFromV2AndMissingRemoteSchema (0.07s)
+=== RUN   TestContractHTTPRatingValidationAuthorizationAndRevision
+--- PASS: TestContractHTTPRatingValidationAuthorizationAndRevision (0.23s)
+=== RUN   TestSQLiteRatingAtomicRestartAndMigration
+--- PASS: TestSQLiteRatingAtomicRestartAndMigration (0.38s)
+=== RUN   TestSQLiteRatingConcurrentIdenticalWritesReplaySingleTimestamp
+--- PASS: TestSQLiteRatingConcurrentIdenticalWritesReplaySingleTimestamp (0.33s)
+=== RUN   TestContractRatingAuthorizationBeforeStorage
+--- PASS: TestContractRatingAuthorizationBeforeStorage (0.07s)
+=== RUN   TestContractHTTPRatingStorageFailureReturnsSafe503
+--- PASS: TestContractHTTPRatingStorageFailureReturnsSafe503 (0.13s)
+=== RUN   TestContractRatingRejectedAttemptsShareBoundedWindow
+--- PASS: TestContractRatingRejectedAttemptsShareBoundedWindow (0.11s)
+=== RUN   TestContractRatingTursoLoopbackAndUncertainCommit
+--- PASS: TestContractRatingTursoLoopbackAndUncertainCommit (0.58s)
+=== RUN   TestSQLiteRatingUpgradeFromV2AndMissingRemoteSchema
+--- PASS: TestSQLiteRatingUpgradeFromV2AndMissingRemoteSchema (0.09s)
+=== RUN   TestContractHTTPRatingValidationAuthorizationAndRevision
+--- PASS: TestContractHTTPRatingValidationAuthorizationAndRevision (0.39s)
+=== RUN   TestSQLiteRatingAtomicRestartAndMigration
+--- PASS: TestSQLiteRatingAtomicRestartAndMigration (0.27s)
+=== RUN   TestSQLiteRatingConcurrentIdenticalWritesReplaySingleTimestamp
+--- PASS: TestSQLiteRatingConcurrentIdenticalWritesReplaySingleTimestamp (0.31s)
+=== RUN   TestContractRatingAuthorizationBeforeStorage
+--- PASS: TestContractRatingAuthorizationBeforeStorage (0.06s)
+=== RUN   TestContractHTTPRatingStorageFailureReturnsSafe503
+--- PASS: TestContractHTTPRatingStorageFailureReturnsSafe503 (0.10s)
+=== RUN   TestContractRatingRejectedAttemptsShareBoundedWindow
+--- PASS: TestContractRatingRejectedAttemptsShareBoundedWindow (0.05s)
+=== RUN   TestContractRatingTursoLoopbackAndUncertainCommit
+--- PASS: TestContractRatingTursoLoopbackAndUncertainCommit (0.37s)
+=== RUN   TestSQLiteRatingUpgradeFromV2AndMissingRemoteSchema
+--- PASS: TestSQLiteRatingUpgradeFromV2AndMissingRemoteSchema (0.06s)
+=== RUN   TestContractHTTPRatingValidationAuthorizationAndRevision
+--- PASS: TestContractHTTPRatingValidationAuthorizationAndRevision (0.24s)
+=== RUN   TestSQLiteRatingAtomicRestartAndMigration
+--- PASS: TestSQLiteRatingAtomicRestartAndMigration (0.25s)
+=== RUN   TestSQLiteRatingConcurrentIdenticalWritesReplaySingleTimestamp
+--- PASS: TestSQLiteRatingConcurrentIdenticalWritesReplaySingleTimestamp (0.51s)
+=== RUN   TestContractRatingAuthorizationBeforeStorage
+--- PASS: TestContractRatingAuthorizationBeforeStorage (0.09s)
+=== RUN   TestContractHTTPRatingStorageFailureReturnsSafe503
+--- PASS: TestContractHTTPRatingStorageFailureReturnsSafe503 (0.10s)
+=== RUN   TestContractRatingRejectedAttemptsShareBoundedWindow
+--- PASS: TestContractRatingRejectedAttemptsShareBoundedWindow (0.06s)
+=== RUN   TestContractRatingTursoLoopbackAndUncertainCommit
+--- PASS: TestContractRatingTursoLoopbackAndUncertainCommit (0.43s)
+=== RUN   TestSQLiteRatingUpgradeFromV2AndMissingRemoteSchema
+--- PASS: TestSQLiteRatingUpgradeFromV2AndMissingRemoteSchema (0.07s)
+=== RUN   TestContractHTTPRatingValidationAuthorizationAndRevision
+--- PASS: TestContractHTTPRatingValidationAuthorizationAndRevision (0.24s)
+=== RUN   TestSQLiteRatingAtomicRestartAndMigration
+--- PASS: TestSQLiteRatingAtomicRestartAndMigration (0.27s)
+=== RUN   TestSQLiteRatingConcurrentIdenticalWritesReplaySingleTimestamp
+--- PASS: TestSQLiteRatingConcurrentIdenticalWritesReplaySingleTimestamp (0.25s)
+=== RUN   TestContractRatingAuthorizationBeforeStorage
+--- PASS: TestContractRatingAuthorizationBeforeStorage (0.05s)
+=== RUN   TestContractHTTPRatingStorageFailureReturnsSafe503
+--- PASS: TestContractHTTPRatingStorageFailureReturnsSafe503 (0.09s)
+=== RUN   TestContractRatingRejectedAttemptsShareBoundedWindow
+--- PASS: TestContractRatingRejectedAttemptsShareBoundedWindow (0.05s)
+=== RUN   TestContractRatingTursoLoopbackAndUncertainCommit
+--- PASS: TestContractRatingTursoLoopbackAndUncertainCommit (0.55s)
+=== RUN   TestSQLiteRatingUpgradeFromV2AndMissingRemoteSchema
+--- PASS: TestSQLiteRatingUpgradeFromV2AndMissingRemoteSchema (0.12s)
+=== RUN   FuzzDecodeRating
+=== RUN   FuzzDecodeRating/seed#0
+=== RUN   FuzzDecodeRating/seed#1
+=== RUN   FuzzDecodeRating/seed#2
+=== RUN   FuzzDecodeRating/seed#3
+=== RUN   FuzzDecodeRating/seed#4
+=== RUN   FuzzDecodeRating/seed#5
+=== RUN   FuzzDecodeRating/seed#6
+=== RUN   FuzzDecodeRating/seed#7
+--- PASS: FuzzDecodeRating (0.00s)
+    --- PASS: FuzzDecodeRating/seed#0 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#1 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#2 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#3 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#4 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#5 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#6 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#7 (0.00s)
+=== RUN   FuzzDecodeRating
+=== RUN   FuzzDecodeRating/seed#0
+=== RUN   FuzzDecodeRating/seed#1
+=== RUN   FuzzDecodeRating/seed#2
+=== RUN   FuzzDecodeRating/seed#3
+=== RUN   FuzzDecodeRating/seed#4
+=== RUN   FuzzDecodeRating/seed#5
+=== RUN   FuzzDecodeRating/seed#6
+=== RUN   FuzzDecodeRating/seed#7
+--- PASS: FuzzDecodeRating (0.00s)
+    --- PASS: FuzzDecodeRating/seed#0 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#1 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#2 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#3 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#4 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#5 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#6 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#7 (0.00s)
+=== RUN   FuzzDecodeRating
+=== RUN   FuzzDecodeRating/seed#0
+=== RUN   FuzzDecodeRating/seed#1
+=== RUN   FuzzDecodeRating/seed#2
+=== RUN   FuzzDecodeRating/seed#3
+=== RUN   FuzzDecodeRating/seed#4
+=== RUN   FuzzDecodeRating/seed#5
+=== RUN   FuzzDecodeRating/seed#6
+=== RUN   FuzzDecodeRating/seed#7
+--- PASS: FuzzDecodeRating (0.00s)
+    --- PASS: FuzzDecodeRating/seed#0 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#1 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#2 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#3 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#4 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#5 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#6 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#7 (0.00s)
+=== RUN   FuzzDecodeRating
+=== RUN   FuzzDecodeRating/seed#0
+=== RUN   FuzzDecodeRating/seed#1
+=== RUN   FuzzDecodeRating/seed#2
+=== RUN   FuzzDecodeRating/seed#3
+=== RUN   FuzzDecodeRating/seed#4
+=== RUN   FuzzDecodeRating/seed#5
+=== RUN   FuzzDecodeRating/seed#6
+=== RUN   FuzzDecodeRating/seed#7
+--- PASS: FuzzDecodeRating (0.01s)
+    --- PASS: FuzzDecodeRating/seed#0 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#1 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#2 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#3 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#4 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#5 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#6 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#7 (0.00s)
+=== RUN   FuzzDecodeRating
+=== RUN   FuzzDecodeRating/seed#0
+=== RUN   FuzzDecodeRating/seed#1
+=== RUN   FuzzDecodeRating/seed#2
+=== RUN   FuzzDecodeRating/seed#3
+=== RUN   FuzzDecodeRating/seed#4
+=== RUN   FuzzDecodeRating/seed#5
+=== RUN   FuzzDecodeRating/seed#6
+=== RUN   FuzzDecodeRating/seed#7
+--- PASS: FuzzDecodeRating (0.01s)
+    --- PASS: FuzzDecodeRating/seed#0 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#1 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#2 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#3 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#4 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#5 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#6 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#7 (0.00s)
+=== RUN   FuzzDecodeRating
+=== RUN   FuzzDecodeRating/seed#0
+=== RUN   FuzzDecodeRating/seed#1
+=== RUN   FuzzDecodeRating/seed#2
+=== RUN   FuzzDecodeRating/seed#3
+=== RUN   FuzzDecodeRating/seed#4
+=== RUN   FuzzDecodeRating/seed#5
+=== RUN   FuzzDecodeRating/seed#6
+=== RUN   FuzzDecodeRating/seed#7
+--- PASS: FuzzDecodeRating (0.00s)
+    --- PASS: FuzzDecodeRating/seed#0 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#1 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#2 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#3 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#4 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#5 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#6 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#7 (0.00s)
+=== RUN   FuzzDecodeRating
+=== RUN   FuzzDecodeRating/seed#0
+=== RUN   FuzzDecodeRating/seed#1
+=== RUN   FuzzDecodeRating/seed#2
+=== RUN   FuzzDecodeRating/seed#3
+=== RUN   FuzzDecodeRating/seed#4
+=== RUN   FuzzDecodeRating/seed#5
+=== RUN   FuzzDecodeRating/seed#6
+=== RUN   FuzzDecodeRating/seed#7
+--- PASS: FuzzDecodeRating (0.00s)
+    --- PASS: FuzzDecodeRating/seed#0 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#1 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#2 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#3 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#4 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#5 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#6 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#7 (0.00s)
+=== RUN   FuzzDecodeRating
+=== RUN   FuzzDecodeRating/seed#0
+=== RUN   FuzzDecodeRating/seed#1
+=== RUN   FuzzDecodeRating/seed#2
+=== RUN   FuzzDecodeRating/seed#3
+=== RUN   FuzzDecodeRating/seed#4
+=== RUN   FuzzDecodeRating/seed#5
+=== RUN   FuzzDecodeRating/seed#6
+=== RUN   FuzzDecodeRating/seed#7
+--- PASS: FuzzDecodeRating (0.00s)
+    --- PASS: FuzzDecodeRating/seed#0 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#1 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#2 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#3 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#4 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#5 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#6 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#7 (0.00s)
+=== RUN   FuzzDecodeRating
+=== RUN   FuzzDecodeRating/seed#0
+=== RUN   FuzzDecodeRating/seed#1
+=== RUN   FuzzDecodeRating/seed#2
+=== RUN   FuzzDecodeRating/seed#3
+=== RUN   FuzzDecodeRating/seed#4
+=== RUN   FuzzDecodeRating/seed#5
+=== RUN   FuzzDecodeRating/seed#6
+=== RUN   FuzzDecodeRating/seed#7
+--- PASS: FuzzDecodeRating (0.00s)
+    --- PASS: FuzzDecodeRating/seed#0 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#1 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#2 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#3 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#4 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#5 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#6 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#7 (0.00s)
+=== RUN   FuzzDecodeRating
+=== RUN   FuzzDecodeRating/seed#0
+=== RUN   FuzzDecodeRating/seed#1
+=== RUN   FuzzDecodeRating/seed#2
+=== RUN   FuzzDecodeRating/seed#3
+=== RUN   FuzzDecodeRating/seed#4
+=== RUN   FuzzDecodeRating/seed#5
+=== RUN   FuzzDecodeRating/seed#6
+=== RUN   FuzzDecodeRating/seed#7
+--- PASS: FuzzDecodeRating (0.00s)
+    --- PASS: FuzzDecodeRating/seed#0 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#1 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#2 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#3 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#4 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#5 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#6 (0.00s)
+    --- PASS: FuzzDecodeRating/seed#7 (0.00s)
+PASS
+ok  	ai-virtual-assistant/internal/chat	19.037s
