@@ -88,7 +88,7 @@ test('the handoff menu opens only after a conversation exists and no server even
   assert.equal(fixture.ui['escalation-form'].hidden, true);
 });
 
-test('Escape closes the handoff menu and returns focus to its trigger, and no other key closes it', async () => {
+test('Escape requests window close even with handoff form open; other keys leave it open', async () => {
   const fixture = ready(); await settle();
   fixture.ui['escalate-toggle'].dispatch('click');
   fixture.ui['handoff-email'].dispatch('click');
@@ -98,11 +98,16 @@ test('Escape closes the handoff menu and returns focus to its trigger, and no ot
   // A typed letter must never dismiss the menu.
   fixture.emit('keydown', { key: 'q', target: {}, preventDefault() {} });
   assert.equal(fixture.ui['handoff-menu'].hidden, false);
-  fixture.emit('keydown', { key: 'Escape', target: {}, preventDefault() {} });
+  let prevented = false;
+  fixture.ui['escalate-email'].value = 'visitor@example.org';
+  fixture.emit('keydown', { key: 'Escape', target: fixture.ui['escalate-email'], preventDefault() { prevented = true; } });
+  assert.equal(prevented, true);
   assert.equal(fixture.ui['handoff-menu'].hidden, true);
   assert.equal(fixture.ui['escalation-form'].hidden, true);
   assert.equal(fixture.ui['escalate-toggle'].getAttribute('aria-expanded'), 'false');
-  assert.equal(fixture.ui['escalate-toggle'].focused, true);
+  assert.equal(fixture.ui['escalate-toggle'].focused, undefined);
+  assert.deepEqual(fixture.sent.at(-1), { data: { type: 'assistant:close', version: 1 }, origin: 'https://host.example' });
+  assert.equal(fixture.ui['escalate-email'].value, 'visitor@example.org');
 });
 
 test('an outside click closes the handoff menu while a click inside the handoff region does not', async () => {
@@ -153,6 +158,7 @@ test('handoff menu closes on Escape and outside click, and never auto-opens on a
   fixture.emit('keydown', { key: 'Escape', target: {}, preventDefault() {} });
   assert.equal(fixture.ui['handoff-menu'].hidden, true);
   assert.equal(fixture.ui['escalation-form'].hidden, true);
+  assert.equal(fixture.sent.at(-1).data.type, 'assistant:close');
   // An outside click closes the disclosure too.
   fixture.ui['escalate-toggle'].dispatch('click');
   assert.equal(fixture.ui['handoff-menu'].hidden, false);

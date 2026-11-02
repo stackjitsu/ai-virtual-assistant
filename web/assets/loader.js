@@ -55,6 +55,14 @@
   let initialized = false;
   const knownKeys = (data, expected) => data && typeof data === 'object' && !Array.isArray(data)
     && Object.keys(data).length === expected.length && expected.every((key) => Object.hasOwn(data, key));
+  const close = () => {
+    if (frame.hidden) return;
+    frame.hidden = true;
+    launcher.setAttribute('aria-expanded', 'false');
+    launcher.setAttribute('aria-label', 'Open support assistant');
+    launcher.textContent = 'Ask the assistant';
+    launcher.focus();
+  };
   window.addEventListener('message', (event) => {
     if (!mounted || event.source !== frame.contentWindow || event.origin !== origin) return;
     const data = event.data;
@@ -64,7 +72,15 @@
     } else if (initialized && knownKeys(data, ['type', 'version', 'height'])
       && data.type === 'assistant:resize' && data.version === 1 && Number.isFinite(data.height)) {
       frame.height = String(Math.max(300, Math.min(720, Math.round(data.height))));
+    } else if (initialized && knownKeys(data, ['type', 'version'])
+      && data.type === 'assistant:close' && data.version === 1) {
+      close();
     }
+  });
+  launcher.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape' || frame.hidden) return;
+    event.preventDefault();
+    close();
   });
   launcher.addEventListener('click', () => {
     if (!mounted) {
@@ -72,7 +88,8 @@
       frame.src = `${origin}/widget/widget.html#parent_origin=${encodeURIComponent(window.location.origin)}`;
       root.prepend(frame);
     }
-    frame.hidden = !frame.hidden;
+    if (!frame.hidden) { close(); return; }
+    frame.hidden = false;
     launcher.setAttribute('aria-expanded', String(!frame.hidden));
     launcher.setAttribute('aria-label', frame.hidden ? 'Open support assistant' : 'Close support assistant');
     launcher.textContent = frame.hidden ? 'Ask the assistant' : 'Close assistant';

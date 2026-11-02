@@ -141,7 +141,7 @@ try {
   const target = await cdp('Target.createTarget', { url: 'about:blank' }, null);
   session = (await cdp('Target.attachToTarget', { targetId: target.targetId, flatten: true }, null)).sessionId;
   for (const domain of ['Page', 'Runtime', 'Network', 'Log']) await cdp(`${domain}.enable`);
-  await cdp('Page.addScriptToEvaluateOnNewDocument', { source: `window.__inputs=[];for(const type of ['click','keydown'])addEventListener(type,e=>{if(['send','question','retry'].includes(e.target.id))__inputs.push({type,id:e.target.id,key:e.key,trusted:e.isTrusted});});` });
+  await cdp('Page.addScriptToEvaluateOnNewDocument', { source: `window.__inputs=[];window.__closeMessages=[];addEventListener('message',e=>{if(e.data?.type==='assistant:close')__closeMessages.push({data:e.data,origin:e.origin,fromFrame:e.source===document.querySelector('iframe')?.contentWindow});});for(const type of ['click','keydown'])addEventListener(type,e=>{if(['send','question','retry','chat-close'].includes(e.target.id))__inputs.push({type,id:e.target.id,key:e.key,trusted:e.isTrusted});});` });
 
   async function open() {
     await cdp('Page.navigate', { url: host });
@@ -203,6 +203,73 @@ try {
     report.trustedInputs.push({ action, events: await evaluate(f, '__inputs') });
     await screenshot(`${action}${sent ? '-complete' : '-blocked'}.png`);
   }
+  // Real keyboard events inside the iframe must close the host window in one
+  // press, even when focus is in the expanded email form. Hiding must not
+  // reload the iframe or discard the conversation and unsent draft.
+  const { h, f } = await open();
+  const priorPosts = posts().length;
+  const creations = () => report.requests.filter((request) => request.method === 'POST' && request.url.endsWith('/conversations')).length;
+  const initialCreations = creations();
+  await click(f, '#question', h);
+  await cdp('Input.insertText', { text: 'Can you explain quantum entanglement?' });
+  await click(f, '#send', h);
+  await wait(() => evaluate(f, `document.querySelector('#messages').children.length===2&&!document.querySelector('#send').disabled`), 'completed turn before close');
+  const transcript = await evaluate(f, `document.querySelector('#messages').textContent`);
+  await click(f, '#question', h);
+  await cdp('Input.insertText', { text: 'Unsent draft stays here' });
+  await key('q', 'KeyQ', 81, 0, 'q');
+  check('Other iframe key does not close window', await evaluate(h, `!document.querySelector('iframe').hidden`));
+  await key('Escape', 'Escape', 27);
+  await wait(() => evaluate(h, `document.querySelector('iframe').hidden`), 'iframe Escape closes window');
+  check('Iframe Escape returns focus and closed launcher state', await evaluate(h, `document.activeElement===document.querySelector('.assistant-launcher')&&document.querySelector('.assistant-launcher').getAttribute('aria-expanded')==='false'&&document.querySelector('.assistant-launcher').getAttribute('aria-label')==='Open support assistant'`));
+  await click(h, '.assistant-launcher');
+  check('Reopen preserves iframe and unsent draft without new creation', await evaluate(f, `document.querySelector('#question').value.startsWith('Unsent draft stays here')`) && creations() === initialCreations);
+  await click(f, '#escalate-toggle', h);
+  await click(f, '#handoff-email', h);
+  await click(f, '#escalate-email', h);
+  await cdp('Input.insertText', { text: 'visitor@example.org' });
+  check('Email form open before Escape', await evaluate(f, `!document.querySelector('#handoff-menu').hidden&&!document.querySelector('#escalation-form').hidden`));
+  await key('Escape', 'Escape', 27);
+  await wait(() => evaluate(h, `document.querySelector('iframe').hidden`), 'email form Escape closes window');
+  check('Email form Escape focuses launcher', await evaluate(h, `document.activeElement===document.querySelector('.assistant-launcher')`));
+  await click(h, '.assistant-launcher');
+  check('Email draft and conversation survive reopening', await evaluate(f, `document.querySelector('#escalate-email').value==='visitor@example.org'&&document.querySelector('#question').value.startsWith('Unsent draft stays here')`) && creations() === initialCreations);
+  await click(f, '#escalate-toggle', h);
+  await click(f, '#handoff-email', h);
+  await click(f, '#escalate-note', h);
+  await cdp('Input.insertText', { text: 'Unsent support note' });
+  await click(f, '#escalate-consent', h);
+  for (const action of ['mouse', 'enter', 'space']) {
+    const beforeClose = await evaluate(h, '__closeMessages.length');
+    if (action === 'mouse') await click(f, '#chat-close', h);
+    else {
+      // Reach the header button by actual keyboard traversal, not DOM focus/click.
+      await click(f, '#question', h);
+      for (let n = 0; n < 20 && !await evaluate(f, `document.activeElement.id==='chat-close'`); n++) await key('Tab', 'Tab', 9, 8);
+      check(`${action}: keyboard reaches Close chat`, await evaluate(f, `document.activeElement.id==='chat-close'`));
+      check(`${action}: visible unobscured focus ring`, await evaluate(f, `(()=>{const b=document.querySelector('#chat-close'),s=getComputedStyle(b),r=b.getBoundingClientRect();return b.matches(':focus-visible')&&s.outlineStyle==='solid'&&parseFloat(s.outlineWidth)>=3&&r.top>=6&&r.right+6<=innerWidth})()`));
+      await pause(180);
+      await screenshot(`close-${action}-focus.png`);
+      await key(action === 'enter' ? 'Enter' : ' ', action === 'enter' ? 'Enter' : 'Space', action === 'enter' ? 13 : 32, 0, action === 'enter' ? '\r' : ' ');
+    }
+    await wait(() => evaluate(h, `document.querySelector('iframe').hidden`), `${action} closes widget`);
+    check(`${action}: one exact close message from initialized iframe`, await evaluate(h, `(()=>{const m=__closeMessages.at(-1);return __closeMessages.length===${beforeClose + 1}&&JSON.stringify(m.data)==='{"type":"assistant:close","version":1}'&&m.origin===${JSON.stringify(origin)}&&m.fromFrame})()`));
+    check(`${action}: host restores launcher focus`, await evaluate(h, `document.activeElement===document.querySelector('.assistant-launcher')&&document.querySelector('.assistant-launcher').getAttribute('aria-expanded')==='false'`));
+    await click(h, '.assistant-launcher');
+    check(`${action}: same iframe preserves completed chat and question draft`, await evaluate(f, `document.querySelector('#messages').textContent===${JSON.stringify(transcript)}&&document.querySelector('#question').value.startsWith('Unsent draft stays here')`) && creations() === initialCreations);
+    check(`${action}: close collapses disclosures without discarding support drafts`, await evaluate(f, `document.querySelector('#handoff-menu').hidden&&document.querySelector('#escalation-form').hidden&&document.querySelector('#escalate-email').value==='visitor@example.org'&&document.querySelector('#escalate-note').value==='Unsent support note'&&document.querySelector('#escalate-consent').checked`));
+    await click(f, '#escalate-toggle', h);
+    await click(f, '#handoff-email', h);
+  }
+  const closeInputs = await evaluate(f, `__inputs.filter(e=>e.id==='chat-close')`);
+  report.trustedInputs.push({ action: 'header-close-pointer-enter-space', events: closeInputs });
+  check('Close button received three browser-trusted clicks', closeInputs.filter((event) => event.type === 'click' && event.trusted).length === 3);
+  await click(h, '.assistant-launcher');
+  // Launcher has focus after the real pointer click; reopen then Escape there.
+  await click(h, '.assistant-launcher');
+  await key('Escape', 'Escape', 27);
+  check('Trusted host launcher Escape closes and keeps focus', await evaluate(h, `document.querySelector('iframe').hidden&&document.activeElement===document.querySelector('.assistant-launcher')&&document.querySelector('.assistant-launcher').getAttribute('aria-expanded')==='false'`));
+  check('Close and Escape do not submit questions or escalation', posts().length === priorPosts + 1 && !report.requests.some((request) => request.url.endsWith('/escalation')));
   check('All observed control inputs are browser-trusted', report.trustedInputs.every((input) => input.events.length && input.events.every((event) => event.trusted)));
   check('No browser JavaScript exceptions', !report.exception);
 } catch (error) {

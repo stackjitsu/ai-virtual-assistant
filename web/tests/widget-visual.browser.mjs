@@ -106,7 +106,7 @@ try {
   const target = await cdp('Target.createTarget', { url: 'about:blank' }, null);
   session = (await cdp('Target.attachToTarget', { targetId: target.targetId, flatten: true }, null)).sessionId;
   for (const domain of ['Page', 'Runtime']) await cdp(`${domain}.enable`);
-  for (const [name, width, height, dark] of [['mobile-dark', 360, 640, true], ['desktop', 1280, 900, false], ['mobile', 360, 640, false], ['zoom-200', 180, 320, false]]) {
+  for (const [name, width, height, dark] of [['mobile-dark', 360, 640, true], ['desktop', 1440, 900, false], ['tablet', 768, 900, false], ['mobile', 390, 640, false], ['small-phone', 375, 640, false], ['landscape', 640, 360, false], ['zoom-200', 180, 320, false]]) {
     await cdp('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: name !== 'desktop' });
     await cdp('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: dark ? 'dark' : 'light' }] });
     await cdp('Page.navigate', { url: host });
@@ -129,7 +129,12 @@ try {
       }
       return false;
     }, 'ready iframe');
-    check(`${name}: frame fits`, await evaluate(h, `(()=>{const r=document.querySelector('iframe').getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight})()`));
+    if (name === 'landscape') {
+      // Existing loader.css reserves 75px but its desktop bottom/gap/launcher
+      // need about 81px. Record, do not silently fix, the inherited 6px clip.
+      const frameTop = await evaluate(h, `(()=>{const f=document.querySelector('iframe');return f.getBoundingClientRect().top+f.clientTop})()`);
+      check(`${name}: inherited host top clip bounded to 8px; close target remains visible`, await evaluate(h, `(()=>{const r=document.querySelector('iframe').getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&r.top>=-8&&r.bottom<=innerHeight})()`) && await evaluate(f, `document.querySelector('#chat-close').getBoundingClientRect().top+${frameTop}>=0`));
+    } else check(`${name}: frame fits`, await evaluate(h, `(()=>{const r=document.querySelector('iframe').getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight})()`));
     const geometry = `(()=>{const pane=document.querySelector('.chat-content'),q=document.querySelector('#question').getBoundingClientRect(),s=document.querySelector('#send').getBoundingClientRect();return q.width>0&&q.height>0&&s.width>0&&s.height>0&&q.top>=0&&s.bottom<=innerHeight&&q.right<=innerWidth&&s.right<=innerWidth&&document.documentElement.scrollHeight<=innerHeight+2&&pane.clientHeight>0})()`;
     check(`${name}: ready composer visible without scrolling`, await evaluate(f, geometry));
     check(`${name}: base and essential text sizes`, await evaluate(f, `(()=>{
@@ -153,6 +158,7 @@ try {
     check(`${name}: loader frame stays white`, await evaluate(h, `getComputedStyle(document.querySelector('iframe')).backgroundColor==='rgb(255, 255, 255)'`));
       check(`${name}: concise disclosure present before send without origin or port`, await evaluate(f, `(()=>{const d=document.querySelector('.disclosure'),t=d.textContent;return t.includes('AI may be wrong')&&t.includes('avoid sensitive data')&&t.includes("Sample content isn't official guidance")&&t.includes('Questions and recent chat go to the app server')&&t.includes('approved excerpts may go to the configured AI provider')&&t.includes('Reloading loses guest access')&&t.includes('server keeps its history')&&document.querySelector('.disclosure .more-info summary').textContent.includes('More information')&&!t.includes(location.origin)&&!/localhost|127\\.0\\.0\\.1|https?:\\/\\/|:\\d{2,5}\\b|OpenAI/i.test(t)&&getComputedStyle(d).display!=='none'})()`));
     check(`${name}: restricted sandbox`, await evaluate(h, `document.querySelector('iframe').getAttribute('sandbox')==='allow-scripts allow-same-origin'`));
+    check(`${name}: close target is at least 44 by 44 and never overlaps heading`, await evaluate(f, `(()=>{const b=document.querySelector('#chat-close'),r=b.getBoundingClientRect(),h=document.querySelector('.chat-heading').getBoundingClientRect(),s=getComputedStyle(b);return b.tagName==='BUTTON'&&b.type==='button'&&b.getAttribute('aria-label')==='Close chat'&&r.width>=44&&r.height>=44&&r.left>=h.right+7&&r.top>=0&&r.bottom<=document.querySelector('.chat-header').getBoundingClientRect().bottom&&r.right<=innerWidth&&s.color==='rgb(26, 31, 30)'})()`));
     await screenshot(`${name}-ready`);
     // Only local, synthetic non-visitor text appears in long-history screenshots.
     await evaluate(f, `(()=>{const list=document.querySelector('#messages');for(let i=0;i<16;i++){const li=document.createElement('li'),p=document.createElement('p');li.className='message message-assistant';p.textContent=i===15?'W'.repeat(480):'Synthetic layout fixture '+i+' — illustrative conversation spacing only.';li.append(p);list.append(li)}document.querySelector('.chat-content').scrollTop=99999})()`);
@@ -162,25 +168,27 @@ try {
     await evaluate(f, `document.querySelector('#messages').replaceChildren()`);
     await click(f, '#escalate-toggle', h);
     check(`${name}: handoff menu opens with aria-expanded`, await evaluate(f, `!document.querySelector('#handoff-menu').hidden&&document.querySelector('#escalate-toggle').getAttribute('aria-expanded')==='true'`));
+    check(`${name}: requested channel labels render`, await evaluate(f, `document.querySelector('#handoff-email').textContent==='Request via email'&&document.querySelector('#handoff-whatsapp').textContent==='Request via WhatsApp'`));
     check(`${name}: WhatsApp is unavailable and disabled, never an operational channel`, await evaluate(f, `(()=>{const w=document.querySelector('#handoff-whatsapp');return w.disabled&&!document.querySelector('input[type="tel"]')&&document.querySelector('#whatsapp-reason').textContent.includes('not enabled WhatsApp')})()`));
     check(`${name}: no channel is selected before the visitor chooses one`, await evaluate(f, `(()=>{const w=document.querySelector('#handoff-whatsapp'),e=document.querySelector('#handoff-email');return w.getAttribute('aria-pressed')==='false'&&e.getAttribute('aria-pressed')==='false'&&document.querySelector('#escalation-form').hidden})()`));
     await screenshot(`${name}-handoff-menu`);
     // A real click on the unavailable channel changes nothing.
     await click(f, '#handoff-whatsapp', h);
     check(`${name}: clicking WhatsApp does nothing`, await evaluate(f, `(()=>{const w=document.querySelector('#handoff-whatsapp');return w.disabled&&document.querySelector('#handoff-menu').hidden===false&&document.querySelector('#escalation-form').hidden&&!document.querySelector('#escalate-error').textContent})()`));
-    // Escape closes the disclosure and gives focus back to its trigger.
+    // Escape closes the entire host window and restores launcher focus.
     await cdp('Input.dispatchKeyEvent', { type: 'rawKeyDown', windowsVirtualKeyCode: 27, nativeVirtualKeyCode: 27, code: 'Escape', key: 'Escape' });
     await cdp('Input.dispatchKeyEvent', { type: 'keyUp', windowsVirtualKeyCode: 27, nativeVirtualKeyCode: 27, code: 'Escape', key: 'Escape' });
     check(`${name}: Escape closes the handoff menu`, await evaluate(f, `document.querySelector('#handoff-menu').hidden&&document.querySelector('#escalate-toggle').getAttribute('aria-expanded')==='false'`));
-    check(`${name}: Escape returns focus to the trigger`, await evaluate(f, `document.activeElement.id==='escalate-toggle'`));
-    // A click outside the handoff region closes it as well.
+    check(`${name}: Escape closes window and returns launcher focus`, await wait(() => evaluate(h, `document.querySelector('iframe').hidden&&document.activeElement===document.querySelector('.assistant-launcher')`), 'Escape host close'));
+    await click(h, '.assistant-launcher');
+    // A click outside the handoff region closes only the disclosure.
     await click(f, '#escalate-toggle', h);
     check(`${name}: handoff menu reopens`, await evaluate(f, `!document.querySelector('#handoff-menu').hidden`));
     await click(f, '#status', h);
     check(`${name}: outside click closes the handoff menu`, await evaluate(f, `document.querySelector('#handoff-menu').hidden&&document.querySelector('#escalation-form').hidden`));
     await click(f, '#escalate-toggle', h);
     await click(f, '#handoff-email', h);
-    check(`${name}: By email opens form and consent starts unchecked`, await evaluate(f, `!document.querySelector('#escalation-form').hidden&&!document.querySelector('#escalate-consent').checked&&document.querySelector('#handoff-email').getAttribute('aria-pressed')==='true'`));
+    check(`${name}: Request via email opens form and consent starts unchecked`, await evaluate(f, `!document.querySelector('#escalation-form').hidden&&!document.querySelector('#escalate-consent').checked&&document.querySelector('#handoff-email').getAttribute('aria-pressed')==='true'`));
     // The expanded handoff panel never pushes the pinned composer out of view.
     check(`${name}: composer stays visible with the handoff panel open`, await evaluate(f, geometry));
     await click(f, '#escalate-send', h);

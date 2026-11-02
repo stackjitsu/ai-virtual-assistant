@@ -437,12 +437,33 @@ html, body.widget-page { height: 100%; min-height: 0; }
   overflow: hidden;
 }
 .widget-page .chat-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
   flex: none;
   padding: 10px 18px;
   background: var(--card);
   color: var(--fg);
   border-bottom: 1px solid var(--border);
 }
+.widget-page .chat-heading { min-width: 0; overflow-wrap: anywhere; }
+.widget-page .chat-close {
+  flex: 0 0 44px;
+  width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border-color: transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--fg);
+  font-size: 1.75rem;
+  font-weight: 400;
+  line-height: 1;
+  touch-action: manipulation;
+}
+.widget-page .chat-close:not(:disabled):hover { background: var(--card-hover); border-color: var(--border); }
+.widget-page .chat-close:not(:disabled):active { background: var(--accent-muted); transform: none; }
 .widget-page .chat-header .eyebrow { margin: 0; color: var(--muted); }
 .widget-page .chat-header h1 { margin: 1px 0; font-size: 1.15rem; letter-spacing: -.02em; }
 .widget-page .chat-header p:last-child { margin: 0; font-size: .82rem; }

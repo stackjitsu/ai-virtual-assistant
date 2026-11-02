@@ -103,6 +103,35 @@ test('capability is only a bearer in iframe-owned API calls, never URL/DOM/paren
   }
 });
 
+test('close control uses exact versioned shape, source and origin; invalid messages cannot close', async () => {
+  const fixture = await loaderFixture(); fixture.open();
+  const frame = fixture.frame();
+  const close = { type: 'assistant:close', version: 1 };
+  fixture.message(close); // No close before handshake.
+  assert.equal(frame.hidden, false);
+  fixture.message({ type: 'assistant:ready', version: 1 });
+  for (const [data, origin, source] of [
+    [close, 'https://assistant.example.evil', frame.contentWindow],
+    [close, 'https://assistant.example', {}],
+    [{ ...close, version: 2 }, 'https://assistant.example', frame.contentWindow],
+    [{ ...close, capability: 'bad' }, 'https://assistant.example', frame.contentWindow],
+    [{ ...close, height: 300 }, 'https://assistant.example', frame.contentWindow],
+    [{ type: 'assistant:resize', version: 1 }, 'https://assistant.example', frame.contentWindow],
+  ]) {
+    fixture.message(data, origin, source);
+    assert.equal(frame.hidden, false);
+  }
+  fixture.message(close);
+  assert.equal(frame.hidden, true);
+  assert.equal(fixture.launcher.focused, true);
+  assert.equal(fixture.launcher.getAttribute('aria-expanded'), 'false');
+  assert.equal(fixture.launcher.getAttribute('aria-label'), 'Open support assistant');
+  fixture.open();
+  assert.equal(fixture.frame(), frame);
+  assert.equal(frame.hidden, false);
+  assert.equal(frame.contentWindow.sent.length, 1);
+});
+
 test('disclosure keeps the safety warning visible and names app server and configurable provider without displaying origin before send', async () => {
   const fixture = widgetFixture();
   const html = await readFile(new URL('../assets/widget.html', import.meta.url), 'utf8');
@@ -189,14 +218,14 @@ test('published assets use local external files, semantic form and actual sample
   assert.equal(walk(fixture.document.body).filter((node) => node.tagName === 'IFRAME').length, 1);
 });
 
-test('handoff menu is additive markup: By email available, By WhatsApp disabled, no phone field', async () => {
+test('handoff menu is additive markup: Request via email available, Request via WhatsApp disabled, no phone field', async () => {
   const html = await readFile(new URL('../assets/widget.html', import.meta.url), 'utf8');
   // The menu and email form are in the scrollable pane, never nested inside the pinned chat form.
   assert.match(html, /<section class="escalation" aria-label="Request human support">[\s\S]*?<\/section>[\s\S]*?<\/div>\s*<form id="message-form"/u);
   assert.match(html, /<button id="escalate-toggle" type="button" disabled aria-expanded="false" aria-controls="handoff-menu">Request human support<\/button>/u);
   assert.match(html, /<div id="handoff-menu" class="handoff-menu" role="group" aria-label="Ways to request human support" hidden>/u);
-  assert.match(html, /<button id="handoff-email" type="button" aria-expanded="false" aria-controls="escalation-form" aria-pressed="false">By email<\/button>/u);
-  assert.match(html, /<button id="handoff-whatsapp" type="button" disabled aria-describedby="whatsapp-reason" aria-pressed="false">By WhatsApp<\/button>/u);
+  assert.match(html, /<button id="handoff-email" type="button" aria-expanded="false" aria-controls="escalation-form" aria-pressed="false">Request via email<\/button>/u);
+  assert.match(html, /<button id="handoff-whatsapp" type="button" disabled aria-describedby="whatsapp-reason" aria-pressed="false">Request via WhatsApp<\/button>/u);
   assert.match(html, /<p id="whatsapp-reason">Unavailable: this support service has not enabled WhatsApp\.<\/p>/u);
   assert.match(html, /<form id="escalation-form" aria-label="Request human support by email" hidden>/u);
   assert.match(html, /<label for="escalate-email">Your email<\/label>/u);
@@ -234,11 +263,16 @@ test('only the visitor opens the handoff menu, and the composer stays pinned out
   assert.match(core, /handoffOpen = !handoffOpen;/u);
   assert.doesNotMatch(core, /handoffOpen\s*=\s*true/u);
   assert.match(core, /ui\['handoff-whatsapp'\]\.setAttribute\('aria-pressed', 'false'\)/u);
-  // Escape is the only key that closes the disclosure.
-  assert.match(core, /if \(event\.key !== 'Escape'\) return;/u);
+  // The header button and Escape share the initialized/non-stopped close path.
+  assert.match(core, /ui\['chat-close'\]\.addEventListener\('click', closeChat\)/u);
+  assert.match(core, /function closeChat\(\) \{\s*if \(stopped \|\| !initialized\) return;/u);
+  // Escape is the only key requesting host close, including with this disclosure open.
+  assert.match(core, /if \(event\.key !== 'Escape' \|\| stopped \|\| !initialized\) return;/u);
+  assert.match(core, /platform\.parent\.postMessage\(\{ type: 'assistant:close', version: 1 \}, parent\)/u);
   assert.doesNotMatch(core, /event\.key === 'q'/u);
   // The handoff panel lives in the scrollable pane; the composer stays outside
   // it, so the question and Send controls remain visible on a small screen.
   const html = await readFile(new URL('../assets/widget.html', import.meta.url), 'utf8');
   assert.match(html, /<div class="chat-content"[^>]*>[\s\S]*?<section class="escalation"[\s\S]*?<\/div>\s*<form id="message-form"/u);
+  assert.match(html, /<header class="chat-header">[\s\S]*?<button id="chat-close" type="button" class="chat-close" aria-label="Close chat">×<\/button>\s*<\/header>/u);
 });

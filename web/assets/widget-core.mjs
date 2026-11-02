@@ -9,7 +9,7 @@ import {
 export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 } = {}) {
   const { document } = platform;
   const element = (id) => document.getElementById(id);
-  const ui = Object.fromEntries(['status', 'error', 'retry', 'older', 'messages', 'question', 'send', 'transmission', 'message-form',
+  const ui = Object.fromEntries(['status', 'error', 'retry', 'older', 'messages', 'question', 'send', 'transmission', 'message-form', 'chat-close',
     'escalate-toggle', 'handoff-menu', 'handoff-email', 'handoff-whatsapp', 'escalation-form', 'escalate-email', 'escalate-note', 'escalate-consent', 'escalate-error', 'escalate-outcome', 'escalate-send']
     .map((id) => [id, element(id)]));
   const origin = platform.location.origin;
@@ -30,7 +30,7 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
   // history or disclosures. Session memory of stored tickets only marks a
   // replayed response; the server decides what is stored or replayed.
   // The handoff menu is a separate, visitor-opened disclosure: the selected
-  // channel is By email (which reveals the consent form) while By WhatsApp is
+  // channel is Request via email (which reveals the consent form) while Request via WhatsApp is
   // permanently unavailable. No server event ever opens either.
   let handoffOpen = false;
   let escalateOpen = false;
@@ -62,8 +62,8 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
     ui.older.disabled = busy || pending !== null || stopped;
     // Handoff affordance: visible only once a conversation exists, closed
     // again when the chat is terminal. Chat controls above stay untouched.
-    // The menu is the outer disclosure; By email is the only available
-    // channel and toggles the consent form inside it. By WhatsApp stays
+    // The menu is the outer disclosure; Request via email is the only available
+    // channel and toggles the consent form inside it. Request via WhatsApp stays
     // disabled, so its channel state is never exposed as selected.
     ui['escalate-toggle'].hidden = !conversation || stopped;
     ui['escalate-toggle'].disabled = false;
@@ -365,8 +365,8 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
   });
   // Handoff: the visitor opts in deliberately; no provider failure or other
   // server state ever opens the menu. The outer toggle only reveals the
-  // channel menu. By email is the only available channel and opens the
-  // consent form; By WhatsApp is permanently disabled and collects nothing.
+  // channel menu. Request via email is the only available channel and opens the
+  // consent form; Request via WhatsApp is permanently disabled and collects nothing.
   ui['escalate-toggle'].addEventListener('click', () => {
     handoffOpen = !handoffOpen;
     if (!handoffOpen) escalateOpen = false;
@@ -394,17 +394,20 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
     event.preventDefault();
     submitEscalation();
   });
-  // Escape closes the handoff disclosure and returns focus to its trigger, so
-  // a keyboard visitor never loses their place. No other key closes it: a
-  // letter typed in the email form must never dismiss the menu.
-  platform.addEventListener('keydown', (event) => {
-    if (!handoffOpen || stopped) return;
-    if (event.key !== 'Escape') return;
-    event.preventDefault();
+  // Both controls close the host window without changing chat or form drafts.
+  // The host returns focus to its launcher; nothing in this iframe is reloaded.
+  function closeChat() {
+    if (stopped || !initialized) return;
     handoffOpen = false;
     escalateOpen = false;
     controls();
-    ui['escalate-toggle'].focus?.();
+    platform.parent.postMessage({ type: 'assistant:close', version: 1 }, parent);
+  }
+  ui['chat-close'].addEventListener('click', closeChat);
+  platform.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape' || stopped || !initialized) return;
+    event.preventDefault();
+    closeChat();
   });
   // The stored recorded_at is already contract-validated; render it in a
   // visitor-sane UTC form with the server's own truthful sentence verbatim.

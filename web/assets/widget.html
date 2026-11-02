@@ -10,9 +10,12 @@
 <body class="widget-page">
   <main class="chat" aria-labelledby="chat-title">
     <header class="chat-header">
-      <p class="eyebrow">AI SUPPORT</p>
-      <h1 id="chat-title">Ask a question</h1>
-      <p>Find relevant information here.</p>
+      <div class="chat-heading">
+        <p class="eyebrow">AI SUPPORT</p>
+        <h1 id="chat-title">Ask a question</h1>
+        <p>Find relevant information here.</p>
+      </div>
+      <button id="chat-close" type="button" class="chat-close" aria-label="Close chat">×</button>
     </header>
     <div class="chat-content" aria-label="Conversation and support information" tabindex="0">
     <section class="disclosure" aria-label="Before you ask">
@@ -32,7 +35,7 @@
       <button id="escalate-toggle" type="button" disabled aria-expanded="false" aria-controls="handoff-menu">Request human support</button>
       <div id="handoff-menu" class="handoff-menu" role="group" aria-label="Ways to request human support" hidden>
         <div class="handoff-option">
-          <button id="handoff-email" type="button" aria-expanded="false" aria-controls="escalation-form" aria-pressed="false">By email</button>
+          <button id="handoff-email" type="button" aria-expanded="false" aria-controls="escalation-form" aria-pressed="false">Request via email</button>
           <form id="escalation-form" aria-label="Request human support by email" hidden>
             <label for="escalate-email">Your email</label>
             <input id="escalate-email" name="email" type="text" inputmode="email" autocomplete="email" placeholder="you@example.org" aria-describedby="escalate-hint" required disabled>
@@ -45,7 +48,7 @@
           </form>
         </div>
         <div class="handoff-option handoff-unavailable">
-          <button id="handoff-whatsapp" type="button" disabled aria-describedby="whatsapp-reason" aria-pressed="false">By WhatsApp</button>
+          <button id="handoff-whatsapp" type="button" disabled aria-describedby="whatsapp-reason" aria-pressed="false">Request via WhatsApp</button>
           <p id="whatsapp-reason">Unavailable: this support service has not enabled WhatsApp.</p>
         </div>
       </div>

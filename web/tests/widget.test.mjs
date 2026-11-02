@@ -334,6 +334,78 @@ test('loader toggle reuses one iframe, accessible control and conversation hands
   assert.equal(walk(fixture.document.body).filter((node) => node.tagName === 'IFRAME').length, 1);
 });
 
+test('launcher Escape closes an open window and focuses launcher; other keys do nothing', async () => {
+  const fixture = await loaderFixture(); fixture.open();
+  const frame = fixture.frame();
+  let prevented = 0;
+  fixture.launcher.dispatch('keydown', { key: 'q', preventDefault() { prevented++; } });
+  assert.equal(frame.hidden, false);
+  fixture.launcher.dispatch('keydown', { key: 'Escape', preventDefault() { prevented++; } });
+  assert.equal(prevented, 1);
+  assert.equal(frame.hidden, true);
+  assert.equal(fixture.launcher.focused, true);
+  assert.equal(fixture.launcher.getAttribute('aria-expanded'), 'false');
+  assert.equal(fixture.launcher.textContent, 'Ask the assistant');
+  fixture.launcher.dispatch('keydown', { key: 'Escape', preventDefault() { prevented++; } });
+  assert.equal(prevented, 1);
+  fixture.open();
+  assert.equal(fixture.frame(), frame);
+  assert.equal(frame.hidden, false);
+});
+
+test('iframe Escape requests host close without a menu or a send, only after init', async () => {
+  const fixture = widgetFixture();
+  let prevented = 0;
+  fixture.emit('keydown', { key: 'Escape', preventDefault() { prevented++; } });
+  assert.equal(prevented, 0);
+  assert.equal(fixture.sent.filter((message) => message.data.type === 'assistant:close').length, 0);
+  fixture.init(); await settle();
+  fixture.ui.question.value = 'Keep this draft';
+  fixture.emit('keydown', { key: 'x', preventDefault() { prevented++; } });
+  fixture.emit('keydown', { key: 'Escape', preventDefault() { prevented++; } });
+  assert.equal(prevented, 1);
+  assert.equal(fixture.ui.question.value, 'Keep this draft');
+  assert.deepEqual(fixture.sent.at(-1), { data: { type: 'assistant:close', version: 1 }, origin: 'https://host.example' });
+  assert.equal(fixture.requests.length, 2);
+});
+
+test('header close click uses exact initialized close message and preserves transcript and drafts', async () => {
+  const fixture = widgetFixture([json(creation, 201), json({ messages: turn().messages, next_before: null })]);
+  fixture.ui['chat-close'].dispatch('click');
+  assert.equal(fixture.sent.some(({ data }) => data.type === 'assistant:close'), false);
+  fixture.init(); await settle();
+  fixture.ui.question.value = 'Unsent question';
+  fixture.ui['escalate-toggle'].dispatch('click');
+  fixture.ui['handoff-email'].dispatch('click');
+  fixture.ui['escalate-email'].value = 'draft@example.org';
+  fixture.ui['escalate-note'].value = 'Unsent note';
+  fixture.ui['escalate-consent'].checked = true;
+  const transcript = fixture.ui.messages.textContent;
+  fixture.ui['chat-close'].dispatch('click');
+  assert.deepEqual(fixture.sent.at(-1), { data: { type: 'assistant:close', version: 1 }, origin: 'https://host.example' });
+  assert.equal(fixture.sent.filter(({ data }) => data.type === 'assistant:close').length, 1);
+  assert.equal(fixture.ui['handoff-menu'].hidden, true);
+  assert.equal(fixture.ui['escalation-form'].hidden, true);
+  assert.equal(fixture.ui.messages.textContent, transcript);
+  assert.equal(fixture.ui.question.value, 'Unsent question');
+  assert.equal(fixture.ui['escalate-email'].value, 'draft@example.org');
+  assert.equal(fixture.ui['escalate-note'].value, 'Unsent note');
+  assert.equal(fixture.ui['escalate-consent'].checked, true);
+  assert.equal(fixture.requests.length, 2);
+});
+
+test('both close triggers are inert after terminal failure or pagehide', async () => {
+  for (const stop of ['terminal', 'pagehide']) {
+    const fixture = widgetFixture(stop === 'terminal' ? [fail('unauthorized', 401)] : undefined);
+    fixture.init(); await settle();
+    if (stop === 'pagehide') fixture.emit('pagehide', {});
+    const sent = fixture.sent.length;
+    fixture.ui['chat-close'].dispatch('click');
+    fixture.emit('keydown', { key: 'Escape', preventDefault() { assert.fail('stopped key must be ignored'); } });
+    assert.equal(fixture.sent.length, sent);
+  }
+});
+
 test('bounded property sweep: arbitrary malformed boundary values never fetch or crash', async () => {
   // Deterministic regression/property corpus; no claim of a browser or native fuzzer.
   let seed = 14641;
