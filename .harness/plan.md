@@ -1,5 +1,65 @@
 # Active Plan
 
+## UI approved and checkpointed; combined integration next
+
+User approved the running UI preview and requested proceeding. Reviewed UX-02 handoff and source diff; committed approved UI/Escape implementation, contract and selected durable evidence as `191910a` on feat/conversation-rating. UX-02 completed with explicit user acceptance and known compact/landscape limits retained. Do not mix CI/admin drafts into UI integration. Checkpoint coordination records separately, then delegate merge of accepted rating branch into isolated integration branch; widget owner resolves application/test conflicts within exact web/contract scope, no blind ours/theirs. Independent combined-tree gates/browser/full fuzz required before feature fast-forward/push. No main merge or deployment.
+
+## Current UI completion — user visual acceptance
+
+User requested finishing the UI and will validate it personally. UX-02 dispatched to `assistant-widget-finish` in the main feature worktree: sole web writer, preserve existing edits, complete visible close wiring/styles/tests and handoff labels; no rating import, commit, push, merge or deployment. Brief `.scratch/widget-ux/issues/08-close-button-and-labels.md` now includes explicit evidence scope and preview authorization. Worker must pass technical gates/trusted-browser checks and leave a credential-free loopback preview at unused port 18102 (or documented alternative) in `assistant-widget-preview`. URL is not claimed running until verified. Handoff `.scratch/widget-ux/handoff-ux-02.md`. User visual approval gates next UI commit/integration. Other workstreams remain separate; rating branch already pushed, CI repair still needs independent re-review.
+
+## Rating branch pushed; merge held — 2026-11-02
+
+User green-lit proceeding. Pushed `validation/rating-acceptance` and verified remote head equals `eface12be8e508a31efa6a8d1ceb7bd2daf07be5`; upstream tracking configured. Remote feature branch `feat/conversation-rating` does not exist; remote main currently points to 40773a3e09e83c584baadc6dae18a3482991ac67 (not inspected/accepted for integration). Local feature branch is an ancestor of the rating branch (0 local-only / 11 rating-only commits), but its checked-out worktree has overlapping uncommitted harness/UI edits including incomplete UX-02. No stash, reset, overwrite, feature-branch push or merge performed. Next: obtain explicit scope for checkpointing/finishing main-tree work before feature integration; do not merge into remote main blindly. CI remains pending independent re-review.
+
+## Earlier local rating acceptance committed — 2026-11-02
+
+Reviewed final RATE-04 handoff and accepted its bounded recovered-rating scope. Created local branch `validation/rating-acceptance` in assistant-rating-acceptance and committed `eface12` (`Strengthen rating durability and trusted-browser acceptance`). Commit includes only the two reviewed test files plus selected durable acceptance handoff/logs/JSON results (no executable, SQLite database, browser profile or screenshots). All source checks were run before this evidence-only commit; no test source changed after validation. RATE-04 independent acceptance is completed; RATE-02/03 integration into main feature tree remains pending separately. Main feature branch and its existing application/UI edits were untouched. No push or merge performed. Low-severity runner-profile cleanup is not an acceptance blocker. CI repair remains unaccepted until independent re-review. Next user decision: whether/how to push and integrate the local rating branch; do not assume permission.
+
+## Earlier local commit permission — 2026-11-02
+
+User authorized committing only if safe; push and merge are separate future decisions. Independent rating execution logs show all common gates/full fuzz passed (seven mutation campaigns), repeated rating race tests passed ten times, browser rating 52/52, sandbox-send 22/22, visual 113/113. Validator reports no acceptance blocker and is finalizing handoff; review before committing only the test/evidence batch on isolated local branch `validation/rating-acceptance`. CI remains unaccepted pending repair/re-review. Main-tree UX-02 is incomplete: header close-button markup exists but click wiring/styles/tests remain pending, so do not sweep main-tree changes into a commit. Preserve all uncommitted work.
+
+## Earlier acceptance/repair dispatch — 2026-11-02
+
+Reviewed the backend test diff and complete browser regression plus all three handoffs. RATE-02/03 workers delivered test-only changes; reported passes are not independent acceptance. Dispatched `assistant-rate-acceptance` in new isolated `/home/me/Documents/agent-worktrees/assistant-rating-acceptance` at 1253287: mechanically assemble only supplied test patches, independently review/rerun common gates, full fuzz, trusted-input rating plus sandbox-send/visual regressions. Backend patch SHA256 `98bc40d3700374850f3c8bdc29a2122a418d2c37c2bad6c2fd9625912adb1ad6`; browser patch SHA256 `dab81ae7b84b3517a48eadc3ed8fa4278df50eb008a634ddb910086ae4b3efbc`. Main-tree Escape work is excluded and not implicitly accepted. Brief `07-rating-independent-acceptance.md` under `.scratch/automation/issues/`.
+
+CI review recommended hold: P2 adapter can hang when Chromium dies by signal; P3 workflow ownership missing from context map. Dispatched `assistant-ci-repair` in existing assistant-ci worktree with allowed foundation adapter/tests/docs paths only, including context map; no web changes. Brief `06-ci-failure-containment.md`. Must demonstrate timeout/process-group cleanup without browser sandbox bypass; independent re-review follows.
+
+Central ledger repair restored genuine DISC-01/RATE-01 evidence pointers from existing issue handoffs; RATE-02/03 remain claimed pending acceptance. CI worktree's historical ledger remains unchanged and can still fail static; no fabricated evidence or schema weakening. Next: review acceptance and CI repair handoffs; do not start AUTO-01 or admin runtime yet. No commit/push/merge/deploy authorized.
+
+## Earlier resume — 2026-11-02
+
+User authorized proceeding with the status report's next work. Started three interactive tmux workers using explicit openai/gpt-6.1-sol; each has executed its first brief-read tool call (not merely opened a session):
+
+| Task | Session | Worktree / allowed scope | Handoff |
+|---|---|---|---|
+| RATE-02 follow-up | assistant-rate-backend | assistant-rating-review at 1253287; backend tests only | `.scratch/automation/backend-followup/handoff.md` |
+| RATE-03 follow-up | assistant-rate-browser | new isolated assistant-rating-browser at 1253287; rating browser/tests only | `.scratch/automation/browser-followup/handoff.md` |
+| CI-01 independent review | assistant-ci-review | assistant-ci at 1253287 plus existing CI diff; no implementation writes | `.scratch/automation/ci-review/handoff.md` |
+
+Briefs are `.scratch/automation/issues/03-rating-backend-followup.md`, `04-rating-browser-followup.md`, and `05-ci-independent-review.md`. Each worker has a two-repair limit and must stop at handoff/blocker. Main-tree Escape/UI changes remain untouched. No commit/push/merge/deploy or remote-write permission granted. No polling/heartbeat daemon added.
+
+Recovered ADMIN-01 handoff exists; draft contract/design delivered, not accepted. Static/unit/contract attempts were blocked by historical disk-quota errors; current filesystem check shows 13GB available on home and 3.8GB on /tmp, which does not itself establish quota remediation or passing checks. Review security/policy decisions before any admin implementation dispatch.
+
+Next: inspect completed follow-up handoffs, assign any demonstrated defects to owners, and perform independent RATE-04 validation only on the exact combined reviewed tree. CI must retain honest ledger-schema failures until real evidence/status corrections exist. AUTO-01 remains pending CI acceptance. Goal now acknowledges approved admin design scope; older plan/preview sections below are historical.
+
+## Staff dashboard — approved new feature
+
+User approved separate staff login and ticket management dashboard and requested available UI/UX skills. ADMIN-01 contract/design worker dispatched on feat/admin-contract at `/home/me/Documents/agent-worktrees/assistant-admin`, base 1253287. Brief: `.scratch/admin-dashboard/issues/01-contract-design.md`. Apply UI/UX Pro Max, Design Taste app-screen workflow, and Tailwind v4 tokens. Contract gate precedes backend/UI implementation. Ticket lifecycle, priority, assignment, internal notes and audit included; outbound replies and public signup excluded. CI/rating blockers remain open; no main-tree application changes or commit/push/deploy authorized by this dispatch.
+
+## Approved automation — current decision
+
+Latest resume: tmux server/sessions are absent, but both worker handoffs survived and were copied to `.scratch/automation/handoffs/`. CI-01 implementation remains uncommitted in its isolated worktree; local gates passed except new full task-schema validation, which correctly rejects four completed rating/disclosure records with empty evidence on base 1253287. GitHub execution and independent CI patch review remain outstanding. Rating recovery passed existing local gates and browser scripts, but acceptance is BLOCKED: rating browser tests use synthetic input against a mock API; storage restart/concurrent-write/uncertain-commit assertions need strengthening. Full fuzz not independently rerun. Next dispatch: bounded widget browser and backend test follow-ups, plus independent CI review; do not reimplement rating or declare completion. AUTO-01 remains pending CI acceptance. Original Escape/UI work remains untouched.
+
+User approved CI-01 and AUTO-01. CI-01 foundation implementation dispatched in isolated worktree `/home/me/Documents/agent-worktrees/assistant-ci` on `tooling/ci-autonomy`, based on recovered rating integration `1253287`. Brief: `.scratch/automation/issues/01-ci.md`. No commit/push/merge/deploy authorized by this dispatch. Independent validation is required before acceptance. Startup correction: both initial worker calls failed before implementation because default gpt-5.5 was rejected by the account. Explicit openai/gpt-5.4 was also rejected. Restarted the two owned tmux workers with openai/gpt-6-astra, matching the current coordinator's PI_MODEL/PI_PROVIDER; success must be confirmed from tool activity/handoffs, not session existence. Rating recovery brief: `.scratch/automation/issues/02-rating-recovery.md`; isolated review tree: `/home/me/Documents/agent-worktrees/assistant-rating-review`.
+
+Reconciliation: rating backend/widget commits already exist, and `rating-integration-clean` ends at `1253287`; previous temporary worktrees are absent/prunable and no matching tmux workers remain. Old claimed task statuses below are historical, not proof of running sessions. Preserve the main tree's uncommitted Escape/UI work. Next: review CI handoff, independently validate recovered rating integration, then implement bounded AUTO-01 runtime/skills with two-repair limit and explicit permission gates. No autonomous production work.
+
+## Widget Escape close — completed locally
+
+WIDGET-ESC-01 and WIDGET-ESC-02 are complete: Escape inside the iframe (including the handoff form) or on the focused launcher closes the window, focuses the launcher, and leaves the guest chat/draft intact for reopening. Exact-origin/source message guards and embedding contract were reviewed. Widget owner passed format, lint, static, unit, contract, fuzz-smoke and trusted Chromium checks (31/31); foundation owner passed format, lint, static, unit, contract. Current isolated preview: `http://127.0.0.1:18101/widget/sample-host.html` (local SQLite, no external AI credentials). Existing 18100 preview was left untouched. No commit/push or deployment. Next decision: user review of Escape behavior; rating slice below remains independent.
+
 ## Rating slice — integration branch feat/conversation-rating
 
 | Step | Owner | State | Depends on |

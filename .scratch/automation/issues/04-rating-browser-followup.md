@@ -1,0 +1,11 @@
+# RATE-03 trusted-input actual-backend follow-up
+
+Status: dispatched; worker must record claim here before editing.
+Context/owner: chat-widget / rating browser follow-up worker.
+Worktree: /home/me/Documents/agent-worktrees/assistant-rating-browser at 1253287.
+Goal: replace missing rating acceptance evidence with a repeatable real-browser regression against actual Go/SQLite, not a mock API.
+Allowed writes: web/tests/rating.browser.mjs, web/tests/rating*.test.mjs, .scratch/automation/browser-followup/** and this brief for claim only. No runtime edits without reporting a demonstrated defect for a new bounded task. Do not import main tree Escape/UI work.
+Read AGENTS.md, pinned goal (historical), GLOSSARY.md, context map, rating spec/issues, chat contract, testing-contract.md, fuzzing.md and ADRs. Read rating recovery handoff copied beside this brief. Current coordinator direction is this brief.
+Acceptance: browser-trusted CDP pointer and keyboard input selects rating including accessible radio keyboard navigation, enters comment, saves/revises/replays with honest outcome against backend-served unchanged assets/sandbox/CSP; initial turn unlock, double-submit prevention, guest isolation and persisted backend rating across process restart verified. Guest capability must stay iframe-only in product; test inspection must not add storage or guest resume behavior. Distinguish backend persistence/replay across restart from browser reload that loses guest access. Use local credential-free Go process/fresh SQLite only; no provider/Turso/email service. Synthetic value assignment/click or mock API is not acceptance evidence. Capture request counts and event trust where feasible; mark any remaining gap honestly.
+Checks: make format lint static unit contract; build Go executable; execute browser regression with explicit binary/evidence paths and fail nonzero on errors. At most two repair rounds then report blocker.
+Handoff: .scratch/automation/browser-followup/handoff.md with exact revision/changed paths, commands/logs/screenshots and scenario results. No nested workers, other-worktree or central ledger edits, commits, pushes, merges, deployment, credentials or live services. Independent acceptance is still required.
