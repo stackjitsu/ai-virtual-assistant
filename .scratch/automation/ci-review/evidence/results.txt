@@ -1,0 +1,12 @@
+format exit=0
+lint exit=0
+static exit=2
+unit exit=0
+contract exit=0
+fuzz-smoke exit=0
+compile exit=0
+diff-check exit=0
+browser-crash-fixture outer_timeout_exit=124
+tasks-schema exit=1
+missing-schema-dependency expected_failure_exit=1
+missing-browser expected_failure_exit=1

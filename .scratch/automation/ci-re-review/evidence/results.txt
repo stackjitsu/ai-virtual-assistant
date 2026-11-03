@@ -1,0 +1,14 @@
+format exit=0
+lint exit=0
+static exit=2
+unit exit=0
+contract exit=0
+fuzz-smoke exit=0
+tooling-tests exit=0
+actionlint exit=0
+crash-fixture exit=1
+browser exit=1
+compile exit=0
+diff-check exit=0
+independent-verification exit=0
+process-tests-repeat exit=0

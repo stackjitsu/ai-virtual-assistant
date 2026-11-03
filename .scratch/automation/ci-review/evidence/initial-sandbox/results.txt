@@ -1,0 +1,6 @@
+format exit=0
+lint exit=2
+static exit=2
+unit exit=2
+contract exit=2
+fuzz-smoke exit=2
