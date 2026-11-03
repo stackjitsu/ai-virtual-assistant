@@ -1,0 +1,1608 @@
+diff --git c/database/migrations/003_ratings.sql w/database/migrations/003_ratings.sql
+new file mode 100644
+index 0000000..b299094
+--- /dev/null
++++ w/database/migrations/003_ratings.sql
+@@ -0,0 +1,7 @@
++CREATE TABLE IF NOT EXISTS ratings (
++ conversation_id TEXT PRIMARY KEY REFERENCES conversations(id),
++ rating INTEGER NOT NULL CHECK(rating BETWEEN 1 AND 5),
++ comment TEXT NOT NULL CHECK(length(CAST(comment AS BLOB)) <= 2000),
++ rated_at TEXT NOT NULL
++);
++INSERT OR IGNORE INTO schema_versions(version) VALUES(3);
+diff --git c/internal/chat/http.go w/internal/chat/http.go
+index 92df583..cabeade 100644
+--- c/internal/chat/http.go
++++ w/internal/chat/http.go
+@@ -38,0 +39 @@ type rateWindow struct {
++	ratings     int
+@@ -93,0 +95 @@ func newServer(store Store, provider Provider, cfg HTTPConfig, assets fs.FS, out
++	api.Post("/conversations/{id}/rating", s.rateConversation)
+@@ -147,0 +150,5 @@ func (s *server) apiMiddleware(next http.Handler) http.Handler {
++			if r.Method == http.MethodPost && strings.HasPrefix(r.URL.Path, "/api/v1/conversations/") && strings.HasSuffix(r.URL.Path, "/rating") {
++				if !s.rateRating(w, r) {
++					return
++				}
++			}
+diff --git c/internal/chat/rating.go w/internal/chat/rating.go
+new file mode 100644
+index 0000000..8a49e35
+--- /dev/null
++++ w/internal/chat/rating.go
+@@ -0,0 +1,120 @@
++package chat
++
++import (
++	"context"
++	"encoding/json"
++	"errors"
++	"net/http"
++	"strings"
++	"time"
++	"unicode/utf8"
++)
++
++const ratingAttemptsPerMinute = 10
++
++// Rating is the single canonical, revisable record belonging to a conversation.
++type Rating struct {
++	ConversationID string    `json:"-"`
++	Value          int       `json:"rating"`
++	Comment        string    `json:"comment"`
++	RatedAt        time.Time `json:"rated_at"`
++}
++
++var ErrRatingRequiresTurn = errors.New("rating requires a completed turn")
++
++func canonicalRatingComment(raw string) (string, error) {
++	comment := strings.TrimSpace(raw)
++	if comment != "" && !validText(comment, 1000, 2000) {
++		return "", ErrInvalid
++	}
++	return comment, nil
++}
++
++func decodeRatingRequest(b []byte) (int, string, error) {
++	var body struct {
++		Rating  json.RawMessage `json:"rating,omitempty"`
++		Comment json.RawMessage `json:"comment,omitempty"`
++	}
++	if len(b) > 4096 || strictJSON(b, &body) != nil || len(body.Rating) != 1 || body.Rating[0] < '1' || body.Rating[0] > '5' {
++		return 0, "", ErrInvalid
++	}
++	comment := ""
++	if len(body.Comment) != 0 {
++		if string(body.Comment) == "null" || json.Unmarshal(body.Comment, &comment) != nil || len(body.Comment) == 0 || body.Comment[0] != '"' {
++			return 0, "", ErrInvalid
++		}
++	}
++	canonical, err := canonicalRatingComment(comment)
++	if err != nil {
++		return 0, "", err
++	}
++	return int(body.Rating[0] - '0'), canonical, nil
++}
++
++func validateRating(r Rating) error {
++	if !idPattern.MatchString(r.ConversationID) || r.Value < 1 || r.Value > 5 || r.RatedAt.IsZero() || !utf8.ValidString(r.Comment) {
++		return ErrInvalid
++	}
++	canonical, err := canonicalRatingComment(r.Comment)
++	if err != nil || canonical != r.Comment {
++		return ErrInvalid
++	}
++	return nil
++}
++
++func (s *server) rateRating(w http.ResponseWriter, r *http.Request) bool {
++	peer, now := peerAddress(r), time.Now()
++	s.mu.Lock()
++	window := s.window(peer, now)
++	allowed := window.ratings < ratingAttemptsPerMinute
++	if allowed {
++		window.ratings++
++	}
++	s.rates[peer] = window
++	s.mu.Unlock()
++	if !allowed {
++		apiError(w, 429, "rate_limited")
++	}
++	return allowed
++}
++
++func (s *server) rateConversation(w http.ResponseWriter, r *http.Request) {
++	if !s.rateRating(w, r) {
++		return
++	}
++	if r.URL.RawQuery != "" {
++		apiError(w, 400, "invalid_request")
++		return
++	}
++	media := struct {
++		Rating  json.RawMessage `json:"rating,omitempty"`
++		Comment json.RawMessage `json:"comment,omitempty"`
++	}{}
++	// Reuse the existing 4 KiB media/body/strict-JSON gate; the raw
++	// rating token is then checked for the exact integer literal 1–5.
++	if !decodeBody(w, r, 4096, &media) {
++		return
++	}
++	b, _ := json.Marshal(media)
++	value, comment, err := decodeRatingRequest(b)
++	if err != nil {
++		apiError(w, 400, "invalid_request")
++		return
++	}
++	c, ok := s.authorize(w, r)
++	if !ok {
++		return
++	}
++	commitCtx, cancel := context.WithTimeout(context.WithoutCancel(r.Context()), 3*time.Second)
++	defer cancel()
++	stored, err := s.store.SaveRating(commitCtx, Rating{c.ID, value, comment, time.Now().UTC()})
++	if err != nil {
++		if errors.Is(err, ErrRatingRequiresTurn) {
++			apiError(w, 409, "rating_requires_turn")
++		} else {
++			apiError(w, 503, "storage_unavailable")
++		}
++		return
++	}
++	writeJSON(w, 200, stored)
++}
+diff --git c/internal/chat/rating_store.go w/internal/chat/rating_store.go
+new file mode 100644
+index 0000000..8282fbe
+--- /dev/null
++++ w/internal/chat/rating_store.go
+@@ -0,0 +1,69 @@
++package chat
++
++import (
++	"context"
++	"time"
++)
++
++// One statement decides eligibility, deduplication, replacement and the row
++// returned to the caller. Both adapters execute exactly this statement; a
++// detached read cannot substitute for the serialized write decision.
++// Fixed-width UTC nanoseconds make lexical comparison safe across processes.
++const saveRatingSQL = `INSERT INTO ratings(conversation_id,rating,comment,rated_at)
++ SELECT ?,?,?,? WHERE EXISTS (
++ SELECT 1 FROM turns WHERE conversation_id=? AND status IN ('answered','needs_clarification'))
++ ON CONFLICT(conversation_id) DO UPDATE SET
++ rating=excluded.rating, comment=excluded.comment,
++ rated_at=CASE WHEN ratings.rating=excluded.rating AND ratings.comment=excluded.comment THEN ratings.rated_at
++ WHEN excluded.rated_at>ratings.rated_at THEN excluded.rated_at
++ WHEN substr(ratings.rated_at,21,9)='999999999' THEN strftime('%Y-%m-%dT%H:%M:%S',ratings.rated_at,'+1 second')||'.000000000Z'
++ ELSE substr(ratings.rated_at,1,20)||printf('%09d',CAST(substr(ratings.rated_at,21,9) AS INTEGER)+1)||'Z' END
++ RETURNING conversation_id,rating,comment,rated_at`
++
++func ratingTimestamp(t time.Time) string {
++	return t.UTC().Format("2006-01-02T15:04:05.000000000Z")
++}
++
++func decodeRatingRow(v []any) (Rating, error) {
++	if len(v) != 4 {
++		return Rating{}, ErrUnavailable
++	}
++	id, a := textCell(v[0])
++	n, b := v[1].(int64)
++	comment, c := textCell(v[2])
++	when, d := timeCell(v[3])
++	if !a || !b || !c || !d || n < 1 || n > 5 {
++		return Rating{}, ErrUnavailable
++	}
++	out := Rating{id, int(n), comment, when}
++	if validateRating(out) != nil {
++		return Rating{}, ErrUnavailable
++	}
++	return out, nil
++}
++
++// SaveRating is atomic on SQLite and Turso. A failed remote response may
++// conceal a committed update; never infer a successful replacement from a
++// later read that could belong to another concurrent operation.
++func (s *SQLStore) SaveRating(ctx context.Context, proposed Rating) (Rating, error) {
++	if validateRating(proposed) != nil {
++		return Rating{}, ErrInvalid
++	}
++	r, err := s.query(ctx, saveRatingSQL, proposed.ConversationID, proposed.Value, proposed.Comment, ratingTimestamp(proposed.RatedAt), proposed.ConversationID)
++	if err != nil {
++		return Rating{}, ErrUnavailable
++	}
++	if len(r.rows) == 1 {
++		stored, err := decodeRatingRow(r.rows[0])
++		if err != nil || stored.ConversationID != proposed.ConversationID {
++			return Rating{}, ErrUnavailable
++		}
++		return stored, nil
++	}
++	if len(r.rows) != 0 {
++		return Rating{}, ErrUnavailable
++	}
++	// A zero-row conditional INSERT is definitive for this statement: there
++	// was no eligible completed turn at the atomic decision point.
++	return Rating{}, ErrRatingRequiresTurn
++}
+diff --git c/internal/chat/rating_test.go w/internal/chat/rating_test.go
+new file mode 100644
+index 0000000..55a98ff
+--- /dev/null
++++ w/internal/chat/rating_test.go
+@@ -0,0 +1,609 @@
++package chat
++
++import (
++	"context"
++	"encoding/json"
++	"errors"
++	"fmt"
++	"net/http"
++	"net/http/httptest"
++	"path/filepath"
++	"reflect"
++	"strings"
++	"sync/atomic"
++	"testing"
++	"time"
++
++	"ai-virtual-assistant/database"
++)
++
++type ratingSpyStore struct {
++	Store
++	writes atomic.Int64
++}
++
++func (s *ratingSpyStore) SaveRating(ctx context.Context, r Rating) (Rating, error) {
++	s.writes.Add(1)
++	return s.Store.SaveRating(ctx, r)
++}
++
++func ratingPath(id string) string { return "/api/v1/conversations/" + id + "/rating" }
++
++func ratingResponse(t *testing.T, w *httptest.ResponseRecorder) Rating {
++	t.Helper()
++	if w.Code != 200 || w.Header().Get("Cache-Control") != "no-store" || w.Header().Get("X-Content-Type-Options") != "nosniff" {
++		t.Fatalf("rating response %d %s", w.Code, w.Body)
++	}
++	var result Rating
++	if strictJSON(w.Body.Bytes(), &result) != nil || result.Value < 1 || result.Value > 5 || result.RatedAt.IsZero() {
++		t.Fatalf("rating response invalid: %s", w.Body)
++	}
++	var keys map[string]any
++	_ = json.Unmarshal(w.Body.Bytes(), &keys)
++	if len(keys) != 3 || keys["comment"] == nil || keys["rated_at"] == nil {
++		t.Fatalf("rating envelope %s", w.Body)
++	}
++	return result
++}
++
++func TestContractHTTPRatingValidationAuthorizationAndRevision(t *testing.T) {
++	s := testStore(t)
++	h := escalationHandler(t, s, nil)
++	id, cap := createHTTP(t, h, `{}`)
++	path := ratingPath(id)
++	assertCode(t, perform(h, "POST", path, cap, `{"rating":5}`), 409, "rating_requires_turn")
++	for _, body := range []string{`{}`, `[]`, `null`, `{"rating":null}`, `{"rating":0}`, `{"rating":6}`, `{"rating":1.0}`, `{"rating":1e0}`, `{"rating":"1"}`, `{"rating":true}`, `{"rating":5,"comment":null}`, `{"rating":5,"comment":9}`, `{"rating":5,"comment":"x","comment":"y"}`, `{"rating":5,"comm\u0065nt":"x","comment":"y"}`, `{"rating":5,"other":1}`, `{"Rating":5}`, `{"rating":5} {}`, string([]byte{0xff}), `{"rating":5,"comment":"` + strings.Repeat("a", 1001) + `"}`, `{"rating":5,"comment":"` + strings.Repeat("世", 668) + `"}`, `{"rating":5,"comment":"\u0000"}`} {
++		assertCode(t, perform(h, "POST", path, cap, body), 400, "invalid_request")
++	}
++	assertCode(t, perform(h, "POST", path, cap, strings.Repeat("a", 4097)), 413, "request_too_large")
++	assertCode(t, perform(h, "POST", path+"?x=1", cap, `{"rating":5}`), 400, "invalid_request")
++	assertCode(t, perform(h, "POST", ratingPath("bad"), cap, `{"rating":5}`), 400, "invalid_request")
++	assertCode(t, perform(h, "GET", path, cap, ""), 405, "method_not_allowed")
++	for _, token := range []string{"", "bad", strings.Repeat("d", 64)} {
++		assertCode(t, perform(h, "POST", path, token, `{"rating":5}`), 401, "unauthorized")
++	}
++	assertCode(t, perform(h, "POST", ratingPath(strings.Repeat("f", 32)), cap, `{"rating":5}`), 401, "unauthorized")
++	r := httptest.NewRequest("POST", path, strings.NewReader(`{"rating":5}`))
++	r.Header.Set("Content-Type", "text/plain")
++	w := httptest.NewRecorder()
++	h.ServeHTTP(w, r)
++	assertCode(t, w, 415, "unsupported_media_type")
++	r = httptest.NewRequest("POST", path, strings.NewReader(`{"rating":5}`))
++	r.Header.Set("Content-Type", "application/json")
++	r.Header.Set("Authorization", "Bearer "+cap)
++	r.Header.Set("Origin", "null")
++	w = httptest.NewRecorder()
++	h.ServeHTTP(w, r)
++	assertCode(t, w, 403, "origin_not_allowed")
++	// Independent request windows: the validation traffic above consumes the
++	// default peer's window, not this direct peer's.
++	post := func(body string) *httptest.ResponseRecorder {
++		r := httptest.NewRequest("POST", path, strings.NewReader(body))
++		r.RemoteAddr = "10.12.0.1:4567"
++		r.Header.Set("Authorization", "Bearer "+cap)
++		r.Header.Set("Content-Type", "application/json")
++		w := httptest.NewRecorder()
++		h.ServeHTTP(w, r)
++		return w
++	}
++	turn := perform(h, "POST", "/api/v1/conversations/"+id+"/messages", cap, postBody("request_001", "unknown question"))
++	if turn.Code != 200 {
++		t.Fatalf("turn: %d %s", turn.Code, turn.Body)
++	}
++	first := ratingResponse(t, post(`{"rating":5,"comment":"  Helpful  "}`))
++	if first.Comment != "Helpful" {
++		t.Fatal(first)
++	}
++	replayed := ratingResponse(t, post(`{"rating":5,"comment":"Helpful"}`))
++	if !replayed.RatedAt.Equal(first.RatedAt) {
++		t.Fatal("replay changed timestamp")
++	}
++	changed := ratingResponse(t, post(`{"rating":4}`))
++	if changed.Comment != "" || !changed.RatedAt.After(first.RatedAt) {
++		t.Fatal("replacement not monotonic", changed)
++	}
++	for n := 0; n < 7; n++ {
++		ratingResponse(t, post(`{"rating":4}`))
++	}
++	assertCode(t, post(`{"rating":4}`), 429, "rate_limited")
++	other, otherCap := createHTTP(t, h, `{}`)
++	assertCode(t, perform(h, "POST", ratingPath(other), cap, `{"rating":5}`), 401, "unauthorized")
++	assertCode(t, perform(h, "POST", ratingPath(id), otherCap, `{"rating":5}`), 401, "unauthorized")
++}
++
++// Read the persisted columns directly, independently of SaveRating's RETURNING
++// decoder, so durability checks cannot accidentally perform another write.
++func persistedRating(t *testing.T, s *SQLStore, id string) Rating {
++	t.Helper()
++	var r Rating
++	var timestamp string
++	if err := s.db.QueryRow(`SELECT conversation_id,rating,comment,rated_at FROM ratings WHERE conversation_id=?`, id).
++		Scan(&r.ConversationID, &r.Value, &r.Comment, &timestamp); err != nil {
++		t.Fatal("read persisted rating", err)
++	}
++	var err error
++	r.RatedAt, err = time.Parse(time.RFC3339Nano, timestamp)
++	if err != nil || timestamp != ratingTimestamp(r.RatedAt) {
++		t.Fatalf("noncanonical persisted timestamp %q: %v", timestamp, err)
++	}
++	return r
++}
++
++func assertSameRating(t *testing.T, got, want Rating) {
++	t.Helper()
++	if got.ConversationID != want.ConversationID || got.Value != want.Value || got.Comment != want.Comment ||
++		got.RatedAt.IsZero() || !got.RatedAt.Equal(want.RatedAt) {
++		t.Fatalf("rating mismatch: got %+v, want %+v", got, want)
++	}
++}
++
++// Every submission has a unique comment and the same old proposed clock. Thus
++// distinct serialized replacements must advance the stored clock, and the
++// greatest returned timestamp identifies the last committed row, not merely the
++// goroutine whose response happened to arrive last.
++func concurrentDistinctRatings(t *testing.T, stores []*SQLStore, initial Rating) Rating {
++	t.Helper()
++	type outcome struct {
++		submitted Rating
++		stored    Rating
++		err       error
++	}
++	const writes = 24
++	start := make(chan struct{})
++	results := make(chan outcome, writes)
++	for i := 0; i < writes; i++ {
++		proposed := Rating{initial.ConversationID, (i % 5) + 1, fmt.Sprintf("revision %d", i), time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)}
++		go func(s *SQLStore, submitted Rating) {
++			<-start
++			r, err := s.SaveRating(context.Background(), submitted)
++			results <- outcome{submitted, r, err}
++		}(stores[i%len(stores)], proposed)
++	}
++	close(start)
++	latest := initial
++	seen := make(map[string]bool, writes)
++	for i := 0; i < writes; i++ {
++		result := <-results
++		if result.err != nil {
++			t.Errorf("concurrent rating %+v: %v", result.submitted, result.err)
++			continue
++		}
++		r := result.stored
++		if r.ConversationID != result.submitted.ConversationID || r.Value != result.submitted.Value || r.Comment != result.submitted.Comment {
++			t.Errorf("concurrent response mixed/replaced fields: submitted %+v, returned %+v", result.submitted, r)
++		}
++		stamp := ratingTimestamp(r.RatedAt)
++		if !r.RatedAt.After(initial.RatedAt) || seen[stamp] {
++			t.Errorf("distinct revision reused/nonmonotonic timestamp: %+v", r)
++		}
++		seen[stamp] = true
++		if r.RatedAt.After(latest.RatedAt) {
++			latest = r
++		}
++	}
++	if t.Failed() {
++		t.FailNow()
++	}
++	return latest
++}
++
++func TestSQLiteRatingAtomicRestartAndMigration(t *testing.T) {
++	ctx := context.Background()
++	path := filepath.Join(t.TempDir(), "rating.db")
++	s, closeStore, err := OpenSQLite(path)
++	if err != nil {
++		t.Fatal(err)
++	}
++	defer func() { _ = closeStore() }()
++	if err := s.Migrate(ctx); err != nil {
++		t.Fatal(err)
++	}
++	c := testConversation(t, s, strings.Repeat("a", 32))
++	proposed := Rating{c.ID, 5, "great", time.Now().UTC()}
++	if _, err := s.SaveRating(ctx, proposed); !errors.Is(err, ErrRatingRequiresTurn) {
++		t.Fatal("zero-turn", err)
++	}
++	turn := testTurn(c, "request_001", "start", 1)
++	turn.Assistant.Status = "needs_clarification"
++	turn.Assistant.Sources = []Source{}
++	storedTurn, err := s.CompleteTurn(ctx, turn, 0)
++	if err != nil {
++		t.Fatal(err)
++	}
++	first, err := s.SaveRating(ctx, proposed)
++	if err != nil {
++		t.Fatal(err)
++	}
++	proposed.RatedAt = proposed.RatedAt.Add(-time.Hour)
++	if again, err := s.SaveRating(ctx, proposed); err != nil || !again.RatedAt.Equal(first.RatedAt) {
++		t.Fatal("replay", again, err)
++	}
++	proposed.Value = 3
++	second, err := s.SaveRating(ctx, proposed)
++	if err != nil || !second.RatedAt.After(first.RatedAt) {
++		t.Fatal("monotonic replacement", second, err)
++	}
++	if _, err := s.db.Exec(`CREATE TRIGGER reject_rating BEFORE UPDATE ON ratings BEGIN SELECT RAISE(ABORT,'fixture failure'); END`); err != nil {
++		t.Fatal(err)
++	}
++	proposed.Value = 2
++	if _, err := s.SaveRating(ctx, proposed); !errors.Is(err, ErrUnavailable) {
++		t.Fatal("failed write", err)
++	}
++	if _, err := s.db.Exec(`DROP TRIGGER reject_rating`); err != nil {
++		t.Fatal(err)
++	}
++	assertSameRating(t, persistedRating(t, s, c.ID), second)
++	otherStore, closeOther, err := OpenSQLite(path)
++	if err != nil {
++		t.Fatal(err)
++	}
++	defer func() { _ = closeOther() }()
++	lastCommitted := concurrentDistinctRatings(t, []*SQLStore{s, otherStore}, second)
++	beforeRestart := persistedRating(t, s, c.ID)
++	assertSameRating(t, beforeRestart, lastCommitted)
++	if err := closeOther(); err != nil {
++		t.Fatal(err)
++	}
++	if err := closeStore(); err != nil {
++		t.Fatal(err)
++	}
++	s, closeStore, err = OpenSQLite(path)
++	if err != nil {
++		t.Fatal(err)
++	}
++	if err := s.Migrate(ctx); err != nil {
++		t.Fatal(err)
++	}
++	assertSameRating(t, persistedRating(t, s, c.ID), beforeRestart)
++	replayInput := beforeRestart
++	replayInput.RatedAt = time.Now().UTC().Add(time.Hour)
++	replayed, err := s.SaveRating(ctx, replayInput)
++	if err != nil {
++		t.Fatal("post-restart replay", err)
++	}
++	assertSameRating(t, replayed, beforeRestart)
++	assertSameRating(t, persistedRating(t, s, c.ID), beforeRestart)
++	reopenedTurn, err := s.FindTurn(ctx, c.ID, turn.RequestID)
++	if err != nil || !reflect.DeepEqual(reopenedTurn, storedTurn) {
++		t.Fatalf("rating writes changed completed turn: %+v, %v", reopenedTurn, err)
++	}
++	reopenedConversation, err := s.Conversation(ctx, c.ID)
++	if err != nil || !reflect.DeepEqual(reopenedConversation, c) {
++		t.Fatalf("rating writes changed conversation: %+v, %v", reopenedConversation, err)
++	}
++	var count int
++	if err := s.db.QueryRow(`SELECT COUNT(*) FROM ratings WHERE conversation_id=?`, c.ID).Scan(&count); err != nil || count != 1 {
++		t.Fatal("one durable row", count, err)
++	}
++	if err := s.db.QueryRow(`SELECT COUNT(*) FROM turns WHERE conversation_id=?`, c.ID).Scan(&count); err != nil || count != 1 {
++		t.Fatal("turn changed", count, err)
++	}
++}
++
++func TestSQLiteRatingConcurrentIdenticalWritesReplaySingleTimestamp(t *testing.T) {
++	ctx := context.Background()
++	path := filepath.Join(t.TempDir(), "same-rating.db")
++	firstStore, closeFirst, err := OpenSQLite(path)
++	if err != nil {
++		t.Fatal(err)
++	}
++	defer func() { _ = closeFirst() }()
++	if err := firstStore.Migrate(ctx); err != nil {
++		t.Fatal(err)
++	}
++	secondStore, closeSecond, err := OpenSQLite(path)
++	if err != nil {
++		t.Fatal(err)
++	}
++	defer func() { _ = closeSecond() }()
++	c := testConversation(t, firstStore, strings.Repeat("a", 32))
++	if _, err := firstStore.CompleteTurn(ctx, testTurn(c, "request_001", "start", 1), 0); err != nil {
++		t.Fatal(err)
++	}
++	for attempt := 0; attempt < 20; attempt++ {
++		comment := fmt.Sprintf("same canonical comment %d", attempt)
++		start := make(chan struct{})
++		type outcome struct {
++			rating Rating
++			err    error
++		}
++		results := make(chan outcome, 2)
++		for _, store := range []*SQLStore{firstStore, secondStore} {
++			go func(s *SQLStore) {
++				<-start
++				r, err := s.SaveRating(ctx, Rating{c.ID, 5, comment, time.Now().UTC()})
++				results <- outcome{r, err}
++			}(store)
++		}
++		close(start)
++		left, right := <-results, <-results
++		if left.err != nil || right.err != nil {
++			t.Fatalf("identical race %d: %v, %v", attempt, left.err, right.err)
++		}
++		if left.rating.Value != 5 || right.rating.Value != 5 || left.rating.Comment != comment || right.rating.Comment != comment ||
++			left.rating.RatedAt.IsZero() || !left.rating.RatedAt.Equal(right.rating.RatedAt) {
++			t.Fatalf("identical race %d did not replay one timestamp: %+v %+v", attempt, left.rating, right.rating)
++		}
++		var count int
++		var storedAt string
++		if err := firstStore.db.QueryRowContext(ctx, `SELECT COUNT(*), MAX(rated_at) FROM ratings WHERE conversation_id=?`, c.ID).Scan(&count, &storedAt); err != nil || count != 1 || storedAt != ratingTimestamp(left.rating.RatedAt) {
++			t.Fatalf("identical race %d did not persist one returned row: count=%d time=%q err=%v", attempt, count, storedAt, err)
++		}
++	}
++}
++
++func TestContractRatingAuthorizationBeforeStorage(t *testing.T) {
++	spy := &ratingSpyStore{Store: testStore(t)}
++	h := escalationHandler(t, spy, nil)
++	id, capability := createHTTP(t, h, `{}`)
++	path := ratingPath(id)
++	var unauthorized string
++	for _, attempt := range []struct{ id, token string }{
++		{id, ""}, {id, "invalid"}, {id, strings.Repeat("f", 64)}, {strings.Repeat("d", 32), capability},
++	} {
++		w := perform(h, "POST", ratingPath(attempt.id), attempt.token, `{"rating":5}`)
++		assertCode(t, w, 401, "unauthorized")
++		if unauthorized != "" && unauthorized != w.Body.String() {
++			t.Fatal("authorization leaks existence")
++		}
++		unauthorized = w.Body.String()
++	}
++	if spy.writes.Load() != 0 {
++		t.Fatal("rating store touched without authorization")
++	}
++	assertCode(t, perform(h, "POST", path, capability, `{"rating":5}`), 409, "rating_requires_turn")
++	if spy.writes.Load() != 1 {
++		t.Fatal("authorized rating did not reach storage")
++	}
++}
++
++func TestContractHTTPRatingStorageFailureReturnsSafe503(t *testing.T) {
++	s := testStore(t)
++	h := escalationHandler(t, s, nil)
++	id, capability := createHTTP(t, h, `{}`)
++	turnPath := "/api/v1/conversations/" + id + "/messages"
++	turnResponse := perform(h, "POST", turnPath, capability, postBody("request_001", "unknown question"))
++	if turnResponse.Code != 200 {
++		t.Fatalf("completed clarification: %d %s", turnResponse.Code, turnResponse.Body)
++	}
++	path := ratingPath(id)
++	ratingResponse(t, perform(h, "POST", path, capability, `{"rating":5,"comment":"original"}`))
++	before := persistedRating(t, s, id)
++	historyBefore, err := s.History(context.Background(), id, 100, nil)
++	if err != nil {
++		t.Fatal(err)
++	}
++	// Fail an actual authorized SQL write; do not substitute a canned HTTP
++	// response. Neither adapter diagnostics nor submitted private text may leak.
++	if _, err := s.db.Exec(`CREATE TRIGGER reject_rating BEFORE UPDATE ON ratings BEGIN SELECT RAISE(ABORT,'private SQL fixture-secret stack trace'); END`); err != nil {
++		t.Fatal(err)
++	}
++	w := perform(h, "POST", path, capability, `{"rating":1,"comment":"private rating comment"}`)
++	assertCode(t, w, 503, "storage_unavailable")
++	const safeBody = `{"error":{"code":"storage_unavailable","message":"The assistant is temporarily unavailable. Please retry."}}`
++	if strings.TrimSpace(w.Body.String()) != safeBody {
++		t.Fatalf("storage failure body is not the fixed safe envelope: %s", w.Body)
++	}
++	for _, private := range []string{capability, id, "private rating comment", "original", "private SQL", "fixture-secret", "stack trace"} {
++		if strings.Contains(w.Body.String(), private) {
++			t.Fatalf("storage error leaked %q", private)
++		}
++	}
++	assertSameRating(t, persistedRating(t, s, id), before)
++	historyAfter, err := s.History(context.Background(), id, 100, nil)
++	if err != nil || !reflect.DeepEqual(historyAfter, historyBefore) {
++		t.Fatalf("rating failure changed chat history: %+v, %v", historyAfter, err)
++	}
++	if _, err := s.db.Exec(`DROP TRIGGER reject_rating`); err != nil {
++		t.Fatal(err)
++	}
++	ratingResponse(t, perform(h, "POST", path, capability, `{"rating":5,"comment":"original"}`))
++	assertSameRating(t, persistedRating(t, s, id), before)
++}
++
++func TestContractRatingRejectedAttemptsShareBoundedWindow(t *testing.T) {
++	h := escalationHandler(t, testStore(t), nil)
++	id, cap := createHTTP(t, h, `{}`)
++	for i := 0; i < 10; i++ {
++		r := httptest.NewRequest("POST", ratingPath(id), strings.NewReader(`{"rating":5}`))
++		r.RemoteAddr = "10.12.0.2:1234"
++		r.Header.Set("Content-Type", "application/json")
++		r.Header.Set("X-Forwarded-For", fmt.Sprintf("192.0.2.%d", i))
++		if i%2 == 0 {
++			r.Header.Set("Origin", "null")
++		} else {
++			r.Header.Set("Authorization", "Bearer invalid")
++		}
++		w := httptest.NewRecorder()
++		h.ServeHTTP(w, r)
++		if w.Code != 401 && w.Code != 403 {
++			t.Fatal("rejected attempt", w.Code)
++		}
++	}
++	r := httptest.NewRequest("POST", ratingPath(id), strings.NewReader(`{"rating":5}`))
++	r.RemoteAddr = "10.12.0.2:9999"
++	r.Header.Set("Authorization", "Bearer "+cap)
++	r.Header.Set("Content-Type", "application/json")
++	w := httptest.NewRecorder()
++	h.ServeHTTP(w, r)
++	assertCode(t, w, 429, "rate_limited")
++	if w.Header().Get("Retry-After") != "60" {
++		t.Fatal("missing Retry-After")
++	}
++}
++
++func TestContractRatingTursoLoopbackAndUncertainCommit(t *testing.T) {
++	backing := testStore(t)
++	var drop atomic.Bool
++	fixture := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++		if r.URL.Path != "/v2/pipeline" || r.Header.Get("Authorization") != "Bearer fixture-token" {
++			t.Error("bad Turso request")
++			w.WriteHeader(500)
++			return
++		}
++		var body struct {
++			Requests []struct {
++				Type string `json:"type"`
++				Stmt *struct {
++					SQL      string      `json:"sql"`
++					Args     []tursoCell `json:"args"`
++					WantRows bool        `json:"want_rows"`
++				} `json:"stmt"`
++			} `json:"requests"`
++		}
++		if json.NewDecoder(r.Body).Decode(&body) != nil || len(body.Requests) != 2 || body.Requests[0].Type != "execute" || body.Requests[1].Type != "close" || body.Requests[0].Stmt == nil || !body.Requests[0].Stmt.WantRows {
++			t.Error("not a single execute/close pipeline")
++			w.WriteHeader(500)
++			return
++		}
++		stmt := body.Requests[0].Stmt
++		args := make([]any, 0, len(stmt.Args))
++		for _, cell := range stmt.Args {
++			encoded, _ := json.Marshal(cell)
++			envelope := []byte(`{"results":[{"type":"ok","response":{"type":"execute","result":{"cols":[{"name":"arg"}],"rows":[[` + string(encoded) + `]],"affected_row_count":0}}},{"type":"ok","response":{"type":"close"}}]}`)
++			decoded, err := decodeTurso(envelope)
++			if err != nil {
++				t.Error(err)
++				w.WriteHeader(500)
++				return
++			}
++			args = append(args, decoded.rows[0][0])
++		}
++		result, err := backing.query(r.Context(), stmt.SQL, args...)
++		if err != nil {
++			w.WriteHeader(500)
++			return
++		}
++		if drop.Swap(false) {
++			w.WriteHeader(500)
++			return
++		}
++		_, _ = w.Write(tursoEnvelope(result))
++	}))
++	defer fixture.Close()
++	s := newTurso(fixture.URL+"/v2/pipeline", "fixture-token", fixture.Client())
++	ctx := context.Background()
++	if err := s.Migrate(ctx); err != nil {
++		t.Fatal("migration fixture", err)
++	}
++	c := testConversation(t, s, strings.Repeat("a", 32))
++	proposed := Rating{c.ID, 5, "first", time.Now().UTC()}
++	if _, err := s.SaveRating(ctx, proposed); !errors.Is(err, ErrRatingRequiresTurn) {
++		t.Fatal("remote zero-turn", err)
++	}
++	if _, err := s.CompleteTurn(ctx, testTurn(c, "request_001", "start", 1), 0); err != nil {
++		t.Fatal(err)
++	}
++	first, err := s.SaveRating(ctx, proposed)
++	if err != nil {
++		t.Fatal(err)
++	}
++	if replay, err := s.SaveRating(ctx, proposed); err != nil || !replay.RatedAt.Equal(first.RatedAt) {
++		t.Fatal("remote replay", replay, err)
++	}
++	drop.Store(true)
++	proposed.Comment = "updated"
++	if _, err := s.SaveRating(ctx, proposed); !errors.Is(err, ErrUnavailable) {
++		t.Fatal("uncertain commit claimed success", err)
++	}
++	// Observe the hidden committed row before retrying. A merely successful
++	// retry with a later timestamp would not prove replay rather than rewrite.
++	uncertain := persistedRating(t, backing, c.ID)
++	if uncertain.ConversationID != c.ID || uncertain.Value != proposed.Value || uncertain.Comment != proposed.Comment || !uncertain.RatedAt.After(first.RatedAt) {
++		t.Fatalf("uncertain write did not commit the proposed whole row: %+v", uncertain)
++	}
++	proposed.RatedAt = uncertain.RatedAt.Add(time.Hour)
++	confirmed, err := s.SaveRating(ctx, proposed)
++	if err != nil {
++		t.Fatal("retry did not return stored revision", err)
++	}
++	assertSameRating(t, confirmed, uncertain)
++	assertSameRating(t, persistedRating(t, backing, c.ID), uncertain)
++
++	// Exercise concurrent HTTP pipelines, not just the SQLite adapter. Two
++	// clients share only the loopback primary fixture and disposable database.
++	other := newTurso(fixture.URL+"/v2/pipeline", "fixture-token", fixture.Client())
++	lastCommitted := concurrentDistinctRatings(t, []*SQLStore{s, other}, confirmed)
++	assertSameRating(t, persistedRating(t, backing, c.ID), lastCommitted)
++	replayInput := lastCommitted
++	replayInput.RatedAt = lastCommitted.RatedAt.Add(time.Hour)
++	replayed, err := other.SaveRating(ctx, replayInput)
++	if err != nil {
++		t.Fatal("remote concurrent final replay", err)
++	}
++	assertSameRating(t, replayed, lastCommitted)
++	assertSameRating(t, persistedRating(t, backing, c.ID), lastCommitted)
++	var ratings, turns int
++	if err := backing.db.QueryRow(`SELECT COUNT(*) FROM ratings WHERE conversation_id=?`, c.ID).Scan(&ratings); err != nil || ratings != 1 {
++		t.Fatal("remote single rating row", ratings, err)
++	}
++	if err := backing.db.QueryRow(`SELECT COUNT(*) FROM turns WHERE conversation_id=?`, c.ID).Scan(&turns); err != nil || turns != 1 {
++		t.Fatal("remote rating changed turns", turns, err)
++	}
++}
++
++func TestSQLiteRatingUpgradeFromV2AndMissingRemoteSchema(t *testing.T) {
++	ctx := context.Background()
++	s, closeStore, err := OpenSQLite(filepath.Join(t.TempDir(), "old.db"))
++	if err != nil {
++		t.Fatal(err)
++	}
++	defer func() { _ = closeStore() }()
++	for _, version := range []string{"001_initial.sql", "002_escalation.sql"} {
++		migration, err := database.Migrations.ReadFile("migrations/" + version)
++		if err != nil {
++			t.Fatal(err)
++		}
++		for _, statement := range strings.Split(string(migration), ";") {
++			if strings.TrimSpace(statement) == "" {
++				continue
++			}
++			if _, err := s.db.ExecContext(ctx, statement); err != nil {
++				t.Fatal(err)
++			}
++		}
++	}
++	c := testConversation(t, s, strings.Repeat("a", 32))
++	if _, err := s.CompleteTurn(ctx, testTurn(c, "request_001", "start", 1), 0); err != nil {
++		t.Fatal(err)
++	}
++	proposed := Rating{c.ID, 5, "old database", time.Now().UTC()}
++	if _, err := s.SaveRating(ctx, proposed); !errors.Is(err, ErrUnavailable) {
++		t.Fatal("unmigrated schema succeeded", err)
++	}
++	if err := s.Migrate(ctx); err != nil {
++		t.Fatal("upgrade", err)
++	}
++	if err := s.Migrate(ctx); err != nil {
++		t.Fatal("repeated upgrade", err)
++	}
++	if _, err := s.SaveRating(ctx, proposed); err != nil {
++		t.Fatal("post-upgrade rating", err)
++	}
++	var versions int
++	if err := s.db.QueryRow(`SELECT COUNT(*) FROM schema_versions`).Scan(&versions); err != nil || versions != 3 {
++		t.Fatal("migration versions", versions, err)
++	}
++}
++
++// Property: accepted rating input is canonical, bounded, stable under replay
++// parsing, and arbitrary malformed/Unicode/oversized JSON cannot panic.
++func FuzzDecodeRating(f *testing.F) {
++	for _, s := range []string{`{"rating":5}`, `{"rating":1.0}`, `{"rating":5,"comment":"  hi \t"}`, `{"rating":5,"comment":null}`, `{"rating":5,"comm\u0065nt":"x","comment":"y"}`, `{"rating":5,"comment":"` + strings.Repeat("世", 668) + `"}`, strings.Repeat("x", 4097), string([]byte{0xff})} {
++		f.Add(s)
++	}
++	f.Fuzz(func(t *testing.T, s string) {
++		value, comment, err := decodeRatingRequest([]byte(s))
++		if err != nil {
++			return
++		}
++		if value < 1 || value > 5 || len(comment) > 2000 || len([]rune(comment)) > 1000 {
++			t.Fatal("accepted out of bounds")
++		}
++		again, err := canonicalRatingComment(comment)
++		if err != nil || again != comment {
++			t.Fatal("not canonical")
++		}
++	})
++}
+diff --git c/internal/chat/records.go w/internal/chat/records.go
+index 9a11a0f..0fdbd78 100644
+--- c/internal/chat/records.go
++++ w/internal/chat/records.go
+@@ -78,0 +79 @@ type Store interface {
++	SaveRating(context.Context, Rating) (Rating, error)
+diff --git c/web/assets/protocol.mjs w/web/assets/protocol.mjs
+index 1aea3f2..77640d8 100644
+--- c/web/assets/protocol.mjs
++++ w/web/assets/protocol.mjs
+@@ -118,0 +119,8 @@ export function validEscalationTicket(value) {
++export const validRatingComment = (raw) => typeof raw === 'string'
++  && (raw.trim() === '' || validText(raw.trim(), 1000, 2000));
++const ratingTimestamp = (value) => timestamp(value)
++  && new Date(value).toISOString().slice(0, 19) === value.slice(0, 19);
++export const validRatingResult = (value) => keys(value, ['rating', 'comment', 'rated_at'])
++  && Number.isInteger(value.rating) && value.rating >= 1 && value.rating <= 5
++  && validRatingComment(value.comment) && value.comment === value.comment.trim()
++  && ratingTimestamp(value.rated_at);
+diff --git c/web/assets/widget-core.mjs w/web/assets/widget-core.mjs
+index 8d288b8..a082173 100644
+--- c/web/assets/widget-core.mjs
++++ w/web/assets/widget-core.mjs
+@@ -4 +4 @@ import {
+-  validTurn,
++  validTurn, validRatingComment, validRatingResult,
+@@ -13 +13,2 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
+-    'escalate-toggle', 'handoff-menu', 'handoff-email', 'handoff-whatsapp', 'escalation-form', 'escalate-email', 'escalate-note', 'escalate-consent', 'escalate-error', 'escalate-outcome', 'escalate-send']
++    'escalate-toggle', 'handoff-menu', 'handoff-email', 'handoff-whatsapp', 'escalation-form', 'escalate-email', 'escalate-note', 'escalate-consent', 'escalate-error', 'escalate-outcome', 'escalate-send',
++    'rating-section', 'rating-comment', 'rating-error', 'rating-outcome', 'rating-send', ...[1, 2, 3, 4, 5].map((value) => `rating-choice-${value}`)]
+@@ -41,0 +43,4 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
++  let ratingBusy = false;
++  let ratingCooldownUntil = 0;
++  let ratingCooldownTimer = null;
++  let savedRating = null;
+@@ -49 +54 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
+-  ui.transmission.textContent = 'Questions and recent chat go to the app server; approved excerpts may go to the configured AI provider.';
++  ui.transmission.textContent = 'Questions and recent chat go to the app server; bounded approved excerpts may go to the configured AI provider.';
+@@ -81,0 +87,5 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
++    ui['rating-section'].hidden = stopped || !conversation || !historyReady
++      || ![...messages.values()].some((message) => message.role === 'assistant'
++        && (message.status === 'answered' || message.status === 'needs_clarification'));
++    ui['rating-send'].disabled = ui['rating-section'].hidden || ratingBusy || Date.now() < ratingCooldownUntil;
++    ui['rating-section'].setAttribute('aria-busy', String(ratingBusy));
+@@ -281,0 +292 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
++      controls();
+@@ -310,0 +322 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
++        controls();
+@@ -345,0 +358,51 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
++  function ratingNotice(kind, text) {
++    ui[`rating-${kind}`].textContent = text;
++    ui[`rating-${kind}`].hidden = !text;
++    resize();
++  }
++  async function submitRating() {
++    if (stopped || !conversation || ui['rating-section'].hidden || ratingBusy || Date.now() < ratingCooldownUntil) return;
++    const selected = [1, 2, 3, 4, 5].find((value) => ui[`rating-choice-${value}`].checked);
++    const comment = ui['rating-comment'].value;
++    ratingNotice('error', '');
++    ratingNotice('outcome', '');
++    if (!selected || !validRatingComment(comment)) {
++      ratingNotice('error', 'Choose a rating from 1 to 5 and keep the optional comment within 1,000 characters and 2,000 bytes without control characters.');
++      return;
++    }
++    const canonical = comment.trim();
++    ratingBusy = true;
++    ratingNotice('outcome', 'Saving your rating…');
++    controls();
++    try {
++      const response = await request(`/api/v1/conversations/${conversation.conversation_id}/rating`, {
++        method: 'POST', body: { rating: selected, comment: canonical },
++      });
++      if (stopped) return;
++      ratingNotice('outcome', '');
++      if (rejectAccess(response)) return;
++      if (response.status === 200 && validRatingResult(response.data)
++        && response.data.rating === selected && response.data.comment === canonical) {
++        const revised = savedRating !== null && (savedRating.rating !== selected || savedRating.comment !== canonical);
++        savedRating = response.data;
++        ratingNotice('outcome', `Your conversation rating was ${revised ? 'updated' : 'recorded'}. You can revise it while this guest chat is open.`);
++        return;
++      }
++      if (response.status === 429 && errorCode(response) === 'rate_limited') {
++        ratingCooldownUntil = Date.now() + response.wait * 1000;
++        platform.clearTimeout(ratingCooldownTimer);
++        ratingCooldownTimer = platform.setTimeout(() => { ratingCooldownUntil = 0; controls(); }, response.wait * 1000);
++        ratingNotice('error', 'Too many rating attempts. Please wait before trying again.');
++      } else if (response.status === 409 && errorCode(response) === 'rating_requires_turn') {
++        ratingNotice('error', 'A completed reply or clarification is required before rating. No rating was saved.');
++      } else if (response.status === 400) {
++        ratingNotice('error', 'The rating could not be validated. Check your selection and comment, then try again.');
++      } else ratingNotice('error', 'Your rating could not be confirmed. Please try again; the same feedback is safe to retry.');
++    } catch {
++      if (!stopped) {
++        ratingNotice('outcome', '');
++        ratingNotice('error', 'Your rating was not confirmed. Please try again; the same feedback is safe to retry.');
++      }
++    } finally { ratingBusy = false; controls(); }
++  }
++  ui['rating-send'].addEventListener('click', () => { void submitRating(); });
+@@ -509,0 +573 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
++    platform.clearTimeout(ratingCooldownTimer);
+diff --git c/web/assets/widget.css w/web/assets/widget.css
+index aeb8ac6..783f84c 100644
+--- c/web/assets/widget.css
++++ w/web/assets/widget.css
+@@ -270,0 +271,16 @@ button:not(:disabled):active {
++.rating {
++  margin-top: var(--space-4);
++  padding: var(--space-3);
++  border: 1px solid var(--border);
++  border-radius: var(--radius-md);
++  background: var(--card);
++}
++.rating h2 { font-size: 1rem; margin: 0 0 var(--space-2); }
++.rating p { margin: var(--space-2) 0; font-size: .82rem; color: var(--muted); }
++.rating [role="group"] { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: var(--space-3) 0; }
++.rating [role="group"] label { display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--space-1) var(--space-2); }
++.rating input[type="radio"] { accent-color: var(--accent); }
++.rating textarea { min-height: 60px; }
++.rating #rating-error { color: var(--error-fg); background: var(--error-bg); padding: var(--space-2); }
++.rating #rating-outcome { color: var(--success-fg); background: var(--success-bg); padding: var(--space-2); }
++.rating #rating-send { margin-top: var(--space-2); }
+diff --git c/web/assets/widget.html w/web/assets/widget.html
+index 10e27f4..6036dab 100644
+--- c/web/assets/widget.html
++++ w/web/assets/widget.html
+@@ -33,0 +34,17 @@
++    <section id="rating-section" class="rating" aria-label="Rate this conversation" hidden>
++      <h2>Rate this conversation</h2>
++      <p>After a reply or clarification, you can rate this guest chat and revise your feedback while it remains open.</p>
++      <div role="group" aria-label="Conversation rating, 1 to 5">
++        <label><input id="rating-choice-1" type="radio" name="rating" value="1">1</label>
++        <label><input id="rating-choice-2" type="radio" name="rating" value="2">2</label>
++        <label><input id="rating-choice-3" type="radio" name="rating" value="3">3</label>
++        <label><input id="rating-choice-4" type="radio" name="rating" value="4">4</label>
++        <label><input id="rating-choice-5" type="radio" name="rating" value="5">5</label>
++      </div>
++      <label for="rating-comment">Optional comment</label>
++      <textarea id="rating-comment" rows="2" aria-describedby="rating-hint"></textarea>
++      <p id="rating-hint">Up to 1,000 characters and 2,000 bytes. Your rating can be updated in this guest chat.</p>
++      <p id="rating-error" role="alert" hidden></p>
++      <p id="rating-outcome" role="status" aria-live="polite" hidden></p>
++      <button id="rating-send" type="button">Save rating</button>
++    </section>
+diff --git c/web/tests/harness.mjs w/web/tests/harness.mjs
+index a245fb6..0d6f50e 100644
+--- c/web/tests/harness.mjs
++++ w/web/tests/harness.mjs
+@@ -40 +40,2 @@ export function documentFixture() {
+-    'escalate-toggle', 'handoff-menu', 'handoff-email', 'handoff-whatsapp', 'escalation-form', 'escalate-email', 'escalate-note', 'escalate-consent', 'escalate-error', 'escalate-outcome', 'escalate-send'];
++    'escalate-toggle', 'handoff-menu', 'handoff-email', 'handoff-whatsapp', 'escalation-form', 'escalate-email', 'escalate-note', 'escalate-consent', 'escalate-error', 'escalate-outcome', 'escalate-send',
++    'rating-section', 'rating-comment', 'rating-hint', 'rating-error', 'rating-outcome', 'rating-send', ...[1, 2, 3, 4, 5].map((value) => `rating-choice-${value}`)];
+@@ -48,0 +50,3 @@ export function documentFixture() {
++  elements['rating-section'].hidden = true;
++  elements['rating-error'].hidden = true;
++  elements['rating-outcome'].hidden = true;
+diff --git c/web/tests/rating.browser.mjs w/web/tests/rating.browser.mjs
+new file mode 100644
+index 0000000..bb93099
+--- /dev/null
++++ w/web/tests/rating.browser.mjs
+@@ -0,0 +1,468 @@
++// Opt-in actual-backend regression; never launched by the Node unit glob.
++// Usage: node web/tests/rating.browser.mjs /absolute/assistant /absolute/fresh-evidence-dir
++// Only loopback Go/SQLite and Chromium are used. No mock API or runtime asset edits.
++import assert from 'node:assert/strict';
++import fs from 'node:fs';
++import http from 'node:http';
++import path from 'node:path';
++import { spawn } from 'node:child_process';
++import { once } from 'node:events';
++
++const [binary, directory] = process.argv.slice(2);
++assert.ok(binary && directory && path.isAbsolute(binary) && path.isAbsolute(directory),
++  'Supply absolute assistant binary and fresh evidence directory paths');
++fs.mkdirSync(directory, { recursive: true });
++assert.ok(!fs.existsSync(`${directory}/assistant.sqlite`), 'Use a fresh evidence directory');
++const children = [], servers = [], contexts = new Map(), pending = new Map();
++// Credentials exist only in runner memory for inspection, never in evidence or host state.
++const guests = [], held = [];
++let holdRating = false;
++const report = { assertions: [], requests: [], responses: [], failures: [], trustedInputs: [], screenshots: [], security: [] };
++let socket, session, sequence = 0, backend, origin, backendPort, host;
++const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
++async function wait(predicate, label, ms = 8000) {
++  const deadline = Date.now() + ms;
++  do {
++    const value = await predicate();
++    if (value) return value;
++    await pause(25);
++  } while (Date.now() < deadline);
++  throw new Error(`Timeout: ${label}`);
++}
++function check(name, condition, detail) {
++  report.assertions.push({ name, pass: !!condition, ...(detail === undefined ? {} : { detail }) });
++  assert.ok(condition, name);
++}
++function start(command, args, log, env = { PATH: process.env.PATH, HOME: directory }) {
++  const fd = fs.openSync(`${directory}/${log}`, 'a');
++  const child = spawn(command, args, { cwd: directory, env, stdio: ['ignore', fd, fd] });
++  fs.closeSync(fd);
++  children.push(child);
++  child.on('error', (error) => { report.processError = error.message; });
++  return child;
++}
++async function stop(child) {
++  if (child.exitCode !== null || child.signalCode !== null) return;
++  const exited = once(child, 'exit');
++  child.kill('SIGTERM');
++  await Promise.race([exited, pause(2000)]);
++  if (child.exitCode === null && child.signalCode === null) {
++    child.kill('SIGKILL');
++    await exited;
++  }
++}
++async function startBackend() {
++  backend = start(binary, ['serve', '--seed-demo'], 'backend.log', {
++    PATH: process.env.PATH, HOME: directory, STORE_MODE: 'sqlite', SQLITE_PATH: `${directory}/assistant.sqlite`,
++    OPENAI_API_KEY: '', TURSO_DATABASE_URL: '', TURSO_AUTH_TOKEN: '',
++    ASSISTANT_ORIGIN: origin, LISTEN_ADDR: `127.0.0.1:${backendPort}`, WIDGET_PARENT_ORIGINS: host,
++  });
++  await wait(async () => {
++    try { return (await fetch(`${origin}/widget/widget.html`)).ok; } catch { return false; }
++  }, 'Go startup');
++  return backend.pid;
++}
++async function listen(handler) {
++  const server = http.createServer(handler);
++  servers.push(server);
++  await new Promise((resolve, reject) => {
++    server.once('error', reject);
++    server.listen(0, '127.0.0.1', resolve);
++  });
++  return server;
++}
++function cdp(method, params = {}, target = session) {
++  return new Promise((resolve, reject) => {
++    const id = ++sequence;
++    const timer = setTimeout(() => { pending.delete(id); reject(new Error(`CDP timeout: ${method}`)); }, 10000);
++    pending.set(id, {
++      resolve: (value) => { clearTimeout(timer); resolve(value); },
++      reject: (error) => { clearTimeout(timer); reject(error); },
++    });
++    socket.send(JSON.stringify({ id, method, params, ...(target ? { sessionId: target } : {}) }));
++  });
++}
++async function evaluate(contextId, expression) {
++  const result = await cdp('Runtime.evaluate', { expression, contextId, returnByValue: true, awaitPromise: true });
++  if (result.exceptionDetails) throw new Error(result.exceptionDetails.text);
++  return result.result.value;
++}
++async function click(context, selector, parentContext) {
++  await evaluate(context, `document.querySelector(${JSON.stringify(selector)}).scrollIntoView({block:'center'})`);
++  const point = await evaluate(context, `(()=>{const r=document.querySelector(${JSON.stringify(selector)}).getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2};})()`);
++  if (parentContext) {
++    const offset = await evaluate(parentContext, `(()=>{const f=document.querySelector('iframe'),r=f.getBoundingClientRect();return {x:r.x+f.clientLeft,y:r.y+f.clientTop};})()`);
++    point.x += offset.x;
++    point.y += offset.y;
++  }
++  await cdp('Input.dispatchMouseEvent', { type: 'mousePressed', ...point, button: 'left', clickCount: 1 });
++  await cdp('Input.dispatchMouseEvent', { type: 'mouseReleased', ...point, button: 'left', clickCount: 1 });
++}
++async function key(key, code, virtualKey, modifiers = 0, text) {
++  await cdp('Input.dispatchKeyEvent', { type: 'keyDown', key, code, windowsVirtualKeyCode: virtualKey, modifiers,
++    ...(text ? { text, unmodifiedText: text } : {}) });
++  await cdp('Input.dispatchKeyEvent', { type: 'keyUp', key, code, windowsVirtualKeyCode: virtualKey, modifiers });
++}
++async function screenshot(name) {
++  const { data } = await cdp('Page.captureScreenshot', { format: 'png' });
++  fs.writeFileSync(`${directory}/${name}.png`, Buffer.from(data, 'base64'));
++  report.screenshots.push(`${name}.png`);
++}
++const ratingPosts = () => report.requests.filter((r) => r.method === 'POST' && r.url.endsWith('/rating'));
++const ratingResponses = () => report.responses.filter((r) => r.source === 'browser' && r.url.endsWith('/rating') && r.status === 200 && r.body);
++async function keyboardSubmit(f, h) {
++  // A disabled native button loses focus; navigate back rather than assume focus survives a save.
++  await click(f, '#rating-comment', h);
++  await key('Tab', 'Tab', 9);
++  check('Keyboard submission focuses Save via Tab', await evaluate(f, `document.activeElement.id==='rating-send'`));
++  await key('Enter', 'Enter', 13, 0, '\r');
++}
++async function captureResponse(params) {
++  try {
++    const { body, base64Encoded } = await cdp('Fetch.getResponseBody', { requestId: params.requestId });
++    const value = JSON.parse(base64Encoded ? Buffer.from(body, 'base64').toString() : body);
++    const entry = { source: 'browser', url: params.request.url, status: params.responseStatusCode };
++    if (entry.url.endsWith('/conversations') && entry.status === 201) {
++      guests.push(value);
++      entry.body = { conversation_id: value.conversation_id, created_at: value.created_at, capability: '[not retained in evidence]' };
++    } else entry.body = value;
++    report.responses.push(entry);
++  } catch {
++    report.bodyCaptureError = 'Could not inspect an API response';
++  } finally {
++    // Continue the original response without modifying its body, status or headers.
++    await cdp('Fetch.continueRequest', { requestId: params.requestId });
++  }
++}
++async function contextFor(expectedOrigin, selector) {
++  return wait(async () => {
++    for (const [id, context] of contexts) {
++      if (!context.auxData?.isDefault) continue;
++      try {
++        if (await evaluate(id, `location.origin===${JSON.stringify(expectedOrigin)}&&!!document.querySelector(${JSON.stringify(selector)})`)) return id;
++      } catch { /* A previous navigation context may have just disappeared. */ }
++    }
++    return false;
++  }, `context ${selector}`);
++}
++async function openGuest(reload = false) {
++  if (reload) await cdp('Page.reload', { ignoreCache: true });
++  else await cdp('Page.navigate', { url: host });
++  const h = await contextFor(host, '.assistant-launcher');
++  await click(h, '.assistant-launcher');
++  const f = await contextFor(origin, '#question:not(:disabled)');
++  await wait(() => guests.length >= (reload ? 2 : 1), 'observed creation response');
++  check('Restricted iframe sandbox retained', await evaluate(h,
++    `document.querySelector('iframe').getAttribute('sandbox')==='allow-scripts allow-same-origin'`));
++  return { h, f };
++}
++async function captureInputs(f, scenario) {
++  report.trustedInputs.push({ scenario, events: await evaluate(f, '__ratingInputs.splice(0)') });
++}
++async function saved(f, expectedCount, wording) {
++  await wait(() => ratingResponses().length === expectedCount, 'actual Go rating response');
++  await wait(() => evaluate(f, `!document.querySelector('#rating-send').disabled&&document.querySelector('#rating-outcome').textContent.includes(${JSON.stringify(wording)})`), 'honest rating outcome');
++  check(`${wording}: visible success with no error or review/delivery claim`, await evaluate(f, `(()=>{
++    const o=document.querySelector('#rating-outcome'),e=document.querySelector('#rating-error');
++    return !o.hidden&&e.hidden&&!/reviewed|delivered|sent/i.test(o.textContent);
++  })()`));
++  return ratingResponses().at(-1).body;
++}
++async function privateState(h, f) {
++  const credentials = guests.map((guest) => guest.capability);
++  for (const [name, context] of [['host', h], ['iframe', f]]) {
++    const inspected = await evaluate(context, `({local:localStorage.length,session:sessionStorage.length,
++      dom:document.documentElement.outerHTML,url:location.href})`);
++    check(`${name}: no local/session storage or capability in DOM/URL`, inspected.local === 0 && inspected.session === 0
++      && credentials.every((capability) => !inspected.dom.includes(capability) && !inspected.url.includes(capability)));
++  }
++  // No credential is injected into the host: messages are inspected in runner memory only.
++  const messages = await evaluate(h, '__hostMessages');
++  check('Parent messages contain no capability, transcript or rating', messages.every((message) => {
++    const text = JSON.stringify(message);
++    return !credentials.some((capability) => text.includes(capability))
++      && !/Helpful|Revised|conversation_id|rated_at|comment/u.test(text);
++  }));
++}
++async function apiRating(id, capability, body, label) {
++  const response = await fetch(`${origin}/api/v1/conversations/${id}/rating`, {
++    method: 'POST', headers: { Authorization: `Bearer ${capability}`, 'Content-Type': 'application/json' },
++    body: JSON.stringify(body),
++  });
++  const value = await response.json();
++  report.responses.push({ source: 'runner HTTP, not UI', scenario: label, url: `${origin}/api/v1/conversations/${id}/rating`, status: response.status, body: value });
++  return { status: response.status, body: value };
++}
++
++try {
++  const reservation = await listen((_req, res) => res.end());
++  backendPort = reservation.address().port;
++  await new Promise((resolve) => reservation.close(resolve));
++  origin = `http://127.0.0.1:${backendPort}`;
++  const hostServer = await listen((_req, res) => {
++    res.setHeader('Content-Type', 'text/html; charset=utf-8');
++    res.end(`<!doctype html><title>Trusted rating regression</title><h1>Local Go / SQLite rating</h1><script src="${origin}/widget/loader.js" data-page-path="/help" data-locale="en" defer></script>`);
++  });
++  host = `http://127.0.0.1:${hostServer.address().port}`;
++  report.initialBackendPID = await startBackend();
++  const asset = await fetch(`${origin}/widget/widget.html`);
++  const csp = asset.headers.get('content-security-policy');
++  check('Actual backend CSP retained', csp?.includes("form-action 'none'") && csp.includes("script-src 'self'")
++    && csp.includes("connect-src 'self'") && csp.includes(`frame-ancestors ${host}`), csp);
++  start(process.env.CHROMIUM || '/usr/bin/chromium', [
++    '--headless', '--disable-gpu', '--no-first-run', '--no-default-browser-check', '--disable-background-networking',
++    '--disable-component-update', '--disable-sync', '--proxy-server=http://127.0.0.1:9',
++    '--proxy-bypass-list=127.0.0.1;localhost', '--remote-debugging-address=127.0.0.1', '--remote-debugging-port=0',
++    `--user-data-dir=${directory}/chromium-profile`, '--window-size=1280,1000', 'about:blank',
++  ], 'chromium.log');
++  const debuggerPort = await wait(() => {
++    try { return fs.readFileSync(`${directory}/chromium-profile/DevToolsActivePort`, 'utf8').split('\n')[0]; } catch { return false; }
++  }, 'Chromium startup');
++  const browser = await (await fetch(`http://127.0.0.1:${debuggerPort}/json/version`)).json();
++  report.browser = browser.Browser;
++  socket = new WebSocket(browser.webSocketDebuggerUrl);
++  await once(socket, 'open');
++  socket.addEventListener('message', (event) => {
++    const message = JSON.parse(event.data);
++    if (message.id) {
++      const callback = pending.get(message.id);
++      pending.delete(message.id);
++      if (!callback) return;
++      if (message.error) callback.reject(new Error(JSON.stringify(message.error)));
++      else callback.resolve(message.result);
++      return;
++    }
++    const { method, params } = message;
++    if (method === 'Runtime.executionContextCreated') contexts.set(params.context.id, params.context);
++    if (method === 'Runtime.executionContextDestroyed') contexts.delete(params.executionContextId);
++    if (method === 'Runtime.executionContextsCleared') contexts.clear();
++    if (method === 'Fetch.requestPaused') {
++      if (params.responseStatusCode !== undefined) {
++        void captureResponse(params).catch(() => { report.bodyCaptureError = 'Could not continue an API response'; });
++      } else if (holdRating) held.push(params.requestId);
++      else void cdp('Fetch.continueRequest', { requestId: params.requestId }).catch(() => { report.bodyCaptureError = 'Could not continue a rating request'; });
++    }
++    if (method === 'Network.requestWillBeSent' && params.request.url.includes('/api/v1/')) {
++      const { url, method, postData } = params.request;
++      report.requests.push({ url, method, ...(postData ? { body: JSON.parse(postData) } : {}) });
++    }
++    if (method === 'Network.loadingFailed') report.failures.push({ error: params.errorText, canceled: !!params.canceled });
++    if (method === 'Log.entryAdded' && params.entry.source === 'security') report.security.push(params.entry.text);
++    if (method === 'Runtime.exceptionThrown') report.exception = params.exceptionDetails.text;
++  });
++  const target = await cdp('Target.createTarget', { url: 'about:blank' }, null);
++  session = (await cdp('Target.attachToTarget', { targetId: target.targetId, flatten: true }, null)).sessionId;
++  for (const domain of ['Page', 'Runtime', 'Network', 'Log']) await cdp(`${domain}.enable`);
++  // Response-stage inspection avoids Chromium's canceled-transfer body eviction.
++  // No response is fulfilled/replaced; all original Go bytes are continued.
++  await cdp('Fetch.enable', { patterns: [
++    { urlPattern: `${origin}/api/v1/*`, requestStage: 'Response' },
++    { urlPattern: `${origin}/api/v1/conversations/*/rating`, requestStage: 'Request' },
++  ] });
++  // Observation only: no application state, event handlers, fetches or values are replaced.
++  await cdp('Page.addScriptToEvaluateOnNewDocument', { source: `
++    window.__ratingInputs=[];window.__hostMessages=[];window.__closeMessages=[];
++    for(const type of ['click','keydown','input','change'])addEventListener(type,e=>{
++      if(['question','send','chat-close','escalate-email','escalate-note','escalate-consent'].includes(e.target.id)||e.target.id.startsWith('rating-'))
++        __ratingInputs.push({type,id:e.target.id,key:e.key,trusted:e.isTrusted});
++    },true);
++    addEventListener('message',e=>{if(window===parent){__hostMessages.push(e.data);if(e.data?.type==='assistant:close')__closeMessages.push({data:e.data,origin:e.origin,fromFrame:e.source===document.querySelector('iframe')?.contentWindow});}});
++  ` });
++  let { h, f } = await openGuest();
++  const a = guests[0];
++  check('Before first turn rating is hidden and disabled', await evaluate(f,
++    `document.querySelector('#rating-section').hidden&&document.querySelector('#rating-send').disabled`));
++  await click(f, 'details summary', h);
++  check('Pre-send sharing and guest-reload disclosures are user-accessible', await evaluate(f, `
++    document.querySelector('details').open&&document.querySelector('#transmission').textContent.includes('bounded approved excerpts')
++    &&document.querySelector('details').textContent.includes('Reloading loses guest access')`));
++  await screenshot('before-turn-disclosure');
++  await click(f, 'details summary', h);
++  const premature = await apiRating(a.conversation_id, a.capability, { rating: 5 }, 'zero-turn prerequisite');
++  check('Backend rejects authorized zero-turn rating', premature.status === 409 && premature.body.error.code === 'rating_requires_turn');
++  await click(f, '#question', h);
++  await cdp('Input.insertText', { text: 'Can you explain quantum entanglement?' });
++  await click(f, '#send', h);
++  await wait(() => evaluate(f, `!document.querySelector('#rating-section').hidden&&!document.querySelector('#send').disabled`), 'clarification unlock');
++  check('Actual completed clarification unlocks conversation rating', await evaluate(f, `
++    document.querySelector('#messages').children.length===2&&document.querySelector('#status').textContent.includes('Clarification received')`));
++  check('Exactly one trusted chat send', report.requests.filter((r) => r.method === 'POST' && r.url.endsWith('/messages')).length === 1);
++  check('Native radios have accessible group and label associations', await evaluate(f, `(()=>{
++    const radios=[...document.querySelectorAll('input[name="rating"]')];
++    return radios.length===5&&radios.every((r,i)=>r.type==='radio'&&r.value===String(i+1)&&r.labels.length===1&&r.labels[0].textContent.trim()===String(i+1))
++      &&document.querySelector('#rating-section [role="group"]').getAttribute('aria-label')==='Conversation rating, 1 to 5';
++  })()`));
++  await click(f, '#rating-choice-1', h);
++  for (let choice = 1; choice <= 5; choice++) {
++    if (choice > 1) await key('ArrowRight', 'ArrowRight', 39);
++    check(`Native radio keyboard navigation selects/focuses ${choice}`, await evaluate(f, `
++      document.activeElement.id==='rating-choice-${choice}'&&document.querySelector('#rating-choice-${choice}').checked
++      &&document.querySelectorAll('input[name="rating"]:checked').length===1`));
++  }
++  await key('ArrowLeft', 'ArrowLeft', 37);
++  check('Native radio ArrowLeft selects previous choice', await evaluate(f, `document.activeElement.id==='rating-choice-4'&&document.activeElement.checked`));
++  await key('ArrowRight', 'ArrowRight', 39);
++  await key('Tab', 'Tab', 9);
++  check('Tab leaves radio group for labelled comment', await evaluate(f, `document.activeElement.id==='rating-comment'&&document.activeElement.labels[0].textContent==='Optional comment'`));
++  await cdp('Input.insertText', { text: '  Helpful — local browser  ' });
++  await key('Tab', 'Tab', 9);
++  check('Tab reaches Save rating', await evaluate(f, `document.activeElement.id==='rating-send'`));
++  holdRating = true;
++  const before = ratingPosts().length;
++  await click(f, '#rating-send', h);
++  await wait(() => held.length === 1, 'real request held before backend response');
++  check('In-flight actual request disables submission and announces saving', await evaluate(f, `
++    document.querySelector('#rating-send').disabled&&document.querySelector('#rating-section').getAttribute('aria-busy')==='true'
++    &&document.querySelector('#rating-outcome').textContent==='Saving your rating…'`));
++  await click(f, '#rating-send', h);
++  await key('Enter', 'Enter', 13, 0, '\r');
++  await pause(150);
++  check('Repeated trusted activation while busy emits exactly one request', held.length === 1 && ratingPosts().length === before + 1);
++  await screenshot('saving-duplicate-blocked');
++  holdRating = false;
++  await cdp('Fetch.continueRequest', { requestId: held.shift() });
++  const first = await saved(f, 1, 'recorded');
++  check('First saved response matches canonical trusted input', first.rating === 5 && first.comment === 'Helpful — local browser' && !!first.rated_at);
++  await captureInputs(f, 'clarification, native 1–5 navigation, comment and duplicate exclusion');
++  await screenshot('first-rating-recorded');
++
++  await click(f, '#rating-choice-2', h);
++  check('Trusted pointer selects revision score', await evaluate(f, `document.querySelector('#rating-choice-2').checked`));
++  await key('Tab', 'Tab', 9);
++  check('Revision Tab reaches comment', await evaluate(f, `document.activeElement.id==='rating-comment'`));
++  await key('a', 'KeyA', 65, 2);
++  await cdp('Input.insertText', { text: 'Revised by trusted input' });
++  await key('Tab', 'Tab', 9);
++  await key('Enter', 'Enter', 13, 0, '\r');
++  const revised = await saved(f, 2, 'updated');
++  check('Revision replaces both fields and changes stored timestamp', revised.rating === 2 && revised.comment === 'Revised by trusted input' && revised.rated_at !== first.rated_at);
++  // Combined-tree regression: close a rated conversation with unsaved rating,
++  // question and support drafts. Observe only; drive every edit/close via CDP input.
++  await click(f, '#rating-choice-3', h);
++  await click(f, '#rating-comment', h);
++  await key('a', 'KeyA', 65, 2);
++  await cdp('Input.insertText', { text: 'Unsent rating draft' });
++  await click(f, '#question', h);
++  await cdp('Input.insertText', { text: 'Unsent question draft' });
++  await click(f, '#escalate-toggle', h);
++  await click(f, '#handoff-email', h);
++  check('Approved support labels retain available-email and unavailable-WhatsApp semantics', await evaluate(f, `(()=>{
++    const e=document.querySelector('#handoff-email'),w=document.querySelector('#handoff-whatsapp');
++    return e.textContent==='Request via email'&&!e.disabled&&e.getAttribute('aria-pressed')==='true'
++      &&w.textContent==='Request via WhatsApp'&&w.disabled&&w.getAttribute('aria-pressed')==='false'
++      &&document.querySelector('#whatsapp-reason').textContent.includes('not enabled WhatsApp');
++  })()`));
++  await click(f, '#escalate-email', h);
++  await cdp('Input.insertText', { text: 'draft@example.org' });
++  await click(f, '#escalate-note', h);
++  await cdp('Input.insertText', { text: 'Unsent support note' });
++  await click(f, '#escalate-consent', h);
++  const draftState = `(()=>{const q=s=>document.querySelector(s);return {
++    transcript:q('#messages').textContent,question:q('#question').value,comment:q('#rating-comment').value,
++    score:q('input[name="rating"]:checked').value,outcome:q('#rating-outcome').textContent,
++    email:q('#escalate-email').value,note:q('#escalate-note').value,consent:q('#escalate-consent').checked};})()`;
++  const beforeCloseDrafts = await evaluate(f, draftState);
++  const beforeClosePosts = report.requests.filter((r) => r.method === 'POST').length;
++  const beforeCloseGuests = guests.length;
++  for (const action of ['pointer close', 'email-form Escape']) {
++    const closes = await evaluate(h, '__closeMessages.length');
++    if (action === 'pointer close') await click(f, '#chat-close', h);
++    else {
++      await click(f, '#escalate-email', h);
++      await key('Escape', 'Escape', 27);
++    }
++    await wait(() => evaluate(h, `document.querySelector('iframe').hidden&&document.activeElement===document.querySelector('.assistant-launcher')`), `${action} returns launcher focus`);
++    check(`${action}: exact initialized close protocol from the mounted iframe`, await evaluate(h, `(()=>{
++      const m=__closeMessages.at(-1);return __closeMessages.length===${closes + 1}
++        &&JSON.stringify(m.data)==='{"type":"assistant:close","version":1}'&&m.origin===${JSON.stringify(origin)}&&m.fromFrame;
++    })()`));
++    await click(h, '.assistant-launcher');
++    check(`${action}: same rated iframe preserves transcript and all unsent drafts`,
++      JSON.stringify(await evaluate(f, draftState)) === JSON.stringify(beforeCloseDrafts) && guests.length === beforeCloseGuests);
++    check(`${action}: disclosures reset but rating stays eligible and editable`, await evaluate(f, `
++      document.querySelector('#handoff-menu').hidden&&document.querySelector('#escalation-form').hidden
++      &&!document.querySelector('#rating-section').hidden&&!document.querySelector('#rating-send').disabled`));
++    check(`${action}: no creation, message, rating or escalation POST`, report.requests.filter((r) => r.method === 'POST').length === beforeClosePosts);
++    await click(f, '#escalate-toggle', h);
++    await click(f, '#handoff-email', h);
++  }
++  await screenshot('rated-reopened-drafts');
++  // Restore the saved feedback with trusted controls; the unchanged replay below
++  // independently confirms neither close nor draft edits changed the durable row.
++  await click(f, '#rating-choice-2', h);
++  await click(f, '#rating-comment', h);
++  await key('a', 'KeyA', 65, 2);
++  await cdp('Input.insertText', { text: 'Revised by trusted input' });
++  await keyboardSubmit(f, h);
++  const replay = await saved(f, 3, 'recorded');
++  check('Trusted identical replay preserves complete stored envelope', JSON.stringify(replay) === JSON.stringify(revised));
++  check('Save/revise/replay each issued exactly one browser POST', ratingPosts().length === 3);
++  await captureInputs(f, 'trusted pointer revision, keyboard save and identical replay');
++  await privateState(h, f);
++  await screenshot('revised-and-replayed');
++
++  await stop(backend);
++  check('Original Go OS process exited before restart', backend.exitCode !== null || backend.signalCode !== null);
++  await keyboardSubmit(f, h);
++  await wait(() => evaluate(f, `!document.querySelector('#rating-error').hidden&&document.querySelector('#rating-error').textContent.includes('not confirmed')`), 'truthful stopped-backend outcome');
++  check('Unavailable backend never shows successful recording', await evaluate(f, `document.querySelector('#rating-outcome').hidden&&!document.querySelector('#rating-send').disabled`));
++  await screenshot('backend-down-unconfirmed');
++  report.restartedBackendPID = await startBackend();
++  check('New Go OS process uses same SQLite file', report.initialBackendPID !== report.restartedBackendPID && fs.existsSync(`${directory}/assistant.sqlite`));
++  await keyboardSubmit(f, h);
++  const restartedReplay = await saved(f, 4, 'recorded');
++  check('Process restart retains complete rating and identical timestamp', JSON.stringify(restartedReplay) === JSON.stringify(revised));
++  check('Restart/failure/retry count: five attempts, four successful UI responses', ratingPosts().length === 5 && ratingResponses().length === 4);
++  const history = await fetch(`${origin}/api/v1/conversations/${a.conversation_id}/messages?limit=20`, { headers: { Authorization: `Bearer ${a.capability}` } });
++  const storedHistory = await history.json();
++  check('Completed clarification persists across process restart', history.status === 200 && storedHistory.messages.length === 2 && storedHistory.messages[1].status === 'needs_clarification');
++  await captureInputs(f, 'backend OS stop, truthful failure, OS restart and trusted retry');
++  await screenshot('process-restart-replay');
++
++  ({ h, f } = await openGuest(true));
++  const b = guests[1];
++  check('Browser reload loses prior guest access, creates distinct empty conversation', a.conversation_id !== b.conversation_id && a.capability !== b.capability && await evaluate(f, `
++    document.querySelector('#rating-section').hidden&&document.querySelector('#messages').children.length===0&&document.querySelector('#rating-outcome').hidden`));
++  const wrongA = await apiRating(a.conversation_id, b.capability, { rating: 1, comment: 'wrong guest' }, 'B cannot revise A');
++  const wrongB = await apiRating(b.conversation_id, a.capability, { rating: 1, comment: 'wrong guest' }, 'A cannot revise B');
++  check('Cross-guest rating authorization fails uniformly both directions', wrongA.status === 401 && wrongB.status === 401 && JSON.stringify(wrongA.body) === JSON.stringify(wrongB.body));
++  const emptyB = await apiRating(b.conversation_id, b.capability, { rating: 1 }, 'new guest still requires own turn');
++  check('Reloaded guest cannot inherit old turn eligibility', emptyB.status === 409 && emptyB.body.error.code === 'rating_requires_turn');
++  const unchanged = await apiRating(a.conversation_id, a.capability, { rating: 2, comment: 'Revised by trusted input' }, 'runner-only prior credential confirms no unauthorized mutation');
++  check('Isolation attempts leave original complete persisted row unchanged', unchanged.status === 200 && JSON.stringify(unchanged.body) === JSON.stringify(revised));
++  await privateState(h, f);
++  await screenshot('reload-new-guest');
++  const events = report.trustedInputs.flatMap((input) => input.events);
++  check('All captured control events are browser-trusted', events.length > 0 && events.every((event) => event.trusted));
++  check('Trusted rating input includes native radio changes, comment input and pointer/keyboard submission',
++    events.some((e) => e.type === 'change' && e.id === 'rating-choice-5')
++    && events.some((e) => e.type === 'input' && e.id === 'rating-comment')
++    && events.some((e) => e.type === 'click' && e.id === 'rating-send')
++    && events.some((e) => e.type === 'keydown' && e.id === 'rating-send' && e.key === 'Enter'));
++  check('No browser exceptions, response inspection failures or CSP security errors', !report.exception && !report.bodyCaptureError && !report.processError && report.security.length === 0);
++  check('Backend logs contain no raw guest capability', guests.every((g) => !fs.readFileSync(`${directory}/backend.log`, 'utf8').includes(g.capability)));
++} catch (error) {
++  if (socket && session) {
++    for (const [id, context] of contexts) {
++      if (!context.auxData?.isDefault) continue;
++      try {
++        const state = await evaluate(id, `(()=>{const q=s=>document.querySelector(s);return q('#rating-section')?{
++          outcome:q('#rating-outcome').textContent,error:q('#rating-error').textContent,
++          disabled:q('#rating-send').disabled,focus:document.activeElement.id}:null})()`);
++        if (state) report.failureState = state;
++      } catch { /* A destroyed context is not failure evidence. */ }
++    }
++    try { await screenshot('failure'); } catch { /* Keep the original failure. */ }
++  }
++  report.fatal = String(error.stack || error);
++  console.error(report.fatal);
++  process.exitCode = 1;
++} finally {
++  socket?.close();
++  for (const child of children.reverse()) await stop(child);
++  for (const server of servers) if (server.listening) await new Promise((resolve) => server.close(resolve));
++  report.summary = { passed: report.assertions.filter((entry) => entry.pass).length, failed: report.assertions.filter((entry) => !entry.pass).length };
++  fs.writeFileSync(`${directory}/results.json`, `${JSON.stringify(report, null, 2)}\n`);
++  console.log(JSON.stringify(report.summary));
++  if (report.summary.failed || report.fatal) process.exitCode = 1;
++}
+diff --git c/web/tests/rating.test.mjs w/web/tests/rating.test.mjs
+new file mode 100644
+index 0000000..f0c51be
+--- /dev/null
++++ w/web/tests/rating.test.mjs
+@@ -0,0 +1,128 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { validRatingComment, validRatingResult } from '../assets/protocol.mjs';
++import { creation, emptyHistory, fail, id, json, settle, turn, widgetFixture } from './harness.mjs';
++
++const result = (rating = 5, comment = 'Helpful', rated_at = '2026-10-20T12:00:00Z') => json({ rating, comment, rated_at });
++const ratingRequests = (fixture) => fixture.requests.filter(({ url }) => url.endsWith('/rating'));
++
++test('rating response requires exact server fields, canonical comment and UTC timestamp', () => {
++  assert.equal(validRatingResult({ rating: 5, comment: 'Helpful', rated_at: '2026-10-20T12:00:00Z' }), true);
++  for (const invalid of [
++    { rating: 1, comment: ' hi ', rated_at: '2026-10-20T12:00:00Z' },
++    { rating: 0, comment: '', rated_at: '2026-10-20T12:00:00Z' },
++    { rating: 1.5, comment: '', rated_at: '2026-10-20T12:00:00Z' },
++    { rating: 3, comment: '', rated_at: 'yesterday' },
++    { rating: 3, comment: '', rated_at: '2026-02-30T12:00:00Z' },
++    { rating: 3, comment: '', rated_at: '2026-10-20T12:00:00Z', reviewed: true },
++    { rating: 3, rated_at: '2026-10-20T12:00:00Z' },
++  ]) assert.equal(validRatingResult(invalid), false);
++});
++
++test('comment bounds are applied after trimming in Unicode code points and UTF-8 bytes', () => {
++  for (const value of ['', '  ', `  ${'a'.repeat(1000)}  `, '😀'.repeat(500), 'a\nb\tc\rd']) assert.equal(validRatingComment(value), true);
++  for (const value of ['a'.repeat(1001), '😀'.repeat(501), 'a\u0000b', 'a\u007fb', 'a\u009fb', 'a\ud800']) assert.equal(validRatingComment(value), false);
++});
++
++test('rating stays hidden before a completed turn and is available after clarification, including history', async () => {
++  const fixture = widgetFixture([json(creation, 201), emptyHistory(), json(turn(id, 'How do I start?', 1, true)), result()]);
++  assert.equal(fixture.ui['rating-section'].hidden, true);
++  fixture.init(); await settle();
++  assert.equal(fixture.ui['rating-section'].hidden, true);
++  fixture.submit(); await settle();
++  assert.equal(fixture.ui['rating-section'].hidden, false);
++  fixture.ui['rating-choice-5'].checked = true;
++  fixture.ui['rating-comment'].value = '  Helpful  ';
++  fixture.ui['rating-send'].dispatch('click'); await settle();
++  assert.deepEqual(JSON.parse(ratingRequests(fixture)[0].init.body), { rating: 5, comment: 'Helpful' });
++  assert.match(fixture.ui['rating-outcome'].textContent, /recorded/iu);
++  const recovered = widgetFixture([json(creation, 201), json({ messages: turn(id, 'How do I start?', 1, true).messages, next_before: null })]);
++  recovered.init(); await settle();
++  assert.equal(recovered.ui['rating-section'].hidden, false);
++});
++
++test('rating revision, transport retry and malformed 200 do not invent success', async () => {
++  const fixture = widgetFixture([json(creation, 201), json({ messages: turn().messages, next_before: null }), result(), new Error('lost'), result(2, 'Changed', '2026-10-20T12:00:01Z'), result(3, 'Wrong')]);
++  fixture.init(); await settle();
++  fixture.ui['rating-choice-5'].checked = true;
++  fixture.ui['rating-comment'].value = 'Helpful';
++  fixture.ui['rating-send'].dispatch('click'); await settle();
++  fixture.ui['rating-choice-5'].checked = false;
++  fixture.ui['rating-choice-2'].checked = true;
++  fixture.ui['rating-comment'].value = ' Changed ';
++  fixture.ui['rating-send'].dispatch('click'); await settle();
++  assert.match(fixture.ui['rating-error'].textContent, /not confirmed/iu);
++  assert.equal(fixture.ui['rating-outcome'].hidden, true);
++  fixture.ui['rating-send'].dispatch('click'); await settle();
++  assert.equal(ratingRequests(fixture)[1].init.body, ratingRequests(fixture)[2].init.body);
++  assert.match(fixture.ui['rating-outcome'].textContent, /updated/iu);
++  fixture.ui['rating-send'].dispatch('click'); await settle();
++  assert.equal(fixture.ui['rating-outcome'].hidden, true);
++  assert.match(fixture.ui['rating-error'].textContent, /could not be confirmed/iu);
++});
++
++test('rating double-click is locked, cooldown is bounded, and chat remains available', async () => {
++  let finish;
++  const deferred = new Promise((resolve) => { finish = resolve; });
++  const fixture = widgetFixture([json(creation, 201), json({ messages: turn().messages, next_before: null }), () => deferred,
++    fail('rate_limited', 429, 'secret', { 'Retry-After': '999999' }), result(4, '')]);
++  fixture.init(); await settle();
++  fixture.ui['rating-choice-4'].checked = true;
++  fixture.ui['rating-send'].dispatch('click');
++  fixture.ui['rating-send'].dispatch('click');
++  assert.equal(ratingRequests(fixture).length, 1);
++  assert.equal(fixture.ui['rating-send'].disabled, true);
++  assert.equal(fixture.ui.send.disabled, false);
++  finish(fail('storage_unavailable', 503, '<script>secret</script>')); await settle();
++  assert.match(fixture.ui['rating-error'].textContent, /could not be confirmed/iu);
++  assert.doesNotMatch(fixture.document.body.textContent, /secret/iu);
++  fixture.ui['rating-send'].dispatch('click'); await settle();
++  assert.equal(ratingRequests(fixture).length, 2);
++  assert.equal(fixture.ui['rating-send'].disabled, true);
++  assert.equal([...fixture.timers.values()].some(({ delay }) => delay === 120000), true);
++  fixture.ui['rating-send'].dispatch('click'); await settle();
++  assert.equal(ratingRequests(fixture).length, 2);
++  [...fixture.timers.values()].find(({ delay }) => delay === 120000).fn();
++  fixture.ui['rating-send'].dispatch('click'); await settle();
++  assert.equal(ratingRequests(fixture).length, 3);
++  assert.match(fixture.ui['rating-outcome'].textContent, /recorded/iu);
++});
++
++test('overlapping rating and escalation cooldown timers expire independently', async () => {
++  const fixture = widgetFixture([json(creation, 201), json({ messages: turn().messages, next_before: null }),
++    fail('rate_limited', 429, 'ignored', { 'Retry-After': '60' }),
++    fail('rate_limited', 429, 'ignored', { 'Retry-After': '30' })]);
++  fixture.init(); await settle();
++  fixture.ui['rating-choice-3'].checked = true;
++  fixture.ui['rating-send'].dispatch('click'); await settle();
++  const ratingTimer = [...fixture.timers.entries()].find(([, timer]) => timer.delay === 60000);
++  assert.ok(ratingTimer);
++  fixture.ui['escalate-toggle'].dispatch('click');
++  fixture.ui['handoff-email'].dispatch('click');
++  fixture.ui['escalate-email'].value = 'visitor@example.org';
++  fixture.ui['escalate-consent'].checked = true;
++  fixture.ui['escalate-send'].dispatch('click'); await settle();
++  const escalationTimer = [...fixture.timers.entries()].find(([, timer]) => timer.delay === 30000);
++  assert.ok(escalationTimer);
++  assert.equal(fixture.timers.has(ratingTimer[0]), true, 'escalation must not clear the rating timer');
++  assert.equal(fixture.ui['rating-send'].disabled, true);
++  assert.equal(fixture.ui['escalate-send'].disabled, true);
++  escalationTimer[1].fn();
++  assert.equal(fixture.ui['escalate-send'].disabled, false);
++  assert.equal(fixture.ui['rating-send'].disabled, true);
++  ratingTimer[1].fn();
++  assert.equal(fixture.ui['rating-send'].disabled, false);
++  assert.equal(fixture.ui.send.disabled, false);
++});
++
++test('rating unauthorized response is terminal and never reuses guest access', async () => {
++  const fixture = widgetFixture([json(creation, 201), json({ messages: turn().messages, next_before: null }), fail('unauthorized', 401)]);
++  fixture.init(); await settle();
++  fixture.ui['rating-choice-1'].checked = true;
++  fixture.ui['rating-send'].dispatch('click'); await settle();
++  assert.equal(fixture.ui['rating-section'].hidden, true);
++  assert.equal(fixture.ui.send.disabled, true);
++  assert.equal(ratingRequests(fixture).length, 1);
++  fixture.ui['rating-send'].dispatch('click'); await settle();
++  assert.equal(ratingRequests(fixture).length, 1);
++});

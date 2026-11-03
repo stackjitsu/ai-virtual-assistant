@@ -268,6 +268,22 @@ button:not(:disabled):active {
 }
 
 /* Escalation panel — additive styles */
+.rating {
+  margin-top: var(--space-4);
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--card);
+}
+.rating h2 { font-size: 1rem; margin: 0 0 var(--space-2); }
+.rating p { margin: var(--space-2) 0; font-size: .82rem; color: var(--muted); }
+.rating [role="group"] { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: var(--space-3) 0; }
+.rating [role="group"] label { display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--space-1) var(--space-2); }
+.rating input[type="radio"] { accent-color: var(--accent); }
+.rating textarea { min-height: 60px; }
+.rating #rating-error { color: var(--error-fg); background: var(--error-bg); padding: var(--space-2); }
+.rating #rating-outcome { color: var(--success-fg); background: var(--success-bg); padding: var(--space-2); }
+.rating #rating-send { margin-top: var(--space-2); }
 .escalation {
   margin-top: var(--space-4);
 }

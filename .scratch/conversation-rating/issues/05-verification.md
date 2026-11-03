@@ -1,6 +1,6 @@
 # RATE-04: independent integration verification
 
-Status: ready-for-agent
+Status: claimed
 Blocked by: 03, 04
 Owner: independent validator; read-only application paths, evidence in this issue only.
 

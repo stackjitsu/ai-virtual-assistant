@@ -1,0 +1,38 @@
+python3 scripts/check.py fuzz-smoke
++ go test ai-virtual-assistant/internal/chat -run=^$ -fuzz=^FuzzDecodeEscalation$ -fuzztime=2s -parallel=2
+fuzz: elapsed: 0s, gathering baseline coverage: 0/176 completed
+fuzz: elapsed: 2s, gathering baseline coverage: 118/176 completed
+PASS
+ok  	ai-virtual-assistant/internal/chat	2.034s
++ go test ai-virtual-assistant/internal/chat -run=^$ -fuzz=^FuzzDecodeProvider$ -fuzztime=2s -parallel=2
+fuzz: elapsed: 0s, gathering baseline coverage: 0/197 completed
+fuzz: elapsed: 2s, gathering baseline coverage: 132/197 completed
+PASS
+ok  	ai-virtual-assistant/internal/chat	2.048s
++ go test ai-virtual-assistant/internal/chat -run=^$ -fuzz=^FuzzDecodeRating$ -fuzztime=2s -parallel=2
+fuzz: elapsed: 0s, gathering baseline coverage: 0/204 completed
+fuzz: elapsed: 2s, gathering baseline coverage: 128/204 completed
+PASS
+ok  	ai-virtual-assistant/internal/chat	2.029s
++ go test ai-virtual-assistant/internal/chat -run=^$ -fuzz=^FuzzDecodeTurso$ -fuzztime=2s -parallel=2
+fuzz: elapsed: 0s, gathering baseline coverage: 0/181 completed
+fuzz: elapsed: 2s, gathering baseline coverage: 125/181 completed
+PASS
+ok  	ai-virtual-assistant/internal/chat	2.443s
++ go test ai-virtual-assistant/internal/chat -run=^$ -fuzz=^FuzzParseImportJSONL$ -fuzztime=2s -parallel=2
+fuzz: elapsed: 0s, gathering baseline coverage: 0/123 completed
+fuzz: elapsed: 2s, gathering baseline coverage: 115/123 completed
+PASS
+ok  	ai-virtual-assistant/internal/chat	2.025s
++ go test ai-virtual-assistant/internal/chat -run=^$ -fuzz=^FuzzValidateMessage$ -fuzztime=2s -parallel=2
+fuzz: elapsed: 0s, gathering baseline coverage: 0/89 completed
+fuzz: elapsed: 2s, gathering baseline coverage: 89/89 completed, now fuzzing with 2 workers
+fuzz: elapsed: 2s, execs: 887 (438/sec), new interesting: 0 (total: 89)
+PASS
+ok  	ai-virtual-assistant/internal/chat	2.063s
++ go test ai-virtual-assistant/internal/chat -run=^$ -fuzz=^FuzzValidateOpenAIEndpoint$ -fuzztime=2s -parallel=2
+fuzz: elapsed: 0s, gathering baseline coverage: 0/202 completed
+fuzz: elapsed: 2s, gathering baseline coverage: 118/202 completed
+PASS
+ok  	ai-virtual-assistant/internal/chat	2.030s
+fuzz-smoke: PASS

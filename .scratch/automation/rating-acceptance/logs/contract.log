@@ -1,0 +1,28 @@
+python3 scripts/check.py contract
+ok  	ai-virtual-assistant/cmd/assistant	8.362s
+?   	ai-virtual-assistant/database	[no test files]
+ok  	ai-virtual-assistant/internal/chat	4.157s
+ok  	ai-virtual-assistant/web	1.018s
+✔ iframe handshake rejects wrong source/origin/version and initializes only once (49.372824ms)
+✔ invalid init/context never fetches and shows a visible configuration error (7.650672ms)
+✔ bad or missing parent origin and handshake timeout are visible no-fetch failures (4.14745ms)
+✔ loader verifies exact iframe source, assistant origin, schema and protocol version (4.405071ms)
+✔ resize accepts only exact source/origin/schema and clamps 300–720 (2.308482ms)
+✔ embed origin validation permits HTTPS/loopback only and never falls back to parent URL (10.536826ms)
+✔ capability is only a bearer in iframe-owned API calls, never URL/DOM/parent messages (3.987182ms)
+✔ disclosure keeps the safety warning visible and names app server and configurable provider without displaying origin before send (2.244051ms)
+✔ malformed creation/history/turn envelopes never unlock unsafe success (5.712323ms)
+✔ response byte, media type and UTF-8 boundaries fail closed (5.080835ms)
+✔ a legitimate maximum-text history page over 256 KiB still loads (13.41557ms)
+✔ published assets use local external files, semantic form and actual sample loader (4.799129ms)
+✔ handoff menu is additive markup: By email available, By WhatsApp disabled, no phone field (2.102191ms)
+✔ only the visitor opens the handoff menu, and the composer stays pinned outside it (1.470675ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 207.395968
+contract: PASS

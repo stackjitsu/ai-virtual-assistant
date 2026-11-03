@@ -1,0 +1,1 @@
+{"scope_audit": "PASS", "storage_audit": "PASS", "browser_checks": {"rating": {"passed": 61, "failed": 0}, "sandbox-send": {"passed": 48, "failed": 0}, "widget-visual": {"passed": 208, "failed": 0}}}

@@ -1,0 +1,71 @@
+diff --git c/web/tests/rating.browser.mjs w/web/tests/rating.browser.mjs
+index de0f129..bb93099 100644
+--- c/web/tests/rating.browser.mjs
++++ w/web/tests/rating.browser.mjs
+@@ -264 +264 @@ try {
+-    window.__ratingInputs=[];window.__hostMessages=[];
++    window.__ratingInputs=[];window.__hostMessages=[];window.__closeMessages=[];
+@@ -266 +266 @@ try {
+-      if(e.target.id==='question'||e.target.id==='send'||e.target.id.startsWith('rating-'))
++      if(['question','send','chat-close','escalate-email','escalate-note','escalate-consent'].includes(e.target.id)||e.target.id.startsWith('rating-'))
+@@ -269 +269 @@ try {
+-    addEventListener('message',e=>{if(window===parent)__hostMessages.push(e.data);});
++    addEventListener('message',e=>{if(window===parent){__hostMessages.push(e.data);if(e.data?.type==='assistant:close')__closeMessages.push({data:e.data,origin:e.origin,fromFrame:e.source===document.querySelector('iframe')?.contentWindow});}});
+@@ -338,0 +339,57 @@ try {
++  // Combined-tree regression: close a rated conversation with unsaved rating,
++  // question and support drafts. Observe only; drive every edit/close via CDP input.
++  await click(f, '#rating-choice-3', h);
++  await click(f, '#rating-comment', h);
++  await key('a', 'KeyA', 65, 2);
++  await cdp('Input.insertText', { text: 'Unsent rating draft' });
++  await click(f, '#question', h);
++  await cdp('Input.insertText', { text: 'Unsent question draft' });
++  await click(f, '#escalate-toggle', h);
++  await click(f, '#handoff-email', h);
++  check('Approved support labels retain available-email and unavailable-WhatsApp semantics', await evaluate(f, `(()=>{
++    const e=document.querySelector('#handoff-email'),w=document.querySelector('#handoff-whatsapp');
++    return e.textContent==='Request via email'&&!e.disabled&&e.getAttribute('aria-pressed')==='true'
++      &&w.textContent==='Request via WhatsApp'&&w.disabled&&w.getAttribute('aria-pressed')==='false'
++      &&document.querySelector('#whatsapp-reason').textContent.includes('not enabled WhatsApp');
++  })()`));
++  await click(f, '#escalate-email', h);
++  await cdp('Input.insertText', { text: 'draft@example.org' });
++  await click(f, '#escalate-note', h);
++  await cdp('Input.insertText', { text: 'Unsent support note' });
++  await click(f, '#escalate-consent', h);
++  const draftState = `(()=>{const q=s=>document.querySelector(s);return {
++    transcript:q('#messages').textContent,question:q('#question').value,comment:q('#rating-comment').value,
++    score:q('input[name="rating"]:checked').value,outcome:q('#rating-outcome').textContent,
++    email:q('#escalate-email').value,note:q('#escalate-note').value,consent:q('#escalate-consent').checked};})()`;
++  const beforeCloseDrafts = await evaluate(f, draftState);
++  const beforeClosePosts = report.requests.filter((r) => r.method === 'POST').length;
++  const beforeCloseGuests = guests.length;
++  for (const action of ['pointer close', 'email-form Escape']) {
++    const closes = await evaluate(h, '__closeMessages.length');
++    if (action === 'pointer close') await click(f, '#chat-close', h);
++    else {
++      await click(f, '#escalate-email', h);
++      await key('Escape', 'Escape', 27);
++    }
++    await wait(() => evaluate(h, `document.querySelector('iframe').hidden&&document.activeElement===document.querySelector('.assistant-launcher')`), `${action} returns launcher focus`);
++    check(`${action}: exact initialized close protocol from the mounted iframe`, await evaluate(h, `(()=>{
++      const m=__closeMessages.at(-1);return __closeMessages.length===${closes + 1}
++        &&JSON.stringify(m.data)==='{"type":"assistant:close","version":1}'&&m.origin===${JSON.stringify(origin)}&&m.fromFrame;
++    })()`));
++    await click(h, '.assistant-launcher');
++    check(`${action}: same rated iframe preserves transcript and all unsent drafts`,
++      JSON.stringify(await evaluate(f, draftState)) === JSON.stringify(beforeCloseDrafts) && guests.length === beforeCloseGuests);
++    check(`${action}: disclosures reset but rating stays eligible and editable`, await evaluate(f, `
++      document.querySelector('#handoff-menu').hidden&&document.querySelector('#escalation-form').hidden
++      &&!document.querySelector('#rating-section').hidden&&!document.querySelector('#rating-send').disabled`));
++    check(`${action}: no creation, message, rating or escalation POST`, report.requests.filter((r) => r.method === 'POST').length === beforeClosePosts);
++    await click(f, '#escalate-toggle', h);
++    await click(f, '#handoff-email', h);
++  }
++  await screenshot('rated-reopened-drafts');
++  // Restore the saved feedback with trusted controls; the unchanged replay below
++  // independently confirms neither close nor draft edits changed the durable row.
++  await click(f, '#rating-choice-2', h);
++  await click(f, '#rating-comment', h);
++  await key('a', 'KeyA', 65, 2);
++  await cdp('Input.insertText', { text: 'Revised by trusted input' });

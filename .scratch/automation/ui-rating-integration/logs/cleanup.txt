@@ -1,0 +1,3 @@
+Removed owned rating Chromium profile after browser child shutdown.
+Removed owned sandbox-send Chromium profile after browser child shutdown.
+Removed owned widget-visual Chromium profile after browser child shutdown.

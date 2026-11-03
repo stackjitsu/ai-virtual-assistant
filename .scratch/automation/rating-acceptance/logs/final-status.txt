@@ -1,0 +1,3 @@
+ M internal/chat/rating_test.go
+ M web/tests/rating.browser.mjs
+?? .scratch/automation/

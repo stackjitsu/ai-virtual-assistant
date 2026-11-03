@@ -1,0 +1,6 @@
+python3 scripts/check.py static
+ok  	ai-virtual-assistant/cmd/assistant	0.007s [no tests to run]
+?   	ai-virtual-assistant/database	[no test files]
+ok  	ai-virtual-assistant/internal/chat	0.008s [no tests to run]
+ok  	ai-virtual-assistant/web	0.007s [no tests to run]
+static: PASS

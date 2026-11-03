@@ -1,0 +1,822 @@
+{
+  "assertions": [
+    {
+      "name": "Actual backend CSP retained",
+      "pass": true,
+      "detail": "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors http://127.0.0.1:37123"
+    },
+    {
+      "name": "Restricted iframe sandbox retained",
+      "pass": true
+    },
+    {
+      "name": "Before first turn rating is hidden and disabled",
+      "pass": true
+    },
+    {
+      "name": "Pre-send sharing and guest-reload disclosures are user-accessible",
+      "pass": true
+    },
+    {
+      "name": "Backend rejects authorized zero-turn rating",
+      "pass": true
+    },
+    {
+      "name": "Actual completed clarification unlocks conversation rating",
+      "pass": true
+    },
+    {
+      "name": "Exactly one trusted chat send",
+      "pass": true
+    },
+    {
+      "name": "Native radios have accessible group and label associations",
+      "pass": true
+    },
+    {
+      "name": "Native radio keyboard navigation selects/focuses 1",
+      "pass": true
+    },
+    {
+      "name": "Native radio keyboard navigation selects/focuses 2",
+      "pass": true
+    },
+    {
+      "name": "Native radio keyboard navigation selects/focuses 3",
+      "pass": true
+    },
+    {
+      "name": "Native radio keyboard navigation selects/focuses 4",
+      "pass": true
+    },
+    {
+      "name": "Native radio keyboard navigation selects/focuses 5",
+      "pass": true
+    },
+    {
+      "name": "Native radio ArrowLeft selects previous choice",
+      "pass": true
+    },
+    {
+      "name": "Tab leaves radio group for labelled comment",
+      "pass": true
+    },
+    {
+      "name": "Tab reaches Save rating",
+      "pass": true
+    },
+    {
+      "name": "In-flight actual request disables submission and announces saving",
+      "pass": true
+    },
+    {
+      "name": "Repeated trusted activation while busy emits exactly one request",
+      "pass": true
+    },
+    {
+      "name": "recorded: visible success with no error or review/delivery claim",
+      "pass": true
+    },
+    {
+      "name": "First saved response matches canonical trusted input",
+      "pass": true
+    },
+    {
+      "name": "Trusted pointer selects revision score",
+      "pass": true
+    },
+    {
+      "name": "Revision Tab reaches comment",
+      "pass": true
+    },
+    {
+      "name": "updated: visible success with no error or review/delivery claim",
+      "pass": true
+    },
+    {
+      "name": "Revision replaces both fields and changes stored timestamp",
+      "pass": true
+    },
+    {
+      "name": "Keyboard submission focuses Save via Tab",
+      "pass": true
+    },
+    {
+      "name": "recorded: visible success with no error or review/delivery claim",
+      "pass": true
+    },
+    {
+      "name": "Trusted identical replay preserves complete stored envelope",
+      "pass": true
+    },
+    {
+      "name": "Save/revise/replay each issued exactly one browser POST",
+      "pass": true
+    },
+    {
+      "name": "host: no local/session storage or capability in DOM/URL",
+      "pass": true
+    },
+    {
+      "name": "iframe: no local/session storage or capability in DOM/URL",
+      "pass": true
+    },
+    {
+      "name": "Parent messages contain no capability, transcript or rating",
+      "pass": true
+    },
+    {
+      "name": "Original Go OS process exited before restart",
+      "pass": true
+    },
+    {
+      "name": "Keyboard submission focuses Save via Tab",
+      "pass": true
+    },
+    {
+      "name": "Unavailable backend never shows successful recording",
+      "pass": true
+    },
+    {
+      "name": "New Go OS process uses same SQLite file",
+      "pass": true
+    },
+    {
+      "name": "Keyboard submission focuses Save via Tab",
+      "pass": true
+    },
+    {
+      "name": "recorded: visible success with no error or review/delivery claim",
+      "pass": true
+    },
+    {
+      "name": "Process restart retains complete rating and identical timestamp",
+      "pass": true
+    },
+    {
+      "name": "Restart/failure/retry count: five attempts, four successful UI responses",
+      "pass": true
+    },
+    {
+      "name": "Completed clarification persists across process restart",
+      "pass": true
+    },
+    {
+      "name": "Restricted iframe sandbox retained",
+      "pass": true
+    },
+    {
+      "name": "Browser reload loses prior guest access, creates distinct empty conversation",
+      "pass": true
+    },
+    {
+      "name": "Cross-guest rating authorization fails uniformly both directions",
+      "pass": true
+    },
+    {
+      "name": "Reloaded guest cannot inherit old turn eligibility",
+      "pass": true
+    },
+    {
+      "name": "Isolation attempts leave original complete persisted row unchanged",
+      "pass": true
+    },
+    {
+      "name": "host: no local/session storage or capability in DOM/URL",
+      "pass": true
+    },
+    {
+      "name": "iframe: no local/session storage or capability in DOM/URL",
+      "pass": true
+    },
+    {
+      "name": "Parent messages contain no capability, transcript or rating",
+      "pass": true
+    },
+    {
+      "name": "All captured control events are browser-trusted",
+      "pass": true
+    },
+    {
+      "name": "Trusted rating input includes native radio changes, comment input and pointer/keyboard submission",
+      "pass": true
+    },
+    {
+      "name": "No browser exceptions, response inspection failures or CSP security errors",
+      "pass": true
+    },
+    {
+      "name": "Backend logs contain no raw guest capability",
+      "pass": true
+    }
+  ],
+  "requests": [
+    {
+      "url": "http://127.0.0.1:44719/api/v1/conversations",
+      "method": "POST",
+      "body": {
+        "context": {
+          "page_path": "/help",
+          "locale": "en"
+        }
+      }
+    },
+    {
+      "url": "http://127.0.0.1:44719/api/v1/conversations/08a3a94eef86b49ea226ac66c93a5428/messages?limit=20",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:44719/api/v1/conversations/08a3a94eef86b49ea226ac66c93a5428/messages",
+      "method": "POST",
+      "body": {
+        "request_id": "af7d93cd-770e-4634-82af-2b8b59d0eb73",
+        "text": "Can you explain quantum entanglement?"
+      }
+    },
+    {
+      "url": "http://127.0.0.1:44719/api/v1/conversations/08a3a94eef86b49ea226ac66c93a5428/rating",
+      "method": "POST",
+      "body": {
+        "rating": 5,
+        "comment": "Helpful — local browser"
+      }
+    },
+    {
+      "url": "http://127.0.0.1:44719/api/v1/conversations/08a3a94eef86b49ea226ac66c93a5428/rating",
+      "method": "POST",
+      "body": {
+        "rating": 2,
+        "comment": "Revised by trusted input"
+      }
+    },
+    {
+      "url": "http://127.0.0.1:44719/api/v1/conversations/08a3a94eef86b49ea226ac66c93a5428/rating",
+      "method": "POST",
+      "body": {
+        "rating": 2,
+        "comment": "Revised by trusted input"
+      }
+    },
+    {
+      "url": "http://127.0.0.1:44719/api/v1/conversations/08a3a94eef86b49ea226ac66c93a5428/rating",
+      "method": "POST",
+      "body": {
+        "rating": 2,
+        "comment": "Revised by trusted input"
+      }
+    },
+    {
+      "url": "http://127.0.0.1:44719/api/v1/conversations/08a3a94eef86b49ea226ac66c93a5428/rating",
+      "method": "POST",
+      "body": {
+        "rating": 2,
+        "comment": "Revised by trusted input"
+      }
+    },
+    {
+      "url": "http://127.0.0.1:44719/api/v1/conversations",
+      "method": "POST",
+      "body": {
+        "context": {
+          "page_path": "/help",
+          "locale": "en"
+        }
+      }
+    },
+    {
+      "url": "http://127.0.0.1:44719/api/v1/conversations/31149babaeb0d79a77848dde588ec96a/messages?limit=20",
+      "method": "GET"
+    }
+  ],
+  "responses": [
+    {
+      "source": "browser",
+      "url": "http://127.0.0.1:44719/api/v1/conversations",
+      "status": 201,
+      "body": {
+        "conversation_id": "08a3a94eef86b49ea226ac66c93a5428",
+        "created_at": "2026-11-02T10:39:29.943363281Z",
+        "capability": "[not retained in evidence]"
+      }
+    },
+    {
+      "source": "browser",
+      "url": "http://127.0.0.1:44719/api/v1/conversations/08a3a94eef86b49ea226ac66c93a5428/messages?limit=20",
+      "status": 200,
+      "body": {
+        "messages": [],
+        "next_before": null
+      }
+    },
+    {
+      "source": "runner HTTP, not UI",
+      "scenario": "zero-turn prerequisite",
+      "url": "http://127.0.0.1:44719/api/v1/conversations/08a3a94eef86b49ea226ac66c93a5428/rating",
+      "status": 409,
+      "body": {
+        "error": {
+          "code": "rating_requires_turn",
+          "message": "The request could not be completed."
+        }
+      }
+    },
+    {
+      "source": "browser",
+      "url": "http://127.0.0.1:44719/api/v1/conversations/08a3a94eef86b49ea226ac66c93a5428/messages",
+      "status": 200,
+      "body": {
+        "request_id": "af7d93cd-770e-4634-82af-2b8b59d0eb73",
+        "messages": [
+          {
+            "seq": 1,
+            "request_id": "af7d93cd-770e-4634-82af-2b8b59d0eb73",
+            "role": "user",
+            "text": "Can you explain quantum entanglement?",
+            "created_at": "2026-11-02T10:39:30.402950823Z",
+            "status": "submitted",
+            "sources": []
+          },
+          {
+            "seq": 2,
+            "request_id": "af7d93cd-770e-4634-82af-2b8b59d0eb73",
+            "role": "assistant",
+            "text": "I need more information: the currently approved material does not support an answer to that question. Please clarify what you need help with. Jitihada University (Chuo Kikuu cha Jitihada) is fictional, not a real or accredited institution; this demo cannot confirm real policies, fees, dates, contacts, student records or visa requirements.",
+            "created_at": "2026-11-02T10:39:30.402951136Z",
+            "status": "needs_clarification",
+            "sources": []
+          }
+        ]
+      }
+    },
+    {
+      "source": "browser",
+      "url": "http://127.0.0.1:44719/api/v1/conversations/08a3a94eef86b49ea226ac66c93a5428/rating",
+      "status": 200,
+      "body": {
+        "rating": 5,
+        "comment": "Helpful — local browser",
+        "rated_at": "2026-11-02T10:39:31.026724809Z"
+      }
+    },
+    {
+      "source": "browser",
+      "url": "http://127.0.0.1:44719/api/v1/conversations/08a3a94eef86b49ea226ac66c93a5428/rating",
+      "status": 200,
+      "body": {
+        "rating": 2,
+        "comment": "Revised by trusted input",
+        "rated_at": "2026-11-02T10:39:31.418736209Z"
+      }
+    },
+    {
+      "source": "browser",
+      "url": "http://127.0.0.1:44719/api/v1/conversations/08a3a94eef86b49ea226ac66c93a5428/rating",
+      "status": 200,
+      "body": {
+        "rating": 2,
+        "comment": "Revised by trusted input",
+        "rated_at": "2026-11-02T10:39:31.418736209Z"
+      }
+    },
+    {
+      "source": "browser",
+      "url": "http://127.0.0.1:44719/api/v1/conversations/08a3a94eef86b49ea226ac66c93a5428/rating",
+      "status": 200,
+      "body": {
+        "rating": 2,
+        "comment": "Revised by trusted input",
+        "rated_at": "2026-11-02T10:39:31.418736209Z"
+      }
+    },
+    {
+      "source": "browser",
+      "url": "http://127.0.0.1:44719/api/v1/conversations",
+      "status": 201,
+      "body": {
+        "conversation_id": "31149babaeb0d79a77848dde588ec96a",
+        "created_at": "2026-11-02T10:39:32.456482101Z",
+        "capability": "[not retained in evidence]"
+      }
+    },
+    {
+      "source": "browser",
+      "url": "http://127.0.0.1:44719/api/v1/conversations/31149babaeb0d79a77848dde588ec96a/messages?limit=20",
+      "status": 200,
+      "body": {
+        "messages": [],
+        "next_before": null
+      }
+    },
+    {
+      "source": "runner HTTP, not UI",
+      "scenario": "B cannot revise A",
+      "url": "http://127.0.0.1:44719/api/v1/conversations/08a3a94eef86b49ea226ac66c93a5428/rating",
+      "status": 401,
+      "body": {
+        "error": {
+          "code": "unauthorized",
+          "message": "Conversation authorization is required."
+        }
+      }
+    },
+    {
+      "source": "runner HTTP, not UI",
+      "scenario": "A cannot revise B",
+      "url": "http://127.0.0.1:44719/api/v1/conversations/31149babaeb0d79a77848dde588ec96a/rating",
+      "status": 401,
+      "body": {
+        "error": {
+          "code": "unauthorized",
+          "message": "Conversation authorization is required."
+        }
+      }
+    },
+    {
+      "source": "runner HTTP, not UI",
+      "scenario": "new guest still requires own turn",
+      "url": "http://127.0.0.1:44719/api/v1/conversations/31149babaeb0d79a77848dde588ec96a/rating",
+      "status": 409,
+      "body": {
+        "error": {
+          "code": "rating_requires_turn",
+          "message": "The request could not be completed."
+        }
+      }
+    },
+    {
+      "source": "runner HTTP, not UI",
+      "scenario": "runner-only prior credential confirms no unauthorized mutation",
+      "url": "http://127.0.0.1:44719/api/v1/conversations/08a3a94eef86b49ea226ac66c93a5428/rating",
+      "status": 200,
+      "body": {
+        "rating": 2,
+        "comment": "Revised by trusted input",
+        "rated_at": "2026-11-02T10:39:31.418736209Z"
+      }
+    }
+  ],
+  "failures": [
+    {
+      "error": "net::ERR_ABORTED",
+      "canceled": true
+    },
+    {
+      "error": "net::ERR_ABORTED",
+      "canceled": true
+    },
+    {
+      "error": "net::ERR_CONNECTION_REFUSED",
+      "canceled": false
+    },
+    {
+      "error": "net::ERR_ABORTED",
+      "canceled": true
+    },
+    {
+      "error": "net::ERR_ABORTED",
+      "canceled": true
+    }
+  ],
+  "trustedInputs": [
+    {
+      "scenario": "clarification, native 1–5 navigation, comment and duplicate exclusion",
+      "events": [
+        {
+          "type": "click",
+          "id": "question",
+          "trusted": true
+        },
+        {
+          "type": "input",
+          "id": "question",
+          "trusted": true
+        },
+        {
+          "type": "change",
+          "id": "question",
+          "trusted": true
+        },
+        {
+          "type": "click",
+          "id": "send",
+          "trusted": true
+        },
+        {
+          "type": "click",
+          "id": "rating-choice-1",
+          "trusted": true
+        },
+        {
+          "type": "input",
+          "id": "rating-choice-1",
+          "trusted": true
+        },
+        {
+          "type": "change",
+          "id": "rating-choice-1",
+          "trusted": true
+        },
+        {
+          "type": "keydown",
+          "id": "rating-choice-1",
+          "key": "ArrowRight",
+          "trusted": true
+        },
+        {
+          "type": "click",
+          "id": "rating-choice-2",
+          "trusted": true
+        },
+        {
+          "type": "input",
+          "id": "rating-choice-2",
+          "trusted": true
+        },
+        {
+          "type": "change",
+          "id": "rating-choice-2",
+          "trusted": true
+        },
+        {
+          "type": "keydown",
+          "id": "rating-choice-2",
+          "key": "ArrowRight",
+          "trusted": true
+        },
+        {
+          "type": "click",
+          "id": "rating-choice-3",
+          "trusted": true
+        },
+        {
+          "type": "input",
+          "id": "rating-choice-3",
+          "trusted": true
+        },
+        {
+          "type": "change",
+          "id": "rating-choice-3",
+          "trusted": true
+        },
+        {
+          "type": "keydown",
+          "id": "rating-choice-3",
+          "key": "ArrowRight",
+          "trusted": true
+        },
+        {
+          "type": "click",
+          "id": "rating-choice-4",
+          "trusted": true
+        },
+        {
+          "type": "input",
+          "id": "rating-choice-4",
+          "trusted": true
+        },
+        {
+          "type": "change",
+          "id": "rating-choice-4",
+          "trusted": true
+        },
+        {
+          "type": "keydown",
+          "id": "rating-choice-4",
+          "key": "ArrowRight",
+          "trusted": true
+        },
+        {
+          "type": "click",
+          "id": "rating-choice-5",
+          "trusted": true
+        },
+        {
+          "type": "input",
+          "id": "rating-choice-5",
+          "trusted": true
+        },
+        {
+          "type": "change",
+          "id": "rating-choice-5",
+          "trusted": true
+        },
+        {
+          "type": "keydown",
+          "id": "rating-choice-5",
+          "key": "ArrowLeft",
+          "trusted": true
+        },
+        {
+          "type": "click",
+          "id": "rating-choice-4",
+          "trusted": true
+        },
+        {
+          "type": "input",
+          "id": "rating-choice-4",
+          "trusted": true
+        },
+        {
+          "type": "change",
+          "id": "rating-choice-4",
+          "trusted": true
+        },
+        {
+          "type": "keydown",
+          "id": "rating-choice-4",
+          "key": "ArrowRight",
+          "trusted": true
+        },
+        {
+          "type": "click",
+          "id": "rating-choice-5",
+          "trusted": true
+        },
+        {
+          "type": "input",
+          "id": "rating-choice-5",
+          "trusted": true
+        },
+        {
+          "type": "change",
+          "id": "rating-choice-5",
+          "trusted": true
+        },
+        {
+          "type": "keydown",
+          "id": "rating-choice-5",
+          "key": "Tab",
+          "trusted": true
+        },
+        {
+          "type": "input",
+          "id": "rating-comment",
+          "trusted": true
+        },
+        {
+          "type": "keydown",
+          "id": "rating-comment",
+          "key": "Tab",
+          "trusted": true
+        },
+        {
+          "type": "change",
+          "id": "rating-comment",
+          "trusted": true
+        },
+        {
+          "type": "click",
+          "id": "rating-send",
+          "trusted": true
+        }
+      ]
+    },
+    {
+      "scenario": "trusted pointer revision, keyboard save and identical replay",
+      "events": [
+        {
+          "type": "click",
+          "id": "rating-choice-2",
+          "trusted": true
+        },
+        {
+          "type": "input",
+          "id": "rating-choice-2",
+          "trusted": true
+        },
+        {
+          "type": "change",
+          "id": "rating-choice-2",
+          "trusted": true
+        },
+        {
+          "type": "keydown",
+          "id": "rating-choice-2",
+          "key": "Tab",
+          "trusted": true
+        },
+        {
+          "type": "keydown",
+          "id": "rating-comment",
+          "key": "a",
+          "trusted": true
+        },
+        {
+          "type": "input",
+          "id": "rating-comment",
+          "trusted": true
+        },
+        {
+          "type": "keydown",
+          "id": "rating-comment",
+          "key": "Tab",
+          "trusted": true
+        },
+        {
+          "type": "change",
+          "id": "rating-comment",
+          "trusted": true
+        },
+        {
+          "type": "keydown",
+          "id": "rating-send",
+          "key": "Enter",
+          "trusted": true
+        },
+        {
+          "type": "click",
+          "id": "rating-send",
+          "trusted": true
+        },
+        {
+          "type": "click",
+          "id": "rating-comment",
+          "trusted": true
+        },
+        {
+          "type": "keydown",
+          "id": "rating-comment",
+          "key": "Tab",
+          "trusted": true
+        },
+        {
+          "type": "keydown",
+          "id": "rating-send",
+          "key": "Enter",
+          "trusted": true
+        },
+        {
+          "type": "click",
+          "id": "rating-send",
+          "trusted": true
+        }
+      ]
+    },
+    {
+      "scenario": "backend OS stop, truthful failure, OS restart and trusted retry",
+      "events": [
+        {
+          "type": "click",
+          "id": "rating-comment",
+          "trusted": true
+        },
+        {
+          "type": "keydown",
+          "id": "rating-comment",
+          "key": "Tab",
+          "trusted": true
+        },
+        {
+          "type": "keydown",
+          "id": "rating-send",
+          "key": "Enter",
+          "trusted": true
+        },
+        {
+          "type": "click",
+          "id": "rating-send",
+          "trusted": true
+        },
+        {
+          "type": "click",
+          "id": "rating-comment",
+          "trusted": true
+        },
+        {
+          "type": "keydown",
+          "id": "rating-comment",
+          "key": "Tab",
+          "trusted": true
+        },
+        {
+          "type": "keydown",
+          "id": "rating-send",
+          "key": "Enter",
+          "trusted": true
+        },
+        {
+          "type": "click",
+          "id": "rating-send",
+          "trusted": true
+        }
+      ]
+    }
+  ],
+  "screenshots": [
+    "before-turn-disclosure.png",
+    "saving-duplicate-blocked.png",
+    "first-rating-recorded.png",
+    "revised-and-replayed.png",
+    "backend-down-unconfirmed.png",
+    "process-restart-replay.png",
+    "reload-new-guest.png"
+  ],
+  "security": [],
+  "initialBackendPID": 34478,
+  "browser": "Chrome/154.0.8037.97",
+  "restartedBackendPID": 34625,
+  "summary": {
+    "passed": 52,
+    "failed": 0
+  }
+}

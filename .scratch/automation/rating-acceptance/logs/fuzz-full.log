@@ -1,0 +1,114 @@
+python3 scripts/check.py fuzz-full
++ go test ai-virtual-assistant/internal/chat -run=^$ -fuzz=^FuzzDecodeEscalation$ -fuzztime=30s -parallel=2
+fuzz: elapsed: 0s, gathering baseline coverage: 0/176 completed
+fuzz: elapsed: 3s, gathering baseline coverage: 163/176 completed
+fuzz: elapsed: 3s, gathering baseline coverage: 176/176 completed, now fuzzing with 2 workers
+fuzz: elapsed: 6s, execs: 5281 (1706/sec), new interesting: 1 (total: 177)
+fuzz: elapsed: 9s, execs: 16269 (3663/sec), new interesting: 2 (total: 178)
+fuzz: elapsed: 12s, execs: 30901 (4877/sec), new interesting: 7 (total: 183)
+fuzz: elapsed: 15s, execs: 41323 (3474/sec), new interesting: 9 (total: 185)
+fuzz: elapsed: 18s, execs: 52864 (3847/sec), new interesting: 15 (total: 191)
+fuzz: elapsed: 21s, execs: 59446 (2194/sec), new interesting: 16 (total: 192)
+fuzz: elapsed: 24s, execs: 65600 (2051/sec), new interesting: 18 (total: 194)
+fuzz: elapsed: 27s, execs: 71235 (1878/sec), new interesting: 19 (total: 195)
+fuzz: elapsed: 30s, execs: 76001 (1589/sec), new interesting: 20 (total: 196)
+fuzz: elapsed: 31s, execs: 76001 (0/sec), new interesting: 20 (total: 196)
+PASS
+ok  	ai-virtual-assistant/internal/chat	31.065s
++ go test ai-virtual-assistant/internal/chat -run=^$ -fuzz=^FuzzDecodeProvider$ -fuzztime=30s -parallel=2
+fuzz: elapsed: 0s, gathering baseline coverage: 0/197 completed
+fuzz: elapsed: 3s, gathering baseline coverage: 187/197 completed
+fuzz: elapsed: 3s, gathering baseline coverage: 197/197 completed, now fuzzing with 2 workers
+fuzz: elapsed: 6s, execs: 7627 (2480/sec), new interesting: 0 (total: 197)
+fuzz: elapsed: 9s, execs: 28219 (6866/sec), new interesting: 0 (total: 197)
+fuzz: elapsed: 12s, execs: 49668 (7150/sec), new interesting: 2 (total: 199)
+fuzz: elapsed: 15s, execs: 63597 (4643/sec), new interesting: 3 (total: 200)
+fuzz: elapsed: 18s, execs: 77572 (4658/sec), new interesting: 6 (total: 203)
+fuzz: elapsed: 21s, execs: 91584 (4671/sec), new interesting: 9 (total: 206)
+fuzz: elapsed: 24s, execs: 103951 (4122/sec), new interesting: 10 (total: 207)
+fuzz: elapsed: 27s, execs: 111619 (2556/sec), new interesting: 10 (total: 207)
+fuzz: elapsed: 30s, execs: 146591 (11659/sec), new interesting: 10 (total: 207)
+fuzz: elapsed: 30s, execs: 146591 (0/sec), new interesting: 10 (total: 207)
+PASS
+ok  	ai-virtual-assistant/internal/chat	30.115s
++ go test ai-virtual-assistant/internal/chat -run=^$ -fuzz=^FuzzDecodeRating$ -fuzztime=30s -parallel=2
+fuzz: elapsed: 0s, gathering baseline coverage: 0/204 completed
+fuzz: elapsed: 3s, gathering baseline coverage: 180/204 completed
+fuzz: elapsed: 3s, gathering baseline coverage: 204/204 completed, now fuzzing with 2 workers
+fuzz: elapsed: 6s, execs: 4733 (1518/sec), new interesting: 0 (total: 204)
+fuzz: elapsed: 9s, execs: 11204 (2157/sec), new interesting: 0 (total: 204)
+fuzz: elapsed: 12s, execs: 47961 (12249/sec), new interesting: 2 (total: 206)
+fuzz: elapsed: 15s, execs: 57373 (3137/sec), new interesting: 2 (total: 206)
+fuzz: elapsed: 18s, execs: 65739 (2789/sec), new interesting: 3 (total: 207)
+fuzz: elapsed: 21s, execs: 75503 (3255/sec), new interesting: 7 (total: 211)
+fuzz: elapsed: 24s, execs: 75915 (137/sec), new interesting: 7 (total: 211)
+fuzz: elapsed: 27s, execs: 92725 (5602/sec), new interesting: 8 (total: 212)
+fuzz: elapsed: 30s, execs: 98373 (1883/sec), new interesting: 9 (total: 213)
+fuzz: elapsed: 30s, execs: 98373 (0/sec), new interesting: 9 (total: 213)
+PASS
+ok  	ai-virtual-assistant/internal/chat	30.198s
++ go test ai-virtual-assistant/internal/chat -run=^$ -fuzz=^FuzzDecodeTurso$ -fuzztime=30s -parallel=2
+fuzz: elapsed: 0s, gathering baseline coverage: 0/181 completed
+fuzz: elapsed: 3s, gathering baseline coverage: 160/181 completed
+fuzz: elapsed: 3s, gathering baseline coverage: 181/181 completed, now fuzzing with 2 workers
+fuzz: elapsed: 6s, execs: 5439 (1760/sec), new interesting: 0 (total: 181)
+fuzz: elapsed: 9s, execs: 10157 (1572/sec), new interesting: 1 (total: 182)
+fuzz: elapsed: 12s, execs: 15334 (1726/sec), new interesting: 2 (total: 183)
+fuzz: elapsed: 15s, execs: 19643 (1436/sec), new interesting: 5 (total: 186)
+fuzz: elapsed: 18s, execs: 22762 (1040/sec), new interesting: 5 (total: 186)
+fuzz: elapsed: 21s, execs: 27674 (1638/sec), new interesting: 6 (total: 187)
+fuzz: elapsed: 24s, execs: 33294 (1873/sec), new interesting: 6 (total: 187)
+fuzz: elapsed: 27s, execs: 116933 (27885/sec), new interesting: 11 (total: 192)
+fuzz: elapsed: 30s, execs: 119778 (948/sec), new interesting: 11 (total: 192)
+fuzz: elapsed: 31s, execs: 119778 (0/sec), new interesting: 11 (total: 192)
+PASS
+ok  	ai-virtual-assistant/internal/chat	31.634s
++ go test ai-virtual-assistant/internal/chat -run=^$ -fuzz=^FuzzParseImportJSONL$ -fuzztime=30s -parallel=2
+fuzz: elapsed: 0s, gathering baseline coverage: 0/123 completed
+fuzz: elapsed: 2s, gathering baseline coverage: 123/123 completed, now fuzzing with 2 workers
+fuzz: elapsed: 3s, execs: 1682 (561/sec), new interesting: 1 (total: 124)
+fuzz: elapsed: 6s, execs: 9298 (2538/sec), new interesting: 3 (total: 126)
+fuzz: elapsed: 9s, execs: 11999 (900/sec), new interesting: 6 (total: 129)
+fuzz: elapsed: 12s, execs: 11999 (0/sec), new interesting: 6 (total: 129)
+fuzz: elapsed: 15s, execs: 11999 (0/sec), new interesting: 6 (total: 129)
+fuzz: elapsed: 18s, execs: 11999 (0/sec), new interesting: 6 (total: 129)
+fuzz: elapsed: 21s, execs: 11999 (0/sec), new interesting: 6 (total: 129)
+fuzz: elapsed: 24s, execs: 11999 (0/sec), new interesting: 6 (total: 129)
+fuzz: elapsed: 27s, execs: 11999 (0/sec), new interesting: 6 (total: 129)
+fuzz: elapsed: 30s, execs: 11999 (0/sec), new interesting: 6 (total: 129)
+fuzz: elapsed: 31s, execs: 11999 (0/sec), new interesting: 6 (total: 129)
+PASS
+ok  	ai-virtual-assistant/internal/chat	31.046s
++ go test ai-virtual-assistant/internal/chat -run=^$ -fuzz=^FuzzValidateMessage$ -fuzztime=30s -parallel=2
+fuzz: elapsed: 0s, gathering baseline coverage: 0/89 completed
+fuzz: elapsed: 2s, gathering baseline coverage: 89/89 completed, now fuzzing with 2 workers
+fuzz: elapsed: 3s, execs: 2184 (728/sec), new interesting: 0 (total: 89)
+fuzz: elapsed: 6s, execs: 7504 (1773/sec), new interesting: 3 (total: 92)
+fuzz: elapsed: 9s, execs: 7504 (0/sec), new interesting: 3 (total: 92)
+fuzz: elapsed: 12s, execs: 7504 (0/sec), new interesting: 3 (total: 92)
+fuzz: elapsed: 15s, execs: 7504 (0/sec), new interesting: 3 (total: 92)
+fuzz: elapsed: 18s, execs: 7504 (0/sec), new interesting: 3 (total: 92)
+fuzz: elapsed: 21s, execs: 7504 (0/sec), new interesting: 3 (total: 92)
+fuzz: elapsed: 24s, execs: 7504 (0/sec), new interesting: 3 (total: 92)
+fuzz: elapsed: 27s, execs: 7504 (0/sec), new interesting: 3 (total: 92)
+fuzz: elapsed: 30s, execs: 7504 (0/sec), new interesting: 3 (total: 92)
+fuzz: elapsed: 31s, execs: 7504 (0/sec), new interesting: 3 (total: 92)
+PASS
+ok  	ai-virtual-assistant/internal/chat	31.068s
++ go test ai-virtual-assistant/internal/chat -run=^$ -fuzz=^FuzzValidateOpenAIEndpoint$ -fuzztime=30s -parallel=2
+fuzz: elapsed: 0s, gathering baseline coverage: 0/202 completed
+fuzz: elapsed: 3s, gathering baseline coverage: 129/202 completed
+fuzz: elapsed: 5s, gathering baseline coverage: 202/202 completed, now fuzzing with 2 workers
+fuzz: elapsed: 6s, execs: 3318 (1063/sec), new interesting: 0 (total: 202)
+fuzz: elapsed: 9s, execs: 9540 (2074/sec), new interesting: 0 (total: 202)
+fuzz: elapsed: 12s, execs: 16869 (2443/sec), new interesting: 3 (total: 205)
+fuzz: elapsed: 15s, execs: 23690 (2273/sec), new interesting: 3 (total: 205)
+fuzz: elapsed: 18s, execs: 30250 (2187/sec), new interesting: 3 (total: 205)
+fuzz: elapsed: 21s, execs: 41897 (3883/sec), new interesting: 6 (total: 208)
+fuzz: elapsed: 24s, execs: 53430 (3844/sec), new interesting: 8 (total: 210)
+fuzz: elapsed: 27s, execs: 58359 (1642/sec), new interesting: 9 (total: 211)
+fuzz: elapsed: 30s, execs: 62357 (1333/sec), new interesting: 9 (total: 211)
+fuzz: elapsed: 31s, execs: 62357 (0/sec), new interesting: 9 (total: 211)
+PASS
+ok  	ai-virtual-assistant/internal/chat	31.107s
+fuzz-full: PASS

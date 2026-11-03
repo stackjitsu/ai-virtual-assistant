@@ -1,0 +1,10 @@
+ internal/chat/rating_test.go | 211 +++++++++++++++---
+ web/tests/rating.browser.mjs | 499 ++++++++++++++++++++++++++++++++-----------
+ 2 files changed, 557 insertions(+), 153 deletions(-)
+internal/chat/rating_test.go
+web/tests/rating.browser.mjs
+9f01ae85321cd13424a2deab40b6bca9aa0f8e9da6e6eb6d48ab29b34df6d16c  internal/chat/rating_test.go
+4151460c198d7c5248eae618806dbf8263d96f21248fb209c0c740a9b62dd05b  web/tests/rating.browser.mjs
+55a98ffb53ddb3e18e3d2ecab37f940fc11e1330
+de0f129ab2048f1f64ded9617c314d1f3374e546
+8c18b459bded01054667f458c2f1754b3441f3eaea0f4c76ed09d24280242685  -

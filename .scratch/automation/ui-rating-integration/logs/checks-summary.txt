@@ -1,0 +1,8 @@
+format exit=0 seconds=0
+lint exit=0 seconds=2
+static exit=0 seconds=4
+unit exit=0 seconds=14
+contract exit=0 seconds=14
+fuzz-smoke exit=0 seconds=28
+fuzz-full exit=0 seconds=223
+build exit=0
