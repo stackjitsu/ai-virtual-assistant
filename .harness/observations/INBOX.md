@@ -92,3 +92,27 @@ Append atomic, factual observations using the schema in `docs/agents/observation
   context: manual Jitihada review
   fact: Two local previews ran for manual review: a no-key instance that correctly reported provider unavailable for matching FAQ questions, and a Gemini-backed instance using the operator-held key file, which produced one grounded answered turn citing demo-programmes. The cited example.org URLs do not resolve, and both preview servers were stopped when the session restarted.
   evidence: .scratch/ai-chat/evidence/live-evaluation.md; internal/chat/provider.go
+- id: OBS-20261103-001
+  observed_at: 2026-11-03
+  source: coordinator resume verification
+  context: INTEG-01
+  fact: Widget integration owner delivered merge commit db38c323f2d0913f541d551707f2b8e70df35f41 on integration/ui-rating, combining approved close-UI checkpoint 6507570 with accepted rating source eface12; owner-run gates and trusted-input browser suites (rating 61/0, sandbox-send 48/0, visual 208/0) passed. The previously dispatched independent validator's claim recorded 2026-11-02 14:35 is stale: the tmux server died leaving no evidence beyond the claim line and the copied owner handoff, so a fresh independent validator was re-dispatched against the exact commit.
+  evidence: /home/me/Documents/agent-worktrees/assistant-ui-rating-integration/.scratch/automation/ui-rating-integration/handoff.md; /home/me/Documents/agent-worktrees/assistant-ui-rating-validation/.scratch/automation/combined-validation-brief.md
+- id: OBS-20261103-002
+  observed_at: 2026-11-03
+  source: coordinator resume verification
+  context: CI-01
+  fact: Bounded CI browser-containment repair was delivered in assistant-ci after two implementation rounds and a handoff recording bounded process-group cleanup verified against a signal-crashed Chromium fixture with expected-fail behavior; gates pass except the static blocker flagging four historical empty-evidence ledger entries at base 1253287, which stays a coordination-owner item. An independent re-review brief was written and its validator dispatched. Prior dispatch model openai/gpt-6.1-sol auth check returned invalid on 2026-11-03; dispatches use verified-ready openai/gpt-6-astra.
+  evidence: /home/me/Documents/agent-worktrees/assistant-ci/.scratch/automation/ci-repair/handoff.md; /home/me/Documents/agent-worktrees/assistant-ci/.scratch/automation/ci-re-review-brief.md
+- id: OBS-20261103-003
+  observed_at: 2026-11-03
+  source: coordinator design review (user-delegated decision)
+  context: ADMIN-01
+  fact: Admin design review accepted the draft staff contract with one modification — password KDF upgraded to Argon2id (OWASP minimum m=19456 KiB, t=2, p=1) via the approved golang.org/x/crypto dependency, keeping stdlib PBKDF2-600k as the documented fallback; session/CSRF/throttling/CAS/audit/privacy design retained unchanged, all-staff visibility accepted for the invite-only v1. Benchmarks consulted: OWASP Password Storage Cheat Sheet and Zammad's groups/conflict-historization/audit model. A bounded contract-revision round was dispatched with required reruns of the earlier quota-blocked gates; no admin implementation is authorized yet.
+  evidence: /home/me/Documents/agent-worktrees/assistant-admin/.scratch/admin-dashboard/issues/05-kdf-revision.md; /home/me/Documents/agent-worktrees/assistant-admin/docs/contracts/admin.md; .harness/plan.md
+- id: OBS-20261103-004
+  observed_at: 2026-11-03
+  source: coordinator acceptance plus user decisions
+  context: CI-01 and CI-02
+  fact: User approved commit, standing push-after-acceptance for the feature branch, and closing CI-01 on local evidence with hosted execution deferred. The coordinator checkpointed the independently accepted CI implementation as 84bfd72 on tooling/ci-autonomy (55 tracked source/evidence files; binaries, profiles, screenshots and sqlite deliberately untracked), marked CI-01 completed, and added CI-02 (hosted deterministic PR validation follow-up, pending user scheduling). Not claimed: hosted run, independent happy-path browser rerun, or a green static on that worktree's historical ledger. AUTO-01's dependency on CI-01 is now satisfied.
+  evidence: .harness/plan.md; .harness/tasks.json; /home/me/Documents/agent-worktrees/assistant-ci/.scratch/automation/ci-re-review/handoff.md
