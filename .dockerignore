@@ -1,0 +1,23 @@
+# Deny by default: never send history, credentials, databases, scratch or caches.
+**
+!go.mod
+!go.sum
+!cmd/
+!cmd/assistant/
+!cmd/assistant/*.go
+!internal/
+!internal/chat/
+!internal/chat/*.go
+!database/
+!database/embed.go
+!database/migrations/
+!database/migrations/*.sql
+!web/
+!web/embed.go
+!web/assets/
+!web/assets/*.js
+!web/assets/*.mjs
+!web/assets/*.css
+!web/assets/*.html
+# Test-only files are not needed for the application image.
+**/*_test.go

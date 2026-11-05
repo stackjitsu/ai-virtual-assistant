@@ -1,0 +1,31 @@
+# Preparation only. Creating/syncing this Blueprint can provision AND first-deploy.
+# Do not import it until separately authorized; autoDeployTrigger is not a first-deploy guard.
+# Disable Blueprint Auto Sync separately in the dashboard before future updates.
+services:
+  - type: web
+    name: assistant-staging
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    autoDeployTrigger: "off"
+    healthCheckPath: /widget/widget.css
+    envVars:
+      - key: STORE_MODE
+        value: turso
+      - key: ASSISTANT_PUBLIC_DEMO
+        value: "true"
+      - key: ASSISTANT_ORIGIN
+        sync: false
+      - key: WIDGET_PARENT_ORIGINS
+        sync: false
+      - key: OPENAI_BASE_URL
+        value: https://generativelanguage.googleapis.com/v1beta/openai/chat/completions
+      - key: OPENAI_MODEL
+        value: gemini-2.5-flash-lite
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: TURSO_DATABASE_URL
+        sync: false
+      - key: TURSO_AUTH_TOKEN
+        sync: false

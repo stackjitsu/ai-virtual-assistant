@@ -1,0 +1,1 @@
+d2c572340e115d9ea1440a3f217d3def668433bb158b486f3be17473fa262125  .scratch/staging/checks/assistant-linux-amd64

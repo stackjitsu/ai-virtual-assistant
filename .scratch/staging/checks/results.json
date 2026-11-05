@@ -1,0 +1,32 @@
+[
+  {
+    "command": "make format",
+    "exit": 0,
+    "seconds": 0.22,
+    "bound_seconds": 300
+  },
+  {
+    "command": "make lint",
+    "exit": 0,
+    "seconds": 1.37,
+    "bound_seconds": 300
+  },
+  {
+    "command": "make static",
+    "exit": 0,
+    "seconds": 2.53,
+    "bound_seconds": 300
+  },
+  {
+    "command": "make unit",
+    "exit": 0,
+    "seconds": 35.39,
+    "bound_seconds": 300
+  },
+  {
+    "command": "make contract",
+    "exit": 0,
+    "seconds": 13.45,
+    "bound_seconds": 300
+  }
+]

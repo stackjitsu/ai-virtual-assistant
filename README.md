@@ -59,6 +59,14 @@ These questions exercise lexical retrieval, not guaranteed AI answers. With the 
 - Retrieval is minimal lexical overlap, not semantic search. Valid citations do not prove every sentence true. Missing/invalid provider responses fail safely; no relevant approved knowledge yields clarification.
 - One backend process only. Process-local rate/concurrency limits reset on restart and are not production abuse/spend protection. No sign-in/dashboard, live human handoff, WhatsApp or deployment in this slice.
 
+## Future free-only staging preparation (not deployed)
+
+[`render.yaml`](render.yaml) and the [`Dockerfile`](Dockerfile) prepare a single **free-plan** Docker web service, not a deployment or live-provider result. Read the [staging operator checklist](docs/deployment/render-staging.md) before any future account action. Importing a Blueprint may provision and first-deploy even though automatic Git deploys are disabled; no creation, sync, migration, import or inference is authorized by these files.
+
+The image uses Go 1.26.3, nonroot execution and CA certificates, with a default-deny build context. Its shell command maps Render's `PORT` to `LISTEN_ADDR=0.0.0.0:$PORT`. Staging must use `STORE_MODE=turso` (not ephemeral SQLite), exact actual HTTPS `ASSISTANT_ORIGIN`/`WIDGET_PARENT_ORIGINS`, and separately entered provider/database secrets. No `.env` loading, remote migration or seed occurs automatically. The static CSS health check does not prove database/content/AI readiness.
+
+The Blueprint selects `ASSISTANT_PUBLIC_DEMO=true` and Gemini's compatible endpoint/model, but the backend/widget demo-label and email-disable policy is **a separate integration prerequisite**, not implemented by packaging. Do not publish this baseline image. No remote corpus, live Gemini response, quotas, account eligibility or zero-billing guarantee has been verified. Card/payment/paid-resource/overage prompts are stop conditions; a limited fictional pilot is not an official service. The checklist covers strict origins, explicit future migration/import, privacy/retention/spend limitations, cold starts, rollback and teardown.
+
 ## Validation
 
 ```sh
