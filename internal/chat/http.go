@@ -24,6 +24,7 @@ import (
 const clarification = "I need more information: the currently approved material does not support an answer to that question. Please clarify what you need help with. Jitihada University (Chuo Kikuu cha Jitihada) is fictional, not a real or accredited institution; this demo cannot confirm real policies, fees, dates, contacts, student records or visa requirements."
 
 type HTTPConfig struct {
+	PublicDemo      bool
 	AssistantOrigin string
 	ParentOrigins   []string
 }
@@ -87,6 +88,7 @@ func newServer(store Store, provider Provider, cfg HTTPConfig, assets fs.FS, out
 		s.outbox = &LocalEmailOutbox{}
 	}
 	api := chi.NewRouter()
+	api.Get("/deployment", s.deployment)
 	api.Post("/conversations", s.create)
 	api.Get("/conversations/{id}/messages", s.history)
 	api.Post("/conversations/{id}/messages", s.message)
@@ -180,6 +182,8 @@ func apiError(w http.ResponseWriter, status int, code string) {
 		message = "That request ID was already used for a different question."
 	case "conflict":
 		message = "This conversation cannot accept another escalation request."
+	case "email_support_disabled":
+		message = "Email support requests are unavailable in this public demo."
 	case "origin_not_allowed":
 		message = "This request origin is not allowed."
 	}
@@ -575,8 +579,24 @@ func sendEscalation(w http.ResponseWriter, t Escalation) {
 	writeJSON(w, 201, escalationEnvelope{t.TicketID, t.RecordedAt, t.DeliveryOutcome, message})
 }
 
+func (s *server) deployment(w http.ResponseWriter, r *http.Request) {
+	if r.URL.RawQuery != "" || r.URL.ForceQuery {
+		apiError(w, 400, "invalid_request")
+		return
+	}
+	writeJSON(w, 200, struct {
+		PublicDemo          bool `json:"public_demo"`
+		EmailSupportEnabled bool `json:"email_support_enabled"`
+	}{s.config.PublicDemo, !s.config.PublicDemo})
+}
+
 func (s *server) escalate(w http.ResponseWriter, r *http.Request) {
 	if !s.rateEscalation(w, r) {
+		return
+	}
+	// Policy denial must precede body parsing, authorization, stored replay and outbox I/O.
+	if s.config.PublicDemo {
+		apiError(w, 403, "email_support_disabled")
 		return
 	}
 	if r.URL.RawQuery != "" {

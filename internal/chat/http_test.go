@@ -36,7 +36,7 @@ func perform(h http.Handler, method, path, capability, body string) *httptest.Re
 }
 func testHandler(t *testing.T, s Store, p Provider) http.Handler {
 	t.Helper()
-	h, err := NewHandler(s, p, HTTPConfig{"http://127.0.0.1:8080", []string{"http://localhost:8080", "http://127.0.0.1:8080"}}, fstest.MapFS{"widget.html": &fstest.MapFile{Data: []byte("fixture assets")}, "sample-host.html": &fstest.MapFile{Data: []byte("fixture host")}})
+	h, err := NewHandler(s, p, HTTPConfig{AssistantOrigin: "http://127.0.0.1:8080", ParentOrigins: []string{"http://localhost:8080", "http://127.0.0.1:8080"}}, fstest.MapFS{"widget.html": &fstest.MapFile{Data: []byte("fixture assets")}, "sample-host.html": &fstest.MapFile{Data: []byte("fixture host")}})
 	if err != nil {
 		t.Fatal(err)
 	}

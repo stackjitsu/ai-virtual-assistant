@@ -10,7 +10,7 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
   const { document } = platform;
   const element = (id) => document.getElementById(id);
   const ui = Object.fromEntries(['status', 'error', 'retry', 'older', 'messages', 'question', 'send', 'transmission', 'message-form', 'chat-close',
-    'escalate-toggle', 'handoff-menu', 'handoff-email', 'handoff-whatsapp', 'escalation-form', 'escalate-email', 'escalate-note', 'escalate-consent', 'escalate-error', 'escalate-outcome', 'escalate-send',
+    'support-policy', 'escalate-toggle', 'handoff-menu', 'handoff-email', 'handoff-whatsapp', 'escalation-form', 'escalate-email', 'escalate-note', 'escalate-consent', 'escalate-error', 'escalate-outcome', 'escalate-send',
     'rating-section', 'rating-comment', 'rating-error', 'rating-outcome', 'rating-send', ...[1, 2, 3, 4, 5].map((value) => `rating-choice-${value}`)]
     .map((id) => [id, element(id)]));
   const origin = platform.location.origin;
@@ -33,6 +33,8 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
   // The handoff menu is a separate, visitor-opened disclosure: the selected
   // channel is Request via email (which reveals the consent form) while Request via WhatsApp is
   // permanently unavailable. No server event ever opens either.
+  let emailSupportEnabled = false;
+  let supportPolicyText = 'Email support is unavailable while deployment policy is unverified.';
   let handoffOpen = false;
   let escalateOpen = false;
   let escalateBusy = false;
@@ -74,16 +76,18 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
     ui['escalate-toggle'].disabled = false;
     ui['escalate-toggle'].setAttribute('aria-expanded', String(handoffOpen));
     ui['handoff-menu'].hidden = !handoffOpen || stopped;
+    ui['support-policy'].textContent = supportPolicyText;
+    ui['handoff-email'].disabled = !emailSupportEnabled || stopped;
     ui['handoff-email'].setAttribute('aria-expanded', String(escalateOpen));
     ui['handoff-email'].setAttribute('aria-pressed', String(escalateOpen));
     // The unavailable channel stays permanently disabled and never selected.
     ui['handoff-whatsapp'].disabled = true;
     ui['handoff-whatsapp'].setAttribute('aria-pressed', 'false');
-    ui['escalation-form'].hidden = !escalateOpen || stopped;
-    ui['escalate-email'].disabled = stopped;
-    ui['escalate-note'].disabled = stopped;
-    ui['escalate-consent'].disabled = stopped;
-    ui['escalate-send'].disabled = stopped || escalateBusy || Date.now() < escalateCooldownUntil;
+    ui['escalation-form'].hidden = !emailSupportEnabled || !escalateOpen || stopped;
+    ui['escalate-email'].disabled = !emailSupportEnabled || stopped;
+    ui['escalate-note'].disabled = !emailSupportEnabled || stopped;
+    ui['escalate-consent'].disabled = !emailSupportEnabled || stopped;
+    ui['escalate-send'].disabled = !emailSupportEnabled || stopped || escalateBusy || Date.now() < escalateCooldownUntil;
     ui['rating-section'].hidden = stopped || !conversation || !historyReady
       || ![...messages.values()].some((message) => message.role === 'assistant'
         && (message.status === 'answered' || message.status === 'needs_clarification'));
@@ -171,14 +175,14 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
     platform.clearTimeout(cooldownTimer);
     cooldownTimer = platform.setTimeout(() => { cooldownUntil = 0; controls(); }, seconds * 1000);
   }
-  async function request(path, { method = 'GET', body } = {}) {
+  async function request(path, { method = 'GET', body, publicPolicy = false } = {}) {
     const controller = new AbortController();
     inFlight.add(controller);
     const timer = platform.setTimeout(() => controller.abort(), timeoutMs);
     try {
       const headers = { Accept: 'application/json' };
       if (body !== undefined) headers['Content-Type'] = 'application/json';
-      if (conversation) headers.Authorization = `Bearer ${conversation.capability}`;
+      if (conversation && !publicPolicy) headers.Authorization = `Bearer ${conversation.capability}`;
       const response = await platform.fetch(new URL(path, origin).href, {
         method, headers, body: body === undefined ? undefined : JSON.stringify(body),
         credentials: 'omit', mode: 'same-origin', cache: 'no-store', redirect: 'error', signal: controller.signal,
@@ -232,6 +236,23 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
       return true;
     }
     return false;
+  }
+  async function loadDeploymentPolicy() {
+    try {
+      const response = await request('/api/v1/deployment', { publicPolicy: true });
+      if (stopped) return;
+      const data = response.data;
+      if (response.status !== 200 || !keys(data, ['public_demo', 'email_support_enabled'])
+        || typeof data.public_demo !== 'boolean' || typeof data.email_support_enabled !== 'boolean'
+        || data.email_support_enabled === data.public_demo) throw new Error('invalid policy');
+      emailSupportEnabled = data.email_support_enabled;
+      supportPolicyText = emailSupportEnabled
+        ? 'Email requests can be recorded; email delivery is not configured.'
+        : 'Email support requests are unavailable in this public demo.';
+    } catch {
+      emailSupportEnabled = false;
+      supportPolicyText = 'Email support is unavailable because deployment policy could not be verified. Chat and rating remain available.';
+    } finally { controls(); }
   }
   async function create() {
     if (stopped || busy) return;
@@ -437,6 +458,7 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
     if (handoffOpen) ui['handoff-email'].focus?.();
   });
   ui['handoff-email'].addEventListener('click', () => {
+    if (!emailSupportEnabled || stopped || !conversation) return;
     escalateOpen = !escalateOpen;
     controls();
     if (escalateOpen) ui['escalate-email'].focus?.();
@@ -492,7 +514,7 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
     escalateCooldownTimer = platform.setTimeout(() => { escalateCooldownUntil = 0; controls(); }, seconds * 1000);
   }
   async function submitEscalation() {
-    if (stopped || !conversation || escalateBusy || Date.now() < escalateCooldownUntil) return;
+    if (!emailSupportEnabled || stopped || !conversation || escalateBusy || Date.now() < escalateCooldownUntil) return;
     const email = ui['escalate-email'].value;
     const note = typeof ui['escalate-note'].value === 'string' ? ui['escalate-note'].value : '';
     escalateError('');
@@ -524,6 +546,12 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
       const response = await request(`/api/v1/conversations/${conversation.conversation_id}/escalation`, { method: 'POST', body });
       if (stopped) return;
       escalateOutcome('');
+      if (response.status === 403 && errorCode(response) === 'email_support_disabled') {
+        emailSupportEnabled = false;
+        escalateOpen = false;
+        supportPolicyText = 'Email support requests are unavailable in this public demo.';
+        return;
+      }
       if (rejectAccess(response)) return;
       if (response.status === 201 && validEscalationTicket(response.data)) {
         showTicket(response.data, key);
@@ -562,6 +590,7 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
     context = { ...event.data.context };
     busy = false;
     void create();
+    void loadDeploymentPolicy();
   };
   platform.addEventListener('message', onMessage);
   platform.addEventListener('pagehide', () => {

@@ -208,8 +208,8 @@ test('published assets use local external files, semantic form and actual sample
   assert.doesNotMatch(html, /DEMO \/ AI SUPPORT|fictional demo/u);
   assert.doesNotMatch(html, /<style| style=| on(?:click|load|submit)=/u);
   assert.match(sample, /<script src="loader.js" data-page-path="\/demo\/getting-started" data-locale="en" defer><\/script>/u);
-  assert.match(sample, /Preview only: the knowledge is fictional, not official guidance or a staffed support service/u);
-  assert.match(sample, /no email is sent/u);
+  assert.match(sample, /Fictional Jitihada University demo, not a real institution, official guidance or a staffed support service/u);
+  assert.match(sample, /Email support requests are unavailable in public demo mode/u);
   assert.doesNotMatch(sample, /assistant demo|FICTIONAL DEMO|demo onboarding/u);
   assert.doesNotMatch(sample, /<iframe|message-form|id="messages"/u);
   // Real mount already exercises control listeners and text-only DOM; these are
@@ -224,7 +224,7 @@ test('handoff menu is additive markup: Request via email available, Request via 
   assert.match(html, /<section class="escalation" aria-label="Request human support">[\s\S]*?<\/section>[\s\S]*?<\/div>\s*<form id="message-form"/u);
   assert.match(html, /<button id="escalate-toggle" type="button" disabled aria-expanded="false" aria-controls="handoff-menu">Request human support<\/button>/u);
   assert.match(html, /<div id="handoff-menu" class="handoff-menu" role="group" aria-label="Ways to request human support" hidden>/u);
-  assert.match(html, /<button id="handoff-email" type="button" aria-expanded="false" aria-controls="escalation-form" aria-pressed="false">Request via email<\/button>/u);
+  assert.match(html, /<button id="handoff-email" type="button" disabled aria-describedby="support-policy" aria-expanded="false" aria-controls="escalation-form" aria-pressed="false">Request via email<\/button>/u);
   assert.match(html, /<button id="handoff-whatsapp" type="button" disabled aria-describedby="whatsapp-reason" aria-pressed="false">Request via WhatsApp<\/button>/u);
   assert.match(html, /<p id="whatsapp-reason">Unavailable: this support service has not enabled WhatsApp\.<\/p>/u);
   assert.match(html, /<form id="escalation-form" aria-label="Request human support by email" hidden>/u);

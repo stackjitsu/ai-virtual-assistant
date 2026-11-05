@@ -49,6 +49,16 @@ Errors always have shape `{"error":{"code":"provider_unavailable","message":"The
 
 Unavailable services are **not** successful canned AI responses. Missing OpenAI key permits local persistence/UI operation but every question needing inference fails 503 honestly. No provider calls during tests except loopback fixture servers. Retryable failures do not consume a completed turn. If commit acknowledgement is lost, retry first looks up the stored request; never blindly resend a completed inference.
 
+## Public demo deployment policy — additive
+
+`ASSISTANT_PUBLIC_DEMO` accepts only unset/empty, `false`, or `true` (lowercase, no whitespace); unset/empty/false preserves legacy backend escalation. Invalid values fail startup before storage/service I/O. `HTTPConfig.PublicDemo` is the single server-side policy source.
+
+`GET /api/v1/deployment` is a same-origin public, read-only discovery endpoint with exactly `{"public_demo":true,"email_support_enabled":false}` in demo mode and exactly `{"public_demo":false,"email_support_enabled":true}` otherwise. No capability, secrets, records or user inputs are included. No query parameters (400); wrong method 405; existing Origin guard/no CORS and JSON/no-store/nosniff headers apply. Creation envelopes stay unchanged.
+
+In public demo mode, escalation POSTs return 403 `email_support_disabled` with fixed message `Email support requests are unavailable in this public demo.` after the existing Origin guard and escalation attempt rate limit, **before** ID/auth/body parsing, storage/replay or outbox access. Malformed, oversized, unauthenticated and formerly successful replay requests therefore never record or return a ticket. The existing 429 attempt bound still applies. Chat, history, rating, schemas and provider behavior are unchanged.
+
+The widget obtains and strictly validates discovery independently of chat; only the exact non-demo/enabled pair enables email collection/submission. Missing, failed, malformed, extra-key or contradictory policy fails closed for support only, including direct handlers. Disabled/unavailable copy never claims recording or delivery. Sample host and widget plainly identify fictional Jitihada demo content before sending; existing AI/sensitive-data/sharing/retained-history disclosures remain truthful. No CSP, sandbox or postMessage relaxation.
+
 ## Embedding / assets
 
 Widget owner owns **all** `web/`, including `web/embed.go` (`package web`, `//go:embed assets`, exported `var Assets embed.FS`), `web/assets/{loader.js,widget.html,widget.js,widget.css,sample-host.html}`, and Node `web/tests/*.test.mjs` tests outside assets. Embed only `assets/`, not tests. Backend imports `ai-virtual-assistant/web`, obtains `fs.Sub(web.Assets,"assets")`, serves `/widget/` with this FS, and redirects `/` to `/widget/sample-host.html`. Backend never edits/copies/generates web assets; no build-time npm step or disk-relative runtime dependency. Go cannot compile this import until widget worker supplies the embed package: that is an explicit coordination dependency, not a setup stub.

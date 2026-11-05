@@ -83,7 +83,7 @@ func escalationHandler(t *testing.T, s Store, outbox EmailOutbox) http.Handler {
 	h, err := NewHandlerWithOutbox(s, providerFunc(func(context.Context, ComposeInput) (Composition, error) {
 		t.Error("escalation invoked paid inference")
 		return Composition{}, ErrUnavailable
-	}), HTTPConfig{"http://127.0.0.1:8080", []string{"http://localhost:8080", "http://127.0.0.1:8080"}},
+	}), HTTPConfig{AssistantOrigin: "http://127.0.0.1:8080", ParentOrigins: []string{"http://localhost:8080", "http://127.0.0.1:8080"}},
 		fstest.MapFS{"widget.html": &fstest.MapFile{Data: []byte("fixture assets")}, "sample-host.html": &fstest.MapFile{Data: []byte("fixture host")}}, outbox)
 	if err != nil {
 		t.Fatal(err)
