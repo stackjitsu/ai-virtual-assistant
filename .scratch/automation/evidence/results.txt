@@ -1,0 +1,11 @@
+Final validation after workflow repair/documentation
+format 0
+lint 0
+static 2
+unit 0
+contract 0
+fuzz-smoke 0
+compile separately 0
+actionlint 0
+diff-check 0
+browser 0 (prior run, unchanged browser adapter)

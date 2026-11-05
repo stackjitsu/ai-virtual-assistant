@@ -1,0 +1,44 @@
+{
+  "status": "failed",
+  "stages": [
+    {
+      "stage": "browser-version",
+      "timeoutSeconds": 15,
+      "outcome": "passed",
+      "pid": 9761,
+      "returncode": 0,
+      "cleanup": {
+        "sigtermSent": false,
+        "sigkillSent": false,
+        "leaderReaped": true
+      },
+      "elapsedSeconds": 0.17
+    },
+    {
+      "stage": "backend-build",
+      "timeoutSeconds": 180,
+      "outcome": "passed",
+      "pid": 9762,
+      "returncode": 0,
+      "cleanup": {
+        "sigtermSent": false,
+        "sigkillSent": false,
+        "leaderReaped": true
+      },
+      "elapsedSeconds": 2.384
+    },
+    {
+      "stage": "trusted-input-regression",
+      "timeoutSeconds": 120.0,
+      "outcome": "timeout",
+      "pid": 9851,
+      "cleanup": {
+        "sigtermSent": true,
+        "sigkillSent": false,
+        "leaderReaped": true
+      },
+      "elapsedSeconds": 121.036
+    }
+  ],
+  "error": "trusted-input-regression timed out after 120s; terminating owned process group 9851"
+}

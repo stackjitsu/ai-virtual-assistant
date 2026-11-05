@@ -1,0 +1,508 @@
+{
+  "assertions": [
+    {
+      "name": "Restricted CSP is present",
+      "pass": true,
+      "detail": "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors http://127.0.0.1:41811"
+    },
+    {
+      "name": "Exact restricted sandbox retained",
+      "pass": true
+    },
+    {
+      "name": "mouse: exactly one POST from real input",
+      "pass": true,
+      "detail": {
+        "sent": 1,
+        "state": {
+          "status": "No saved reply found. Retry uses the same question ID.",
+          "error": "The AI service is unavailable. Your question has not been answered. Please retry later.",
+          "count": 1,
+          "text": "You · awaiting confirmationHow do I start the demo?",
+          "disabled": true
+        }
+      }
+    },
+    {
+      "name": "Empty key gives 503 + visible unavailable + history, no automatic resend",
+      "pass": true,
+      "detail": {
+        "status": "No saved reply found. Retry uses the same question ID.",
+        "error": "The AI service is unavailable. Your question has not been answered. Please retry later.",
+        "count": 1,
+        "text": "You · awaiting confirmationHow do I start the demo?",
+        "disabled": true
+      }
+    },
+    {
+      "name": "Real retry click preserves ID/text and reconciles history",
+      "pass": true
+    },
+    {
+      "name": "Exact restricted sandbox retained",
+      "pass": true
+    },
+    {
+      "name": "button-enter: Tab reaches Send",
+      "pass": true
+    },
+    {
+      "name": "button-enter: exactly one POST from real input",
+      "pass": true,
+      "detail": {
+        "sent": 1,
+        "state": {
+          "status": "Clarification received: approved knowledge is limited.",
+          "error": "",
+          "count": 2,
+          "text": "YouCan you explain quantum entanglement?Clarification · limited knowledgeI need more information: the currently approved material does not support an answer to that question. Please clarify what you need help with. Jitihada University (Chuo Kikuu cha Jitihada) is fictional, not a real or accredited institution; this demo cannot confirm real policies, fees, dates, contacts, student records or visa requirements.",
+          "disabled": false
+        }
+      }
+    },
+    {
+      "name": "button-enter: persisted clarification pair",
+      "pass": true,
+      "detail": {
+        "status": "Clarification received: approved knowledge is limited.",
+        "error": "",
+        "count": 2,
+        "text": "YouCan you explain quantum entanglement?Clarification · limited knowledgeI need more information: the currently approved material does not support an answer to that question. Please clarify what you need help with. Jitihada University (Chuo Kikuu cha Jitihada) is fictional, not a real or accredited institution; this demo cannot confirm real policies, fees, dates, contacts, student records or visa requirements.",
+        "disabled": false
+      }
+    },
+    {
+      "name": "Exact restricted sandbox retained",
+      "pass": true
+    },
+    {
+      "name": "button-space: Tab reaches Send",
+      "pass": true
+    },
+    {
+      "name": "button-space: exactly one POST from real input",
+      "pass": true,
+      "detail": {
+        "sent": 1,
+        "state": {
+          "status": "Clarification received: approved knowledge is limited.",
+          "error": "",
+          "count": 2,
+          "text": "YouCan you explain quantum entanglement?Clarification · limited knowledgeI need more information: the currently approved material does not support an answer to that question. Please clarify what you need help with. Jitihada University (Chuo Kikuu cha Jitihada) is fictional, not a real or accredited institution; this demo cannot confirm real policies, fees, dates, contacts, student records or visa requirements.",
+          "disabled": false
+        }
+      }
+    },
+    {
+      "name": "button-space: persisted clarification pair",
+      "pass": true,
+      "detail": {
+        "status": "Clarification received: approved knowledge is limited.",
+        "error": "",
+        "count": 2,
+        "text": "YouCan you explain quantum entanglement?Clarification · limited knowledgeI need more information: the currently approved material does not support an answer to that question. Please clarify what you need help with. Jitihada University (Chuo Kikuu cha Jitihada) is fictional, not a real or accredited institution; this demo cannot confirm real policies, fees, dates, contacts, student records or visa requirements.",
+        "disabled": false
+      }
+    },
+    {
+      "name": "Exact restricted sandbox retained",
+      "pass": true
+    },
+    {
+      "name": "Plain textarea Enter inserts newline without sending",
+      "pass": true
+    },
+    {
+      "name": "ctrl-enter: exactly one POST from real input",
+      "pass": true,
+      "detail": {
+        "sent": 1,
+        "state": {
+          "status": "Clarification received: approved knowledge is limited.",
+          "error": "",
+          "count": 2,
+          "text": "YouCan you explain quantum entanglement?Clarification · limited knowledgeI need more information: the currently approved material does not support an answer to that question. Please clarify what you need help with. Jitihada University (Chuo Kikuu cha Jitihada) is fictional, not a real or accredited institution; this demo cannot confirm real policies, fees, dates, contacts, student records or visa requirements.",
+          "disabled": false
+        }
+      }
+    },
+    {
+      "name": "ctrl-enter: persisted clarification pair",
+      "pass": true,
+      "detail": {
+        "status": "Clarification received: approved knowledge is limited.",
+        "error": "",
+        "count": 2,
+        "text": "YouCan you explain quantum entanglement?Clarification · limited knowledgeI need more information: the currently approved material does not support an answer to that question. Please clarify what you need help with. Jitihada University (Chuo Kikuu cha Jitihada) is fictional, not a real or accredited institution; this demo cannot confirm real policies, fees, dates, contacts, student records or visa requirements.",
+        "disabled": false
+      }
+    },
+    {
+      "name": "Exact restricted sandbox retained",
+      "pass": true
+    },
+    {
+      "name": "meta-enter: exactly one POST from real input",
+      "pass": true,
+      "detail": {
+        "sent": 1,
+        "state": {
+          "status": "Clarification received: approved knowledge is limited.",
+          "error": "",
+          "count": 2,
+          "text": "YouCan you explain quantum entanglement?Clarification · limited knowledgeI need more information: the currently approved material does not support an answer to that question. Please clarify what you need help with. Jitihada University (Chuo Kikuu cha Jitihada) is fictional, not a real or accredited institution; this demo cannot confirm real policies, fees, dates, contacts, student records or visa requirements.",
+          "disabled": false
+        }
+      }
+    },
+    {
+      "name": "meta-enter: persisted clarification pair",
+      "pass": true,
+      "detail": {
+        "status": "Clarification received: approved knowledge is limited.",
+        "error": "",
+        "count": 2,
+        "text": "YouCan you explain quantum entanglement?Clarification · limited knowledgeI need more information: the currently approved material does not support an answer to that question. Please clarify what you need help with. Jitihada University (Chuo Kikuu cha Jitihada) is fictional, not a real or accredited institution; this demo cannot confirm real policies, fees, dates, contacts, student records or visa requirements.",
+        "disabled": false
+      }
+    },
+    {
+      "name": "All observed control inputs are browser-trusted",
+      "pass": true
+    },
+    {
+      "name": "No browser JavaScript exceptions",
+      "pass": true
+    }
+  ],
+  "requests": [
+    {
+      "url": "http://127.0.0.1:40457/api/v1/conversations",
+      "method": "POST",
+      "body": {
+        "context": {
+          "page_path": "/help",
+          "locale": "en"
+        }
+      }
+    },
+    {
+      "url": "http://127.0.0.1:40457/api/v1/conversations/54d442a8d1c27fe49cfd47f7570b20fd/messages?limit=20",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:40457/api/v1/conversations/54d442a8d1c27fe49cfd47f7570b20fd/messages",
+      "method": "POST",
+      "body": {
+        "request_id": "92f9ad42-83fd-4552-b88d-76dbce8a2fb3",
+        "text": "How do I start the demo?"
+      }
+    },
+    {
+      "url": "http://127.0.0.1:40457/api/v1/conversations/54d442a8d1c27fe49cfd47f7570b20fd/messages?limit=20",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:40457/api/v1/conversations/54d442a8d1c27fe49cfd47f7570b20fd/messages",
+      "method": "POST",
+      "body": {
+        "request_id": "92f9ad42-83fd-4552-b88d-76dbce8a2fb3",
+        "text": "How do I start the demo?"
+      }
+    },
+    {
+      "url": "http://127.0.0.1:40457/api/v1/conversations/54d442a8d1c27fe49cfd47f7570b20fd/messages?limit=20",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:40457/api/v1/conversations",
+      "method": "POST",
+      "body": {
+        "context": {
+          "page_path": "/help",
+          "locale": "en"
+        }
+      }
+    },
+    {
+      "url": "http://127.0.0.1:40457/api/v1/conversations/6082d30de6f7739a7c7955f4e3de3501/messages?limit=20",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:40457/api/v1/conversations/6082d30de6f7739a7c7955f4e3de3501/messages",
+      "method": "POST",
+      "body": {
+        "request_id": "379adabb-b79f-4a7e-b027-e8e4a186f481",
+        "text": "Can you explain quantum entanglement?"
+      }
+    },
+    {
+      "url": "http://127.0.0.1:40457/api/v1/conversations",
+      "method": "POST",
+      "body": {
+        "context": {
+          "page_path": "/help",
+          "locale": "en"
+        }
+      }
+    },
+    {
+      "url": "http://127.0.0.1:40457/api/v1/conversations/5479a9dbf544766c36e753dafa10321c/messages?limit=20",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:40457/api/v1/conversations/5479a9dbf544766c36e753dafa10321c/messages",
+      "method": "POST",
+      "body": {
+        "request_id": "4be32d64-acb1-47a0-b292-16125b6acca2",
+        "text": "Can you explain quantum entanglement?"
+      }
+    },
+    {
+      "url": "http://127.0.0.1:40457/api/v1/conversations",
+      "method": "POST",
+      "body": {
+        "context": {
+          "page_path": "/help",
+          "locale": "en"
+        }
+      }
+    },
+    {
+      "url": "http://127.0.0.1:40457/api/v1/conversations/7f77bfff76b1ff5f3eb97f43f56c7331/messages?limit=20",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:40457/api/v1/conversations/7f77bfff76b1ff5f3eb97f43f56c7331/messages",
+      "method": "POST",
+      "body": {
+        "request_id": "4c19e543-d70a-465e-93cf-33543b59a2f8",
+        "text": "Can you explain quantum entanglement?"
+      }
+    },
+    {
+      "url": "http://127.0.0.1:40457/api/v1/conversations",
+      "method": "POST",
+      "body": {
+        "context": {
+          "page_path": "/help",
+          "locale": "en"
+        }
+      }
+    },
+    {
+      "url": "http://127.0.0.1:40457/api/v1/conversations/12990d1eed10a4f61df997e6534ad901/messages?limit=20",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:40457/api/v1/conversations/12990d1eed10a4f61df997e6534ad901/messages",
+      "method": "POST",
+      "body": {
+        "request_id": "57dd5dc1-1f00-465e-8e3d-aa8b1bf5f7d0",
+        "text": "Can you explain quantum entanglement?"
+      }
+    }
+  ],
+  "responses": [
+    {
+      "url": "http://127.0.0.1:40457/api/v1/conversations",
+      "status": 201
+    },
+    {
+      "url": "http://127.0.0.1:40457/api/v1/conversations/54d442a8d1c27fe49cfd47f7570b20fd/messages?limit=20",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:40457/api/v1/conversations/54d442a8d1c27fe49cfd47f7570b20fd/messages",
+      "status": 503
+    },
+    {
+      "url": "http://127.0.0.1:40457/api/v1/conversations/54d442a8d1c27fe49cfd47f7570b20fd/messages?limit=20",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:40457/api/v1/conversations/54d442a8d1c27fe49cfd47f7570b20fd/messages",
+      "status": 503
+    },
+    {
+      "url": "http://127.0.0.1:40457/api/v1/conversations/54d442a8d1c27fe49cfd47f7570b20fd/messages?limit=20",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:40457/api/v1/conversations",
+      "status": 201
+    },
+    {
+      "url": "http://127.0.0.1:40457/api/v1/conversations/6082d30de6f7739a7c7955f4e3de3501/messages?limit=20",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:40457/api/v1/conversations/6082d30de6f7739a7c7955f4e3de3501/messages",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:40457/api/v1/conversations",
+      "status": 201
+    },
+    {
+      "url": "http://127.0.0.1:40457/api/v1/conversations/5479a9dbf544766c36e753dafa10321c/messages?limit=20",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:40457/api/v1/conversations/5479a9dbf544766c36e753dafa10321c/messages",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:40457/api/v1/conversations",
+      "status": 201
+    },
+    {
+      "url": "http://127.0.0.1:40457/api/v1/conversations/7f77bfff76b1ff5f3eb97f43f56c7331/messages?limit=20",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:40457/api/v1/conversations/7f77bfff76b1ff5f3eb97f43f56c7331/messages",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:40457/api/v1/conversations",
+      "status": 201
+    },
+    {
+      "url": "http://127.0.0.1:40457/api/v1/conversations/12990d1eed10a4f61df997e6534ad901/messages?limit=20",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:40457/api/v1/conversations/12990d1eed10a4f61df997e6534ad901/messages",
+      "status": 200
+    }
+  ],
+  "security": [],
+  "trustedInputs": [
+    {
+      "action": "mouse",
+      "events": [
+        {
+          "type": "click",
+          "id": "question",
+          "trusted": true
+        },
+        {
+          "type": "click",
+          "id": "send",
+          "trusted": true
+        },
+        {
+          "type": "click",
+          "id": "retry",
+          "trusted": true
+        }
+      ]
+    },
+    {
+      "action": "button-enter",
+      "events": [
+        {
+          "type": "click",
+          "id": "question",
+          "trusted": true
+        },
+        {
+          "type": "keydown",
+          "id": "question",
+          "key": "Tab",
+          "trusted": true
+        },
+        {
+          "type": "keydown",
+          "id": "send",
+          "key": "Enter",
+          "trusted": true
+        },
+        {
+          "type": "click",
+          "id": "send",
+          "trusted": true
+        }
+      ]
+    },
+    {
+      "action": "button-space",
+      "events": [
+        {
+          "type": "click",
+          "id": "question",
+          "trusted": true
+        },
+        {
+          "type": "keydown",
+          "id": "question",
+          "key": "Tab",
+          "trusted": true
+        },
+        {
+          "type": "keydown",
+          "id": "send",
+          "key": " ",
+          "trusted": true
+        },
+        {
+          "type": "click",
+          "id": "send",
+          "trusted": true
+        }
+      ]
+    },
+    {
+      "action": "ctrl-enter",
+      "events": [
+        {
+          "type": "click",
+          "id": "question",
+          "trusted": true
+        },
+        {
+          "type": "keydown",
+          "id": "question",
+          "key": "Enter",
+          "trusted": true
+        },
+        {
+          "type": "keydown",
+          "id": "question",
+          "key": "Enter",
+          "trusted": true
+        }
+      ]
+    },
+    {
+      "action": "meta-enter",
+      "events": [
+        {
+          "type": "click",
+          "id": "question",
+          "trusted": true
+        },
+        {
+          "type": "keydown",
+          "id": "question",
+          "key": "Enter",
+          "trusted": true
+        }
+      ]
+    }
+  ],
+  "screenshots": [
+    "mouse.png",
+    "mouse-complete.png",
+    "button-enter-complete.png",
+    "button-space-complete.png",
+    "ctrl-enter-complete.png",
+    "meta-enter-complete.png"
+  ],
+  "browser": "Chrome/154.0.8037.97",
+  "summary": {
+    "passed": 22,
+    "failed": 0
+  }
+}

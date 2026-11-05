@@ -12,7 +12,7 @@
       {
         "id": "project-foundation",
         "owner": "SETUP-01 contract-tooling worker",
-        "ownedPaths": ["docs/architecture/**", "docs/contracts/**", "docs/testing/project-checks.md", "go.mod", "go.sum", "Makefile", "scripts/**", "harness.json", "README.md", ".env.example", "GLOSSARY.md"],
+        "ownedPaths": [".github/workflows/**", "docs/architecture/**", "docs/contracts/**", "docs/testing/project-checks.md", "go.mod", "go.sum", "Makefile", "scripts/**", "harness.json", "README.md", ".env.example", "GLOSSARY.md"],
         "contract": "docs/testing/project-checks.md",
         "communicationPath": "Contract/dependency requests via orchestrator; affected backend/widget owners acknowledge changes",
         "collaborators": ["chat-backend", "chat-widget", "coordination"]
@@ -46,7 +46,7 @@
   "validation": {
     "adapter": {
       "status": "configured",
-      "name": "Go + Node built-ins + Python stdlib"
+      "name": "Go + Node built-ins + Python/jsonschema"
     },
     "requiredChecks": [
       "format",

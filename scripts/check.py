@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Small stdlib check adapter. No runtime stubs, installs or source mutation."""
+"""Small check adapter. No runtime stubs, installs or source mutation."""
 
 import argparse
 import ast
@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CHECKS = ("format", "lint", "static", "unit", "contract", "fuzz-smoke", "fuzz-full")
 MANDATORY_FUZZ = {"FuzzValidateMessage", "FuzzDecodeProvider", "FuzzDecodeTurso"}
 SKIP = {".git", ".harness", ".scratch", "node_modules", "__pycache__", "data"}
-TEXT_SUFFIXES = {".go", ".js", ".mjs", ".json", ".py", ".md", ".sql", ".html", ".css"}
+TEXT_SUFFIXES = {".go", ".js", ".mjs", ".json", ".py", ".md", ".sql", ".html", ".css", ".yml", ".yaml", ".txt"}
 
 
 class CheckError(Exception):
@@ -32,6 +32,7 @@ def require(condition, message):
 def run(args, root=ROOT, capture=False):
     # Feature checks must not inherit live service credentials from a shell.
     env = dict(os.environ)
+    Path("/tmp/opencode").mkdir(parents=True, exist_ok=True)
     env.update(OPENAI_API_KEY="", TURSO_AUTH_TOKEN="", TURSO_DATABASE_URL="", TMPDIR="/tmp/opencode")
     result = subprocess.run(args, cwd=root, env=env, text=True,
                             stdout=subprocess.PIPE if capture else None,
@@ -117,6 +118,23 @@ def validate_manifest(root=ROOT):
         require((root / "docs/contracts" / contract).is_file(), f"missing {contract}")
 
 
+def validate_tasks(root=ROOT):
+    """Validate every ledger field against the unchanged, local Draft-07 schema."""
+    try:
+        from jsonschema import Draft7Validator
+    except ImportError as error:
+        raise CheckError("missing JSON Schema dependency: pip install -r scripts/requirements-checks.txt") from error
+    schema = json.loads((root / ".harness/tasks.schema.json").read_text(encoding="utf-8"))
+    ledger = json.loads((root / ".harness/tasks.json").read_text(encoding="utf-8"))
+    Draft7Validator.check_schema(schema)
+    errors = sorted(Draft7Validator(schema).iter_errors(ledger), key=lambda e: str(list(e.path)))
+    details = []
+    for error in errors:
+        location = "/" + "/".join(str(part) for part in error.absolute_path)
+        details.append(f"{location}: {error.message}")
+    require(not errors, "task ledger schema violations:\n" + "\n".join(details))
+
+
 def setup_tests(root=ROOT):
     suite = unittest.defaultTestLoader.discover(str(root / "scripts"), pattern="test_*.py")
     require(suite.countTestCases() > 0, "missing check-adapter tests")
@@ -158,11 +176,13 @@ def fuzz_plan(targets, seconds):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("check", choices=(*CHECKS, "setup"))
+    parser.add_argument("check", choices=(*CHECKS, "setup", "tasks-schema"))
     choice = parser.parse_args(argv).check
     try:
         if choice == "format":
             format_check()
+        elif choice == "tasks-schema":
+            validate_tasks()
         elif choice == "setup":
             format_check()
             syntax_check()
@@ -174,6 +194,7 @@ def main(argv=None):
             run(["go", "vet", "./..."])
         elif choice == "static":
             validate_manifest()
+            validate_tasks()
             syntax_check()
             go_packages()
             run(["go", "test", "-run=^$", "./..."])

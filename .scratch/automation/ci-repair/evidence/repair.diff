@@ -1,0 +1,342 @@
+--- a/scripts/browser_check.py
++++ b/scripts/browser_check.py
+@@ -1,36 +1,143 @@
+ #!/usr/bin/env python3
+-"""Run the existing trusted-input Chromium test, with local SQLite and no AI key."""
++"""Bound the trusted-input Chromium test, with local SQLite and no AI key."""
+ 
++import json
++import math
+ import os
+ from pathlib import Path
+ import shutil
++import signal
++import subprocess
+ import sys
++import time
+ 
+-from check import CheckError, ROOT, require, run
++from check import CheckError, ROOT, require
++
++
++DEFAULT_TIMEOUT_SECONDS = 120
++VERSION_TIMEOUT_SECONDS = 15
++BUILD_TIMEOUT_SECONDS = 180
++CLEANUP_GRACE_SECONDS = 1
++REAP_TIMEOUT_SECONDS = 2
++
++
++class Interrupted(CheckError):
++    def __init__(self, signum):
++        self.signum = signum
++        super().__init__(f"interrupted by {signal.Signals(signum).name}")
++
++
++def interrupt(signum, _frame):
++    raise Interrupted(signum)
++
++
++def cleanup_group(process):
++    """Kill the owned group even if its leader already exited; never wait forever."""
++    cleanup = {"sigtermSent": False, "sigkillSent": False, "leaderReaped": False}
++    # A second normal termination signal must not interrupt mandatory cleanup.
++    previous = {sig: signal.signal(sig, signal.SIG_IGN) for sig in (signal.SIGINT, signal.SIGTERM)}
++    try:
++        for sig, key in ((signal.SIGTERM, "sigtermSent"), (signal.SIGKILL, "sigkillSent")):
++            try:
++                os.killpg(process.pid, sig)
++                cleanup[key] = True
++            except ProcessLookupError:
++                break
++            if sig == signal.SIGTERM:
++                # Reap the leader promptly, but still escalate against descendants.
++                try:
++                    process.wait(timeout=CLEANUP_GRACE_SECONDS)
++                except subprocess.TimeoutExpired:
++                    pass
++                else:
++                    time.sleep(CLEANUP_GRACE_SECONDS)
++        try:
++            process.wait(timeout=REAP_TIMEOUT_SECONDS)
++            cleanup["leaderReaped"] = True
++        except subprocess.TimeoutExpired:
++            cleanup["error"] = "leader did not exit after SIGKILL within reap bound"
++    finally:
++        for sig, handler in previous.items():
++            signal.signal(sig, handler)
++    return cleanup
++
++
++def run_owned(args, stage, timeout, report):
++    """Inherit log streams, strip live credentials, and own one POSIX group."""
++    env = dict(os.environ)
++    Path("/tmp/opencode").mkdir(parents=True, exist_ok=True)
++    env.update(OPENAI_API_KEY="", TURSO_AUTH_TOKEN="", TURSO_DATABASE_URL="", TMPDIR="/tmp/opencode")
++    record = {"stage": stage, "timeoutSeconds": timeout, "outcome": "starting"}
++    report["stages"].append(record)
++    started = time.monotonic()
++    process = None
++    try:
++        process = subprocess.Popen(args, cwd=ROOT, env=env, start_new_session=True)
++        record["pid"] = process.pid
++        record["outcome"] = "running"
++        try:
++            code = process.wait(timeout=timeout)
++        except subprocess.TimeoutExpired as error:
++            record["outcome"] = "timeout"
++            raise CheckError(f"{stage} timed out after {timeout:g}s; terminating owned process group {process.pid}") from error
++        record["returncode"] = code
++        record["outcome"] = "failed" if code else "passed"
++        require(code == 0, f"{stage} command failed ({code}): {' '.join(args)}")
++    except Interrupted:
++        record["outcome"] = "interrupted"
++        raise
++    except OSError:
++        record["outcome"] = "failed"
++        raise
++    finally:
++        if process is not None:
++            record["cleanup"] = cleanup_group(process)
++        record["elapsedSeconds"] = round(time.monotonic() - started, 3)
++    require(record["cleanup"]["leaderReaped"], f"{stage}: process cleanup failed")
+ 
+ 
+ def main(argv=None):
+     args = sys.argv[1:] if argv is None else argv
++    directory = None
++    handlers = {}
++    report = {"status": "failed", "stages": []}
+     try:
+         require(len(args) == 1, "usage: python3 scripts/browser_check.py FRESH_EVIDENCE_DIR")
+-        directory = Path(args[0]).resolve()
+-        require(not directory.exists(), "browser evidence directory must be fresh")
++        require(os.name == "posix", "browser adapter requires POSIX process groups")
++        try:
++            timeout = float(os.environ.get("BROWSER_CHECK_TIMEOUT_SECONDS", DEFAULT_TIMEOUT_SECONDS))
++        except ValueError as error:
++            raise CheckError("BROWSER_CHECK_TIMEOUT_SECONDS must be a number") from error
++        require(math.isfinite(timeout) and 0.1 <= timeout <= 300,
++                "BROWSER_CHECK_TIMEOUT_SECONDS must be finite and between 0.1 and 300 seconds")
++        destination = Path(args[0]).resolve()
++        require(not destination.exists(), "browser evidence directory must be fresh")
+         script = ROOT / "web/tests/sandbox-send.browser.mjs"
+         require(script.is_file(), "missing trusted-input browser regression")
+         chromium = os.environ.get("CHROMIUM") or shutil.which("chromium")
+         require(chromium and Path(chromium).is_file() and os.access(chromium, os.X_OK),
+                 "missing executable Chromium; set CHROMIUM to the pinned browser path")
+         os.environ["CHROMIUM"] = chromium
+-        directory.mkdir(parents=True)
+-        run([chromium, "--version"])
++        destination.mkdir(parents=True)
++        directory = destination
++        handlers = {sig: signal.signal(sig, interrupt) for sig in (signal.SIGINT, signal.SIGTERM)}
++        run_owned([chromium, "--version"], "browser-version", VERSION_TIMEOUT_SECONDS, report)
+         binary = directory / "assistant"
+-        run(["go", "build", "-o", str(binary), "./cmd/assistant"])
+-        run(["node", str(script), str(binary), str(directory)])
++        run_owned(["go", "build", "-o", str(binary), "./cmd/assistant"], "backend-build", BUILD_TIMEOUT_SECONDS, report)
++        run_owned(["node", str(script), str(binary), str(directory)], "trusted-input-regression", timeout, report)
++        report["status"] = "passed"
+         print("browser: PASS", flush=True)
+         return 0
+     except (CheckError, OSError) as error:
++        report["error"] = str(error)
+         print(f"browser: FAIL: {error}", file=sys.stderr, flush=True)
+-        return 1
++        return 128 + error.signum if isinstance(error, Interrupted) else 1
++    finally:
++        for sig, handler in handlers.items():
++            signal.signal(sig, handler)
++        if directory is not None:
++            # Separate from Node results.json, which inherited cleanup may never write.
++            (directory / "adapter-results.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+ 
+ 
+ if __name__ == "__main__":
+--- a/scripts/test_browser_check.py
++++ b/scripts/test_browser_check.py
+@@ -1,8 +1,13 @@
+ """Browser adapter cannot silently skip a missing tool or failed regression."""
+ 
++import json
+ import os
+ from pathlib import Path
++import signal
++import subprocess
++import sys
+ import tempfile
++import time
+ import unittest
+ from unittest.mock import patch
+ 
+@@ -25,11 +30,116 @@
+             executable.write_text("fixture")
+             executable.chmod(0o700)
+             with patch.dict(os.environ, {"CHROMIUM": str(executable)}):
+-                with patch.object(browser, "run", side_effect=["", "", browser.CheckError("test failure")]) as run:
++                with patch.object(browser, "run_owned", side_effect=[None, None, browser.CheckError("test failure")]) as run:
+                     self.assertEqual(browser.main([directory + "/evidence"]), 1)
+                     command = run.call_args.args[0]
+                     self.assertEqual(command[:2], ["node", str(browser.ROOT / "web/tests/sandbox-send.browser.mjs")])
+ 
++    def test_invalid_timeout_fails(self):
++        for value in ("nan", "inf", "0", "301", "not-a-number"):
++            with self.subTest(value=value), tempfile.TemporaryDirectory() as directory:
++                with patch.dict(os.environ, {"BROWSER_CHECK_TIMEOUT_SECONDS": value}):
++                    self.assertEqual(browser.main([directory + "/evidence"]), 1)
++
++
++@unittest.skipUnless(sys.platform == "linux", "process-tree assertions require Linux /proc")
++class BrowserProcessTests(unittest.TestCase):
++    """Real executable failure fixtures, never substitutes for browser acceptance."""
++
++    def assert_stopped(self, pid):
++        deadline = time.monotonic() + 2
++        while time.monotonic() < deadline:
++            try:
++                state = Path(f"/proc/{pid}/stat").read_text().rsplit(")", 1)[1].split()[0]
++            except FileNotFoundError:
++                return
++            if state == "Z":  # Dead; orphan zombies are reaped by the host, not Popen.
++                return
++            time.sleep(0.02)
++        self.fail(f"live descendant {pid} survived owned process-group cleanup")
++
++    def exercise(self, mode, interrupt=None):
++        with tempfile.TemporaryDirectory() as temporary:
++            directory = Path(temporary)
++            evidence = directory / "evidence"
++            fixture = directory / "chromium"
++            fixture.write_text(f'''#!{sys.executable}
++import os, pathlib, signal, subprocess, sys, time
++if "--version" in sys.argv:
++    print("FAILURE CONTAINMENT FIXTURE ONLY")
++    sys.exit(0)
++directory = pathlib.Path(next(arg.split("=", 1)[1] for arg in sys.argv if arg.startswith("--user-data-dir="))).parent
++child = subprocess.Popen([sys.executable, "-c", "import signal,time; signal.signal(signal.SIGTERM, signal.SIG_IGN); print('ready', flush=True); time.sleep(300)"], stdout=subprocess.PIPE, text=True)
++assert child.stdout.readline().strip() == "ready"
++(directory / "fixture-pids.json").write_text(__import__("json").dumps([os.getpid(), child.pid, os.getpgrp()]))
++if {mode!r} == "crash":
++    os.kill(os.getpid(), signal.SIGTERM)
++while True:
++    time.sleep(1)
++''')
++            fixture.chmod(0o700)
++            timeout = 8 if mode == "crash" or interrupt is not None else 1
++            env = dict(os.environ, CHROMIUM=str(fixture), BROWSER_CHECK_TIMEOUT_SECONDS=str(timeout),
++                       GOPROXY="off", GOSUMDB="off", GOTOOLCHAIN="local", GOTELEMETRY="off")
++            with (directory / "adapter.log").open("w+") as log:
++                # Outer group/bound is test safety only; adapter must finish before it.
++                process = subprocess.Popen([sys.executable, str(browser.ROOT / "scripts/browser_check.py"), str(evidence)],
++                                           env=env, stdout=log, stderr=log, start_new_session=True)
++                pids = []
++                try:
++                    if interrupt is not None:
++                        deadline = time.monotonic() + 15
++                        while not (evidence / "fixture-pids.json").exists() and time.monotonic() < deadline:
++                            if process.poll() is not None:
++                                break
++                            time.sleep(0.02)
++                        self.assertTrue((evidence / "fixture-pids.json").exists(), "fixture did not start")
++                        process.send_signal(interrupt)
++                    try:
++                        code = process.wait(timeout=25)
++                    except subprocess.TimeoutExpired:
++                        self.fail("adapter hung on real executable failure; outer safety timeout expired")
++                    log.seek(0)
++                    output = log.read()
++                    self.assertEqual(code, 128 + interrupt if interrupt else 1, output)
++                    report = json.loads((evidence / "adapter-results.json").read_text())
++                    self.assertEqual(report["status"], "failed")
++                    stage = report["stages"][-1]
++                    self.assertEqual(stage["stage"], "trusted-input-regression")
++                    self.assertEqual(stage["outcome"], "interrupted" if interrupt else "timeout")
++                    self.assertEqual(stage["timeoutSeconds"], timeout)
++                    self.assertTrue(stage["cleanup"]["leaderReaped"])
++                    self.assertTrue(stage["cleanup"]["sigkillSent"], "SIGTERM-ignoring child requires escalation")
++                    pids = json.loads((evidence / "fixture-pids.json").read_text())
++                    for pid in pids[:2]:
++                        self.assert_stopped(pid)
++                    self.assertEqual(pids[2], stage["pid"], "Chromium must inherit the Node-owned group")
++                    if mode == "crash" and interrupt is None:
++                        self.assertIn("Timeout: Chromium startup", output)
++                    self.assertNotIn("browser: PASS", output)
++                finally:
++                    # Also clean the deliberately broken pre-fix adapter safely.
++                    if (evidence / "fixture-pids.json").exists():
++                        pids = json.loads((evidence / "fixture-pids.json").read_text())
++                    for group in {process.pid, *pids[2:]}:
++                        try:
++                            os.killpg(group, signal.SIGKILL)
++                        except ProcessLookupError:
++                            pass
++                    process.wait(timeout=3)
++
++    def test_signal_crashed_executable_cleanup_hang_is_bounded(self):
++        self.exercise("crash")
++
++    def test_hanging_executable_and_sigterm_ignoring_descendant_are_killed(self):
++        self.exercise("hang")
++
++    def test_sigterm_interrupt_cleans_owned_group(self):
++        self.exercise("hang", signal.SIGTERM)
++
++    def test_sigint_interrupt_cleans_owned_group(self):
++        self.exercise("hang", signal.SIGINT)
++
+ 
+ if __name__ == "__main__":
+     unittest.main()
+--- a/docs/testing/project-checks.md
++++ b/docs/testing/project-checks.md
+@@ -63,7 +63,38 @@
+ empty AI key. It exercises actual trusted mouse/keyboard sends and explicit
+ retry (22 assertions at the CI-01 baseline); it is not a replacement for all
+ widget/browser acceptance tests. Missing browser, script, test coverage or
+-validation dependency fails rather than skipping. Python tooling regressions
++validation dependency fails rather than skipping.
++
++The POSIX browser adapter bounds browser-version to 15 seconds, backend-build
++to 180 seconds, and the trusted-input Node regression to 120 seconds by default.
++For a slower local host or a failure-containment test,
++`BROWSER_CHECK_TIMEOUT_SECONDS` overrides only the Node regression bound with a
++finite number from 0.1 to 300 seconds; it cannot disable the bound. The separate
++version/build bounds remain fixed. Each stage starts a new
++session/process group with live-service credentials emptied. On timeout,
++SIGINT or SIGTERM, the adapter sends SIGTERM to that entire owned group, then
++SIGKILL after a short grace period, even if its leader has already exited.
++Successful/failed stage exits also clean up leftover group members. Cleanup has
++at most two seconds of TERM grace and a two-second leader-reap bound per stage;
++three stages therefore have a default subprocess budget of at most 327 seconds
++(excluding ordinary filesystem/scheduling overhead). Normal descendants inherit
++the group, including backend and Chromium children; deliberate session/group
++escape is not a supported containment guarantee. SIGKILL of the adapter, runner
++loss and uninterruptible kernel waits cannot guarantee cleanup/evidence.
++
++`adapter-results.json` records overall status/error and stage, timeout, PID,
++return code when available, elapsed time and TERM/KILL/leader-reap evidence.
++It is separate from the unchanged Node `results.json`, which may be absent when
++inherited browser cleanup hangs. Timeout/interruption always fails nonzero,
++with stage and configured bound in the log (signals return 128 + signal number).
++Only the immediate subprocess can be reaped by the adapter; terminated orphan
++grandchildren are reaped by the host's init. Real executable crash/hang tests
++exercise the unchanged Node regression and verify there are no live fixture
++descendants, including a child that ignores SIGTERM; they also cover SIGINT and
++SIGTERM interruption. Those fixtures test containment only, never real-browser
++acceptance. No browser sandbox or CSP bypass is introduced.
++
++Python tooling regressions
+ include schema required fields, types, enums, unknown fields, conditional
+ blocked/completed requirements, later ledger entries and nonmutation.
+ 
+--- a/docs/architecture/context-map.md
++++ b/docs/architecture/context-map.md
+@@ -6,7 +6,7 @@
+ 
+ | Context | Owner | Owned paths | Published contract | Collaborators / communication path |
+ |---|---|---|---|---|
+-| project-foundation | SETUP-01 contract-tooling worker | `docs/architecture/**`, `docs/contracts/**`, `docs/testing/project-checks.md`, `go.mod`, `go.sum`, `Makefile`, `scripts/**`, `harness.json`, `README.md`, `.env.example`, `GLOSSARY.md` | [Backend](../contracts/backend.md), [chat](../contracts/chat.md), [checks](../testing/project-checks.md) | Backend/widget owners request contract or dependency changes via orchestrator; foundation coordinates affected owners |
++| project-foundation | SETUP-01 contract-tooling worker | `.github/workflows/**`, `docs/architecture/**`, `docs/contracts/**`, `docs/testing/project-checks.md`, `go.mod`, `go.sum`, `Makefile`, `scripts/**`, `harness.json`, `README.md`, `.env.example`, `GLOSSARY.md` | [Backend](../contracts/backend.md), [chat](../contracts/chat.md), [checks](../testing/project-checks.md) | Backend/widget owners request contract or dependency changes via orchestrator; foundation coordinates affected owners |
+ | chat-backend | CHAT-01 backend owner | `cmd/**`, `internal/**`, `database/**` | [Backend](../contracts/backend.md), [chat](../contracts/chat.md) | Widget consumes HTTP; backend consumes widget-owned embedded assets; orchestrator resolves changes |
+ | chat-widget | WIDGET-01 widget owner | `web/**` (including `embed.go`, `assets/**`, all widget Node tests) | [Embedding/HTTP](../contracts/chat.md) | Backend imports exported `web.Assets`; widget uses HTTP only, never backend private Go records |
+ | coordination | Primary orchestrator | `.harness/**`, `.scratch/**` | [Delegation](../agents/delegation-protocol.md) | Owns goal, tasks, claims, blockers and gate review; SETUP-01 may only claim its issue before edits |

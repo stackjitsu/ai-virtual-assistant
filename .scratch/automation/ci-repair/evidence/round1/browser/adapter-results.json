@@ -1,0 +1,44 @@
+{
+  "status": "passed",
+  "stages": [
+    {
+      "stage": "browser-version",
+      "timeoutSeconds": 120.0,
+      "outcome": "passed",
+      "pid": 32220,
+      "returncode": 0,
+      "cleanup": {
+        "sigtermSent": false,
+        "sigkillSent": false,
+        "leaderReaped": true
+      },
+      "elapsedSeconds": 0.118
+    },
+    {
+      "stage": "backend-build",
+      "timeoutSeconds": 120.0,
+      "outcome": "passed",
+      "pid": 32221,
+      "returncode": 0,
+      "cleanup": {
+        "sigtermSent": false,
+        "sigkillSent": false,
+        "leaderReaped": true
+      },
+      "elapsedSeconds": 3.293
+    },
+    {
+      "stage": "trusted-input-regression",
+      "timeoutSeconds": 120.0,
+      "outcome": "passed",
+      "pid": 32268,
+      "returncode": 0,
+      "cleanup": {
+        "sigtermSent": false,
+        "sigkillSent": false,
+        "leaderReaped": true
+      },
+      "elapsedSeconds": 15.362
+    }
+  ]
+}

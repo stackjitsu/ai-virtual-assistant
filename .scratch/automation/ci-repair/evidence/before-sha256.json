@@ -1,0 +1,14 @@
+{
+  "scripts/browser_check.py": "cd4e716644321efefe7b95c3246e09305d0e1bb9127e33e916686f9311fe9c6c",
+  "scripts/test_browser_check.py": "1342524be8750e8346220cec105da64257279ec4e6ecf964766210ef2317acd4",
+  "docs/testing/project-checks.md": "53bd4593f1fc906f6b604546caf1b63a5e3a9d3722cde45e28be43e7b80efc6c",
+  "docs/architecture/context-map.md": "9ea96347f2c2b10f694b9c07c2a22195603addebdc763eda57d4224f6e3a1c87",
+  ".github/workflows/validation.yml": "3aa28e353f34a655144b1fc84a77b079accfaacc12987fe5040fc249736fc0ae",
+  "harness.json": "4d3e47a99119b86f62aaddfd8c82e5e36576b4f9296dc77e74341db25fa66853",
+  "scripts/check.py": "d4954246d679417c3eadc374d2f69cb6fcd41560eec7e6df060169d8c182d3cd",
+  "scripts/requirements-checks.txt": "7e9a85f07f79ffef8c05420967ccb8b4f7794c227fe4a8201def82cfc462c0e0",
+  "scripts/test_tasks_schema.py": "20dbc0686097efff41094bca27c3b6315e3f6e3b6eac6d6138ab656328fd8d88",
+  ".harness/tasks.json": "db5a50f485556c381782b8ed0a48b14f26df1cd795744c5d36972fe17614274a",
+  ".harness/tasks.schema.json": "b142430389bd9186238d022ffd7c0ca691ce57bd2a3ebc2271ae34e9fec4d214",
+  "web/tests/sandbox-send.browser.mjs": "1577b9553d9913ad56a941e6ce07295bc5b948f19f2bcf083d66b57e3c512dd6"
+}
