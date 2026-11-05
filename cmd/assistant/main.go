@@ -46,6 +46,18 @@ func printImportSummary(summary importSummary) {
 	fmt.Println(string(encoded))
 }
 
+// parsePublicDemo deliberately accepts only the documented lowercase values.
+func parsePublicDemo(value string) (bool, error) {
+	switch value {
+	case "true":
+		return true, nil
+	case "", "false":
+		return false, nil
+	default:
+		return false, errors.New("invalid ASSISTANT_PUBLIC_DEMO")
+	}
+}
+
 func main() {
 	// Only a running command reads credential environment variables. Tests/builds
 	// never execute main and have no ambient-service or credential dependency.
@@ -63,6 +75,10 @@ func main() {
 	_ = flags.Parse(args)
 	if flags.NArg() != 0 || (command != "serve" && command != "seed-demo" && command != "migrate" && command != "import-faq") || (*allowRemote && command != "migrate" && command != "import-faq") || (command == "import-faq" && *seed) {
 		log.Fatal("invalid command or flags")
+	}
+	publicDemo, policyErr := parsePublicDemo(os.Getenv("ASSISTANT_PUBLIC_DEMO"))
+	if policyErr != nil {
+		log.Fatal("invalid ASSISTANT_PUBLIC_DEMO")
 	}
 	mode := env("STORE_MODE", "sqlite")
 	if mode != "sqlite" && mode != "turso" {
@@ -165,7 +181,7 @@ func main() {
 	if endpoint != "" {
 		openai = chat.NewOpenAIEndpoint(os.Getenv("OPENAI_API_KEY"), model, endpoint)
 	}
-	handler, err := chat.NewHandler(store, openai, chat.HTTPConfig{AssistantOrigin: origin, ParentOrigins: parents}, assets)
+	handler, err := chat.NewHandler(store, openai, chat.HTTPConfig{PublicDemo: publicDemo, AssistantOrigin: origin, ParentOrigins: parents}, assets)
 	if err != nil {
 		log.Fatal("invalid HTTP origin configuration")
 	}

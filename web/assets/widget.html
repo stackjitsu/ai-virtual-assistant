@@ -19,7 +19,7 @@
     </header>
     <div class="chat-content" aria-label="Conversation and support information" tabindex="0">
     <section class="disclosure" aria-label="Before you ask">
-      <p>AI may be wrong; avoid sensitive data. Sample content isn't official guidance.</p>
+      <p>Fictional Jitihada University demo, not a real institution. AI may be wrong; avoid sensitive data. Sample content isn't official guidance.</p>
       <details class="more-info">
         <summary>More information</summary>
         <p id="transmission"></p>
@@ -49,10 +49,11 @@
       <button id="rating-send" type="button">Save rating</button>
     </section>
     <section class="escalation" aria-label="Request human support">
+      <p id="support-policy" role="status">Email support is unavailable while deployment policy is unverified.</p>
       <button id="escalate-toggle" type="button" disabled aria-expanded="false" aria-controls="handoff-menu">Request human support</button>
       <div id="handoff-menu" class="handoff-menu" role="group" aria-label="Ways to request human support" hidden>
         <div class="handoff-option">
-          <button id="handoff-email" type="button" aria-expanded="false" aria-controls="escalation-form" aria-pressed="false">Request via email</button>
+          <button id="handoff-email" type="button" disabled aria-describedby="support-policy" aria-expanded="false" aria-controls="escalation-form" aria-pressed="false">Request via email</button>
           <form id="escalation-form" aria-label="Request human support by email" hidden>
             <label for="escalate-email">Your email</label>
             <input id="escalate-email" name="email" type="text" inputmode="email" autocomplete="email" placeholder="you@example.org" aria-describedby="escalate-hint" required disabled>

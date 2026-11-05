@@ -9,6 +9,8 @@ import { spawn } from 'node:child_process';
 import { once } from 'node:events';
 
 const [binary, directory] = process.argv.slice(2);
+// Optional fixture mode tests the real demo policy without replacing any API bytes.
+const publicDemo = process.env.BROWSER_PUBLIC_DEMO === 'true';
 assert.ok(binary && directory && path.isAbsolute(binary) && path.isAbsolute(directory),
   'Supply absolute assistant binary and fresh evidence directory paths');
 fs.mkdirSync(directory, { recursive: true });
@@ -54,7 +56,7 @@ async function stop(child) {
 async function startBackend() {
   backend = start(binary, ['serve', '--seed-demo'], 'backend.log', {
     PATH: process.env.PATH, HOME: directory, STORE_MODE: 'sqlite', SQLITE_PATH: `${directory}/assistant.sqlite`,
-    OPENAI_API_KEY: '', TURSO_DATABASE_URL: '', TURSO_AUTH_TOKEN: '',
+    OPENAI_API_KEY: '', TURSO_DATABASE_URL: '', TURSO_AUTH_TOKEN: '', ASSISTANT_PUBLIC_DEMO: String(publicDemo),
     ASSISTANT_ORIGIN: origin, LISTEN_ADDR: `127.0.0.1:${backendPort}`, WIDGET_PARENT_ORIGINS: host,
   });
   await wait(async () => {
@@ -270,6 +272,24 @@ try {
   ` });
   let { h, f } = await openGuest();
   const a = guests[0];
+  if (publicDemo) {
+    await wait(() => evaluate(f, `document.querySelector('#support-policy').textContent.includes('public demo')`), 'demo policy discovery');
+    check('Demo policy is exact public non-secret configuration', JSON.stringify((await (await fetch(`${origin}/api/v1/deployment`)).json())) === '{"public_demo":true,"email_support_enabled":false}');
+    check('Fictional institution is plainly labelled before sending', await evaluate(f, `document.querySelector('.disclosure').textContent.includes('Fictional Jitihada University demo')`));
+    const sample = await (await fetch(`${origin}/widget/sample-host.html`)).text();
+    check('Actual sample host labels fictional demo and disabled support', sample.includes('Fictional Jitihada University demo') && sample.includes('Email support requests are unavailable in public demo mode'));
+    await click(f, '#escalate-toggle', h);
+    await click(f, '#handoff-email', h);
+    check('Trusted disabled email activation never exposes collection', await evaluate(f, `document.querySelector('#handoff-email').disabled&&document.querySelector('#escalation-form').hidden&&document.querySelector('#escalate-email').disabled&&document.querySelector('#escalate-send').disabled`));
+    check('Disabled support emits no escalation POST', !report.requests.some((r) => r.url.endsWith('/escalation')));
+    for (const width of [1440, 768, 390]) {
+      await cdp('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: false });
+      await screenshot(`demo-${width}`);
+      check(`Demo ${width}: no horizontal overflow`, await evaluate(f, `document.documentElement.scrollWidth<=innerWidth`));
+    }
+    await cdp('Emulation.clearDeviceMetricsOverride');
+    await click(f, '#escalate-toggle', h);
+  }
   check('Before first turn rating is hidden and disabled', await evaluate(f,
     `document.querySelector('#rating-section').hidden&&document.querySelector('#rating-send').disabled`));
   await click(f, 'details summary', h);
@@ -346,6 +366,7 @@ try {
   await cdp('Input.insertText', { text: 'Unsent question draft' });
   await click(f, '#escalate-toggle', h);
   await click(f, '#handoff-email', h);
+  if (!publicDemo) {
   check('Approved support labels retain available-email and unavailable-WhatsApp semantics', await evaluate(f, `(()=>{
     const e=document.querySelector('#handoff-email'),w=document.querySelector('#handoff-whatsapp');
     return e.textContent==='Request via email'&&!e.disabled&&e.getAttribute('aria-pressed')==='true'
@@ -357,6 +378,9 @@ try {
   await click(f, '#escalate-note', h);
   await cdp('Input.insertText', { text: 'Unsent support note' });
   await click(f, '#escalate-consent', h);
+  } else {
+    check('Demo email remains disabled after rating revisions', await evaluate(f, `document.querySelector('#handoff-email').disabled&&document.querySelector('#escalation-form').hidden`));
+  }
   const draftState = `(()=>{const q=s=>document.querySelector(s);return {
     transcript:q('#messages').textContent,question:q('#question').value,comment:q('#rating-comment').value,
     score:q('input[name="rating"]:checked').value,outcome:q('#rating-outcome').textContent,
@@ -368,7 +392,7 @@ try {
     const closes = await evaluate(h, '__closeMessages.length');
     if (action === 'pointer close') await click(f, '#chat-close', h);
     else {
-      await click(f, '#escalate-email', h);
+      await click(f, publicDemo ? '#question' : '#escalate-email', h);
       await key('Escape', 'Escape', 27);
     }
     await wait(() => evaluate(h, `document.querySelector('iframe').hidden&&document.activeElement===document.querySelector('.assistant-launcher')`), `${action} returns launcher focus`);

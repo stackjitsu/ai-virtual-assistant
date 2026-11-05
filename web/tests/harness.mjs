@@ -37,7 +37,7 @@ export class Element {
 export const walk = (element) => [element, ...element.children.flatMap(walk)];
 export function documentFixture() {
   const ids = ['status', 'error', 'retry', 'older', 'messages', 'question', 'send', 'transmission', 'message-form', 'chat-close',
-    'escalate-toggle', 'handoff-menu', 'handoff-email', 'handoff-whatsapp', 'escalation-form', 'escalate-email', 'escalate-note', 'escalate-consent', 'escalate-error', 'escalate-outcome', 'escalate-send',
+    'support-policy', 'escalate-toggle', 'handoff-menu', 'handoff-email', 'handoff-whatsapp', 'escalation-form', 'escalate-email', 'escalate-note', 'escalate-consent', 'escalate-error', 'escalate-outcome', 'escalate-send',
     'rating-section', 'rating-comment', 'rating-hint', 'rating-error', 'rating-outcome', 'rating-send', ...[1, 2, 3, 4, 5].map((value) => `rating-choice-${value}`)];
   const tags = { form: 'form', 'chat-close': 'button', 'escalate-toggle': 'button', 'handoff-email': 'button', 'handoff-whatsapp': 'button', 'escalate-send': 'button', 'escalate-email': 'input', 'escalate-consent': 'input', 'escalate-note': 'textarea', 'escalate-error': 'p', 'escalate-outcome': 'p' };
   const elements = Object.fromEntries(ids.map((id) => [id, new Element(tags[id] ?? 'div')]));
@@ -72,6 +72,7 @@ export function widgetFixture(responses = [json(creation, 201), emptyHistory()],
   const document = documentFixture();
   const events = {};
   const requests = [];
+  const policyRequests = [];
   const sent = [];
   const timers = new Map();
   let sequence = 0;
@@ -83,6 +84,12 @@ export function widgetFixture(responses = [json(creation, 201), emptyHistory()],
     setTimeout(fn, delay) { const key = ++sequence; timers.set(key, { fn, delay }); return key; },
     clearTimeout(key) { timers.delete(key); },
     async fetch(url, init) {
+      // Keep the legacy chat response queue/indexes stable; policy has its own explicit fixture.
+      if (url.endsWith('/api/v1/deployment')) {
+        policyRequests.push({ url, init });
+        if (options.policy instanceof Error) throw options.policy;
+        return options.policy ?? json({ public_demo: false, email_support_enabled: true });
+      }
       requests.push({ url, init });
       const response = responses.shift();
       if (response instanceof Error) throw response;
@@ -96,7 +103,7 @@ export function widgetFixture(responses = [json(creation, 201), emptyHistory()],
   const init = (data = { type: 'assistant:init', version: 1, context: {} }, origin = 'https://host.example', source = parent) => emit('message', { data, origin, source });
   // Exercise the actual Send listener; native submission is unavailable in the iframe.
   const submit = (text = 'How do I start?') => { document.elements.question.value = text; document.elements.send.dispatch('click'); };
-  return { platform, document, ui: document.elements, requests, sent, timers, responses, init, submit, emit };
+  return { platform, document, ui: document.elements, requests, policyRequests, sent, timers, responses, init, submit, emit };
 }
 export async function loaderFixture(attributes = {}, locationOrigin = 'https://host.example') {
   const document = documentFixture();
