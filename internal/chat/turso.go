@@ -167,6 +167,9 @@ func decodeTurso(b []byte) (sqlResult, error) {
 				}
 				raw, err := base64.StdEncoding.Strict().DecodeString(*cell.Base64)
 				if err != nil {
+					raw, err = base64.RawStdEncoding.Strict().DecodeString(*cell.Base64)
+				}
+				if err != nil {
 					return sqlResult{}, ErrUnavailable
 				}
 				v = raw

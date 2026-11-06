@@ -182,6 +182,11 @@ func FuzzDecodeTurso(f *testing.F) {
 	for _, b := range [][]byte{tursoEnvelope(sqlResult{columns: []string{"n", "s", "b", "null"}, rows: [][]any{{int64(1), "世界", []byte{0, 255}, nil}}, affected: 1}), []byte(`{"results":[{"type":"error"}]}`), {0xff}, []byte(strings.Repeat("x", storageBodyLimit+1))} {
 		f.Add(b)
 	}
+	// Independent raw-standard response seeds, not padded outbound bindings.
+	for _, encoded := range []string{"", "AQ", "AQI", "AQID", "+/8", "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE", "AR", "AQJ", "AQ===", "-_8"} {
+		f.Add(tursoWireBlob(encoded))
+	}
+	f.Add(tursoWireConversation("MTi7m8eN8nxHPs/RQQ971F66wfWc8/+c/k23eqt67dM"))
 	f.Fuzz(func(t *testing.T, b []byte) {
 		r, err := decodeTurso(b)
 		if err != nil {
