@@ -1,0 +1,50 @@
+[
+  {
+    "path": "web/assets/loader.css",
+    "status": 200,
+    "sha256": "4b7f349512d2adc4fc9dfa432f585a509577b9e694d567ee8c95f263909c6649",
+    "byte_match": true
+  },
+  {
+    "path": "web/assets/loader.js",
+    "status": 200,
+    "sha256": "dfd1a87c52100e428932ab5436cfda21de062d2ebbe492a18dfd56b188fdc61d",
+    "byte_match": true
+  },
+  {
+    "path": "web/assets/protocol.mjs",
+    "status": 200,
+    "sha256": "03d298e59335198d7fd3e345e3efc141c81d87796d3614158b391ef877a59fb9",
+    "byte_match": true
+  },
+  {
+    "path": "web/assets/sample-host.html",
+    "status": 200,
+    "sha256": "993ce9ddad542584e91aec0297512c43b6c9de7207d2257ff2356f62a33a9012",
+    "byte_match": true
+  },
+  {
+    "path": "web/assets/widget-core.mjs",
+    "status": 200,
+    "sha256": "f3cdc5b3b454fcb54ed5309f9d3c02308c40be1309228956d7be7725bb7f2f44",
+    "byte_match": true
+  },
+  {
+    "path": "web/assets/widget.css",
+    "status": 200,
+    "sha256": "c29f6fb2992472bfbc8528f2dae2fae59ce6aee04f2399cfc015bad7e6f83f0b",
+    "byte_match": true
+  },
+  {
+    "path": "web/assets/widget.html",
+    "status": 200,
+    "sha256": "ee861fe3ae823de4293ca55459f7fab9f22e14c2e40c6c062477cd0c706f3535",
+    "byte_match": true
+  },
+  {
+    "path": "web/assets/widget.js",
+    "status": 200,
+    "sha256": "06ceba06aab4adccad975e270b09ca454475880c981a950da5304391d7bbaadf",
+    "byte_match": true
+  }
+]

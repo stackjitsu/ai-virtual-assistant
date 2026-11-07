@@ -1,5 +1,142 @@
 # Active Plan
 
+## All staging stages complete; hosted working demo accepted — 2026-11-06
+
+STAGE-06/09/10 closed. Repair a5be344 independently accepted (fresh gates exit 0, browser 48/48/61/61/69/69, publication ALLOW), pushed, redeployed (dep-dbn2u86i0phs73bdn78g) and smoke-verified 24/24 live: wrong-bearer 401 with uniform unauthorized bodies, authorized history/turn/rating persistence proven end to end. No AI key, empty knowledge, Free/auto-deploy off. Next decisions belong to the user: FAQ corpus import, real email transport, retention/privacy/spend policy, operator/custodian naming, and token expiry renewal (2026-11-13) with synthetic-data cleanup choice. No production/public-participant authorization until those close.
+
+## STAGE-08 cause confirmed; STAGE-09 bounded repair approved
+
+Actual synthetic primary protocol confirms unpadded blob output; unchanged strict padded decode breaks32byte conversation digests, exact offline replay reproduces503. User authorized bounded fix+local checks+independent acceptance+audited staging push+one redeploy and synthetic smoke. Created isolated fix/staging-turso-blobs at e816655 in assistant-staging-turso-fix; CHAT-01 owns decoder/tests only and local commit after gates. No remote writes during implementation, no AI/FAQ/newcredential/schema changes. Next: review owner red-green/gates/fullfuzz evidence, independent exact-commit acceptance and publication audit before staging advancement/redeploy; stop on new unrelated blocker.
+
+## STAGE-08 — storage diagnosis authorized
+
+User proceeded with diagnosis. Delegate actual unchanged Turso decoder/Conversation offline synthetic-fixture repro in scratch snapshot; compare documented protocol. If needed, up to4 actual SELECT-constant-only protocol probes with existing staging credential memory-only, never stored values or new tokens. No source/runtime/config/data mutations. Next: review evidenced mechanism or inconclusive limits; only then scope minimal local repair and separate publishing/redeploy approval.
+
+## Hosted runtime starts; storage-read smoke blocks acceptance
+
+STAGE-06 applied canonical schema1–3, one7d DB-only token privately in Render, exact origins and AI key absent, then sole runtime deploy dep-dbmqkbm1egvs73dboi20 of e816655 went live. Free/auto-deploy off and other services/source preserved. Scratch-only Render API-base auth compatibility issue proven/fixed with malicious-host regression tests; no login config changes. Smoke32pass then unexpected wrong-capability response stopped owner. Independent STAGE-07 now reproduces503/storage_unavailable for valid wrong bearer (twice), missing bearer401; no disclosure observed, request valid. Underlying lookup failure remains inconclusive; do not treat missing401 as storage success. One empty synthetic conversation and zero other rows. STAGE-06 BLOCKED; STAGE-07 complete. Next explicit scope: offline decoder/SQLStore.Conversation diagnostics with fabricated documented protocol fixtures; no source repair/new deploy/token/FAQ/liveAI/broad smoke is authorized. Token expires2026-11-13 10:21:07UTC; retain one-record retention follow-up. Evidence in assistant-staging-foundation/.scratch/staging-runtime/handoff.md and .scratch/staging-authz-validation/handoff.md.
+
+## STAGE-06 — secure AI-off hosted runtime explicitly authorized
+
+User approved initializing empty dedicated DB, one 7d database-only token, secure Render env transfer using existing local login, runtime redeploy and synthetic checks at public URL. Delegate bounded backend/foundation operations per .scratch/staging/runtime-setup-brief.md; AI key remains absent, no FAQ import or PII, no other resources/source changes. Canonical migration only after rechecking empty schema; no source fixes or automatic retries. Capture only redacted evidence, credential values stay in memory/Render store. Next: review runtime/storage/security evidence, token expiry and synthetic-data follow-up; no AI/production acceptance implied.
+
+## STAGE-05 complete — hosted image builds; startup intentionally blocked
+
+Coordinator reviewed creation/build/final integrity evidence. One Free Docker service assistant-staging srv-dbmq3s67bikc73bngks0 has actual URL https://assistant-staging-l2vi.onrender.com; auto-deploy off, default Oregon/single instance. Initial deploy dep-dbmq3se7bikc73bnglf0 built/pushed exact e816655, then required-origin shell gate exits 2 before application exec; final update_failed expected. No runtime public traffic, credentials, AI/database calls, retries or existing-service/source changes. STAGE-05 completed for authorized first build only. Container runtime/CA/port/security/storage/public acceptance still blocked. Next decision: explicitly scope secure environment and intended database/schema/content/privacy setup; do not fill missing origins or redeploy automatically. Evidence: assistant-staging-foundation/.scratch/render-first-build/handoff.md.
+
+## STAGE-05 — user-authorized gated Render first build
+
+Use installed authenticated CLI in sole existing workspace to create only assistant-staging Free Docker service from published accepted e816655, automatic deploy off. Deliberately omit required origins and all secrets/endpoints so Docker command exits before app/storage/inference; image build only, expected health/startup failure recorded honestly. Existing two unrelated Render services untouched. Delegate foundation worker with .scratch/staging/render-first-build-brief.md, finite observation and no retries/source changes/paid resources. Next: review service actual URL/plan/commit and build result, then separately scope runtime/data/credential setup; no public-traffic acceptance or live AI authority.
+
+## Accepted staging branch audited and pushed — 2026-11-06
+
+User selected Render first build and reports both accounts. Read-only CLI checks confirm authentication, Turso starter plan/overages disabled and existing assistant-staging database; Render workspace not selected, services/billing unknown. GitHub metadata reveals repository already PUBLIC (no visibility change). After explicit audit-then-push approval, independent STAGE-04 auditor reviewed newly publishable history plus all tracked files and ALLOWed exact candidate; coordinator pushed only release/visitor-staging at e816655 and verified origin/main unchanged. STAGE-04 complete; evidence in assistant-staging-foundation/.scratch/staging-publication/{handoff.md,push-result.json}. Next human checkpoint: confirm Render free/no-card terms and intended database/service/environment; no first-deploy/resource/data/secret authorization inferred. No PR, hosted CI, deployment, live AI or database writes.
+
+## Local staging preparation accepted; container validation blocked — 2026-11-06
+
+STAGE-03 final independent handoff ACCEPTS combined e816655 for local preparation only. Coordinator reviewed handoff, source review and execution records and independently checked all 93 source hashes, fixed HEAD and empty tracked/index diffs. Fresh format/lint/static/unit/contract/fuzz-smoke, uncached Go race, focused policy tests and actual-backend browser suites passed (48/61/69/208 assertions; 56 screenshots). Owner full fuzz independently reviewed against exact sources, NOT rerun. Failed/interrupted validation attempts are preserved with successful bounded reruns; no implementation finding requires repair. Inherited landscape top clipping remains a disclosed nonblocking limitation. STAGE-01/02/03 are completed for local preparation. Docker/Podman absent: container build/context/layers/nonroot/CA/PORT runtime acceptance remains blocked; no installation authorized. Next decision is container-capable validation scope/environment, then separate authority and account/content/privacy/spend decisions for hosted work. No deployment, resource creation, live AI, remote writes or hosted CI performed/authorized. Final evidence: /home/me/Documents/agent-worktrees/assistant-staging-validation/.scratch/staging-independent/handoff.md.
+
+## Interrupted staging validation resumed — 2026-11-06
+
+Recovered exact combined staging revision e816655e7826f7468a07325b8aa1867ff8f6da11 (foundation 7132468 plus policy 8754b50). Both original handoffs are preserved in assistant-staging-foundation/.scratch/staging/{foundation-handoff,policy-handoff}.md. Independent validation stopped with a CLAIMED-only handoff, although gate/browser evidence exists; do not treat those files as final acceptance. No matching old workers remain. Replacement VERIFY-01 ses_e500fd2b2ffevAQGLgy8Lf1xOw resumes STAGE-03 in assistant-staging-validation, scratch-only writes, preserving previous evidence and completing missing checks/source-integrity review. Next: review final handoff, record scoped verdict and container/live/staging blockers. No source implementation, credential-file access, publishing, hosted CI, provisioning, remote writes or deployment authorized by resume.
+
+## Step 3 local staging preparation — 2026-11-05
+
+User states free tier and explicitly skips live AI test to step 3. Two isolated owners dispatched at accepted 8410640: STAGE-01 contract-first backend/widget public-demo flag, visible fictional labels and server/UI disabled email support in assistant-staging-policy; STAGE-02 current official provider research, Docker/Render free-only configuration and operations docs in assistant-staging-foundation (release/visitor-staging). Non-overlapping paths, shared ASSISTANT_PUBLIC_DEMO=true, no dependencies/admin/AUTO imports. Worker briefs are in each .scratch/staging/brief.md. No publishing/hosted CI/account resources/migrations/imports/live model calls/deployment. Next: inspect both handoffs, combine locally only after passing gates, independent actual-demo-backend and default browser/full-fuzz acceptance, record missing build infrastructure honestly.
+
+## Visitor candidate locally accepted — 2026-11-05
+
+REL-01/REL-02 completed. release/visitor-rc is 8410640e027c732a83dc35d354f8c4a56736be0e, merge of accepted 65471be and reviewed CI 84bfd72, with application and baseline harness trees unchanged. Owner all seven gates/browser PASS; independent fresh format/lint/static/unit/contract/fuzz-smoke and actual-backend browser 48/48, rating 61/61, visual 208/208 PASS. Independent final follow-up ACCEPTS local integration after reviewing completed seven-target owner full fuzz and source integrity; full fuzz is NOT independently rerun. Coordinator reviewed both handoffs and final evidence. Other existing worktree HEAD/tracked-diff/status preservation verified. Supplemental whole-tree whitespace diagnostic flags imported historical scratch repair.diff only; scoped tooling check and format PASS. No push, main merge, hosted CI, live services or deployment. Owner evidence/audit: .scratch/release/owner/; independent handoff in assistant-visitor-validation/.scratch/release-independent/. Next: obtain public real-service vs demo and host/domain decision, scope support-promise resolution and approved content, then separately authorize hosted CI/staging; public release remains NO-GO.
+
+## Visitor-only release candidate authorized — 2026-11-05
+
+User approved recommended isolated local preparation. Fetched origin successfully: origin/main remains 40773a3, origin/feat/conversation-rating remains 65471be. Created release/visitor-rc at 65471be in /home/me/Documents/agent-worktrees/assistant-visitor-rc without touching dirty source. REL-01 delegates reviewed CI integration (84bfd72), local checks/full fuzz/browser evidence and release-gap audit; application source must remain identical. Local integration allowed; no remote writes, main merge, hosted CI, live credentials/services or deployment. Next decision: review owner handoff, independently validate exact candidate, then address support/content/hosting/privacy/operating decisions before staging. Admin/demo/AUTO remain separate and preserved.
+
+## LOCAL-01 final presentation handoff delivered (2026-11-04)
+
+Final bounded round after independent handoff `.scratch/local-demo/independent/handoff.md`
+(narrow accept, acceptance withheld): replaced ambiguous advertised sample with
+"How should I make a private mock application checklist?", corrected mis-targeted documented
+samples, added all-samples owner test, re-verified final source live. Final source fingerprint
+4cea8360bd312aa5a2ba571f16053b328d21c2e6bf0dad2fbcf7b4f0276c73fd; full-fuzz evidence boundary
+preserved (runtime unchanged); final live offline HTTP probe passed all ten documented samples;
+make format/lint/static/unit PASS; presentation package v2 created
+(AI_Virtual_Assistant_Windows_Demo_v2.zip SHA-256 1f7f54fbf48e0bd1c252e9c19fe5dd7b21f3ca260d2fc9c080d1486db6d42ee4).
+Owner final handoff written at .scratch/local-demo/handoff.md; coordinator next actions: source
+fingerprint comparison, explicit commit/push/merge authorization, admin follow-up, browser/native
+Windows acceptance. No commit/push/merge made.
+
+## Presentation source package created at user's request
+
+User is in a hurry and requested finishing/sharing presentation build. Created immutable source-only candidate `/home/me/Documents/formartting/Working_Milestone_Files/share/AI_Virtual_Assistant_Windows_Demo.zip` (83 whitelisted source/config files, 261062 bytes, SHA-256 e86ad24e738d6d3a52e21c7667a72b56b4bc569bbfcde6fab57e2ae1f0d653d0) plus per-file manifest. Keys, databases, profiles, .git and .scratch are excluded. Snapshot was hash-stable while copied; owner/independent final handoffs still pending, so package is a presentation candidate, NOT final acceptance or a native Windows claim. Later source changes require a newly versioned package/fingerprint review; do not silently call this old snapshot validated. No commit/push/remote update made. Packaging helper is coordination-only under .scratch/local-demo-package/.
+
+## LOCAL-01 user-requested independent verification dispatched
+
+User said "you verify it". Validator ses_e5a9d63e6ffeWiuZ0AGpwFtMKu reads .scratch/local-demo/independent-task.md and verifies a hash-stable disposable snapshot of current owner work, not a moving worktree. Checks prioritize actual no-key launcher/backend flows, fictional-key secret handling and AI selection, offline Go/Python gates and Windows cross-build/static compatibility. Linux PATH has no pwsh/powershell; native Windows prompt/Ctrl+C/ACL behavior cannot be certified here. Real credential file is out of scope; no live API requests. Final acceptance requires source-to-snapshot fingerprint comparison after owner handoff.
+
+## LOCAL-01 Windows platform refinement
+
+User's collaborator is on Windows. Demo implementation owner steered to add Windows PowerShell 5.1 demo.ps1 with hidden key flow and optional demo.cmd, source-root/space-safe paths, owned server cleanup/env restoration and no persistent policy/admin configuration changes. Windows quickstart takes precedence; Go installation/network prerequisites are explicit. Do not claim native Windows tests from Linux/static/cross-build checks alone. Shell launcher retained as secondary platform.
+
+## LOCAL-01 refinement: hidden key prompt for real AI
+
+User wants the launcher to offer a key-paste prompt for natural AI conversation. Updated spec/task to require hidden nonpersistent runtime prompt: nonempty deliberate key uses real normal provider/serve mode; blank or --offline uses labelled deterministic FAQ fallback. Secret stays only in server process environment, not argv/files/browser/logs. Tests use fictional keys/local fixtures and assert mode selection and no persistence; agent performs no live inference. README/host must distinguish modes and mention API billing/FAQ grounding. No new dependency or unrelated ownership grant.
+
+## Bounded AUTO adapter independently accepted; full runtime still incomplete
+
+Final independent handoff auto-final-acceptance/handoff.md ACCEPTS bounded adapter only: all three P2 cases closed, 20 owner tests, 24 unchanged independent/adjacent tests, 252 refusal probes and fresh offline gates pass with exact source/evidence preservation. Coordinator records bounded acceptance against loop fingerprint dfc2ed46cc50ae11cd467919e753961e3d5faa6490e7b5cd936c3e41f550cc3a. AUTO-01 is not completed because persistent platform turn interception, spawning and central execution are unimplemented. No commit/push or integration authorized. LOCAL-01 no-key demo is now the user priority and implementation has been dispatched in isolation.
+
+## User priority: one-command no-key collaborator demo
+
+User wants clone + one script rather than key sharing. Created clean isolated feat/one-command-demo/assistant-local-demo at accepted chat baseline 65471be, preserving all existing dirty worktrees. LOCAL-01 spec defines opt-in loopback SQLite deterministic FAQ replies with explicit non-AI labels, isolated demo data, credential-free launcher, clear Go/first-run-download prerequisites and separate demo host; normal AI path/security/contracts unchanged. Accountable CHAT-01 implementation owner receives bounded foundation/widget grants, public contract written before implementation, then independent actual-backend/browser acceptance. No admin/AUTO import, git publishing or deployment. Other-harness dashboard work must remain separately owned.
+
+## Admin original findings independently closed; new deadline gap recorded
+
+Issue-08 independent security revalidation returned REJECT backend checkpoint: all original expiry/assignee/timestamp findings closed, all seven gates/full-fuzz 19 targets pass, but protected local transcript lookup lacks the contract's three-second per-query context. Four independent pool-contention runs succeed after four seconds. Record P2 acceptance blocker; no third implementation repair dispatched because two-round budget is exhausted. Required future narrowly authorized follow-up belongs at admin history-call boundary, preserving visitor behavior. Chat-only remote handoff remains separate and should not import unfinished admin code.
+
+## AUTO final repair delivered; issue 15 independent acceptance
+
+Issue 14 round 2 delivered with encoded-reference ambiguity rejected, all original/adjacent reproductions green, 20 owner tests and six offline gates passing. Exact loop fingerprint dfc2ed46cc50ae11cd467919e753961e3d5faa6490e7b5cd936c3e41f550cc3a. Original reviewer is dispatched under issue 15 for final independent bounded-adapter acceptance. Repair budget exhausted; any further finding is an explicit blocker, not an automatic third repair. Admin independent security revalidation remains separately owned. No implementation centrally accepted or published by this dispatch.
+
+## Resumed 2026-11-04 — two bounded workstreams
+
+Verified saved worktrees at the same base commits and finalized handoffs; no tmux server exists. User's resume supersedes yesterday's pause. AUTO issue 14 dispatched for second/final owner repair of encoded-reference handling; ADMIN issue 08 dispatched for independent read-only security-repair revalidation, including real expiry/lock/transport regressions and fresh gates/full fuzz. No code discarded or old pi sessions restarted. UI/CSS/JS/server composition remains pending backend acceptance. No commits/pushes/deployment requested.
+
+## Explicit user pause until tomorrow
+
+All implementation/validation dispatches stopped; no new tests or retries. Close the two owned idle old pi sessions only. `.harness/battery-resume.md` records exact handoffs, fingerprints, queued AUTO round-2 repair and pending independent backend revalidation. Resume only after user returns. No application edits, commits, pushes or deployment during shutdown.
+
+## Battery pause: all dispatched replacements finished; AUTO adjacent defect remains
+
+AUTO independent revalidation closed original P2 cases but rejected encoded-reference handling: percent-encoded fragment can resolve to a literal decoy definition and accept invalid status. Issue 14 queues second bounded repair round, not dispatched while battery is failing. Admin repair completed and awaits independent acceptance. All dispatched replacement sessions have returned final handoffs; do not claim work is still running. battery-resume.md is the recovery entry point. No completion/publishing/deployment authorization inferred.
+
+## Battery-safe backend repair checkpoint
+
+CHAT-01 repair owner completed and stopped: security-repair/handoff.md finalized, all seven gates plus repeated independent repros pass, full fuzz 19/19 targets entered mutation (962,845 reported executions). Two-round budget exhausted. No independent acceptance yet. User reports imminent battery loss; battery-resume.md records exact repaired source fingerprint and next independent backend revalidation. No new long-running backend validation was launched after battery warning. AUTO independent revalidation was already in progress; inspect its latest handoff on resume. All code remains preserved and uncommitted; no publishing or deployment.
+
+## AUTO-01 repair delivered; independent revalidation dispatched
+
+Repair owner ses_e5e3305e7ffeUoPMKpgHGmwFUc delivered round 1 under auto-schema-repair/handoff.md: recursive grammar/value preflight and distinct instance-mismatch handling; 17 owner tests, 16 unchanged independent tests and offline gates pass. Exact repaired fingerprints are recorded. Issue 13 assigns the original independent reviewer a fresh read-only revalidation with separate evidence; no central acceptance yet. Admin security repair remains independently assigned/in progress.
+
+## ADMIN-02 independent rejection; security repair before composition
+
+Validator ses_e5e41c8eeffe7CovoiNI11z5LZ rejected preserved backend: P1 delayed HTTP mutation/invitation consumption authorizes against stale pretransaction time after actual expiry; P2 disabled-assignee commit race gives 503 instead of confirmed 409; P2 mixed whole/fractional timestamp text sorts nonchronologically. All normal gates/full fuzz passed (19 mutation targets), but independent real-path regressions failed. Issue 07-backend-security-repair.md assigns existing admin sources/tests only and scratch evidence, at most two rounds, no contracts/visitor data/UI/composition changes. Backend remains no-go until repair plus independent revalidation. No deployment or exposure.
+
+## AUTO-01 independent rejection; bounded repair dispatched
+
+Validator ses_e5e41fc10ffeFAxGYJD0j1E6Qj returned two P2 findings: unsupported schema forms are silently ignored/conditional schema errors swallowed, and malformed schema containers crash without one structured blocker. Normal gates passed but adversarial suite failed (16 tests: 13 pass, 2 failures, 1 error). Original implementation and evidence are preserved. Issue 12-auto-schema-repair.md assigns the implementation owner only loop/test paths and scratch evidence, at most two rounds, exact repros and fresh independent revalidation required. No completion claim or platform persistence claim.
+
+## Replacement-agent recovery verified; independent checks dispatched — 2026-11-03
+
+- Preserved all uncommitted work. AUTO-01 replacement handoff reports 11 Python tests, a single-writer sidecar/receipt adapter and checklists. It explicitly does not implement persistent platform turn interception. Independent validator `ses_e5e41fc10ffeFAxGYJD0j1E6Qj` owns brief 11-independent-auto-validation.md and scratch-only evidence in assistant-auto.
+- ADMIN-02 replacement continuation added migration 004, lifecycle/session/CLI, protected HTTP and ticket APIs, plus immutability enforcement. Newest checkpoint is backend/completion/handoff.md, newer than primitive/storage handoffs. Only admin/index.html exists; linked CSS/JS and main composition are missing. Independent security validator `ses_e5e41c8eeffe7CovoiNI11z5LZ` owns brief 06-backend-independent-checkpoint.md and scratch-only evidence in assistant-admin-backend.
+- Old rate-limited pi sessions remain paused; do not resume alongside replacement writers. Active validation uses this harness's delegated agents, with no credential/provider changes or usage probes.
+- Next: inspect independent results; owner repairs if necessary; then complete admin UI and explicit opt-in composition, full fuzz and trusted-input integrated acceptance. No new commit/push/merge/deployment authority inferred.
+
+## UI+rating integration ACCEPTED and pushed — 2026-11-03
+
+Independent combined-tree validator accepted the exact integration commit `db38c32` after fresh `-count=1` gates, full-fuzz mutation on all seven targets, and three trusted-input browser suites on the actual backend (rating 61/0, sandbox-send 48/0, visual 208/0; storage audit clean). It also rebuilt the approved UI first parent via `git archive` and compared seven ready viewports pixel-for-pixel: zero differing pixels. Known inherited compact/landscape limits are recorded as widget follow-up P3, not integration regressions. Per standing approval, the coordinator committed the `.harness` checkpoint as `7f0a6c0`, merged `db38c32` as `65471be` (verified merge delta: only the five `.harness` coordination files; application tree byte-identical to the validated tree) and pushed `origin/feat/conversation-rating` → `65471be` (remote ref verified). `origin/main` was untouched; no main merge/deployment. RATE-02/RATE-03 are now closed with evidence; INTEG-01 completed in the ledger. Remaining widget follow-up (optional small-screen layout repair) noted; integration gate row removed from blockers. ADMIN-05 revision accepted (gates PASS); admin backend implementation (brief 02) dispatch follows on an isolated branch; AUTO-01 dispatches after the backend handoff to respect the two-heavy-worker ceiling.
+
 ## CI-01 closed on local evidence; CI-02 created; AUTO-01 unblocked — 2026-11-03
 
 User approved the recommended sequence. The coordinator checkpointed the accepted CI implementation/repair as commit `84bfd72` ('Add deterministic validation CI with bounded browser containment') on `tooling/ci-autonomy` in assistant-ci: ~55 tracked files — source (workflow, browser_check + tests, tasks-schema tests, docs, manifest) plus briefs/handoffs/JSON-text evidence; binaries, browser profiles, screenshots, sqlite and 16MiB executables remain deliberately untracked. CI-01 is marked completed: acceptance criteria are met on local gates plus independent review; explicitly NOT claimed: hosted execution, an independent happy-path browser rerun, or a green static on the worktree's historical ledger. CI-02 (hosted deterministic PR validation follow-up, pending user scheduling) was added; AUTO-01's CI-01 dependency is satisfied and its dispatch follows the integration push. The CI tracker row was removed from blockers.md as resolved.

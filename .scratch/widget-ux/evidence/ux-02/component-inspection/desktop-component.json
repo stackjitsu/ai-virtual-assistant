@@ -1,0 +1,13 @@
+{
+  "label": "Close chat",
+  "width": 44,
+  "height": 44,
+  "headingGap": 126.859375,
+  "color": "rgb(26, 31, 30)",
+  "background": "rgba(0, 0, 0, 0)",
+  "outline": "rgb(26, 31, 30) none 3px",
+  "headerBackground": "rgb(255, 255, 255)",
+  "iframeWidth": 398,
+  "iframeHeight": 598,
+  "headingLines": 0.9998227788279773
+}

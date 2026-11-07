@@ -1,0 +1,16 @@
+ M .harness/blockers.md
+ M .harness/goal.md
+ M .harness/plan.md
+ M .harness/tasks.json
+ M docs/contracts/chat.md
+ M web/assets/loader.js
+ M web/assets/widget-core.mjs
+ M web/assets/widget.html
+ M web/tests/embedding.contract.test.mjs
+ M web/tests/escalation.test.mjs
+ M web/tests/sandbox-send.browser.mjs
+ M web/tests/widget.test.mjs
+?? .scratch/admin-dashboard/
+?? .scratch/automation/
+?? .scratch/widget-escape/
+?? .scratch/widget-ux/

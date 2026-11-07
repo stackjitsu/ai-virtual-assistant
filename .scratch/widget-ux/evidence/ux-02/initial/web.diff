@@ -1,0 +1,288 @@
+diff --git i/web/assets/loader.js w/web/assets/loader.js
+index d5995ad..25f1889 100644
+--- i/web/assets/loader.js
++++ w/web/assets/loader.js
+@@ -55,6 +55,14 @@
+   let initialized = false;
+   const knownKeys = (data, expected) => data && typeof data === 'object' && !Array.isArray(data)
+     && Object.keys(data).length === expected.length && expected.every((key) => Object.hasOwn(data, key));
++  const close = () => {
++    if (frame.hidden) return;
++    frame.hidden = true;
++    launcher.setAttribute('aria-expanded', 'false');
++    launcher.setAttribute('aria-label', 'Open support assistant');
++    launcher.textContent = 'Ask the assistant';
++    launcher.focus();
++  };
+   window.addEventListener('message', (event) => {
+     if (!mounted || event.source !== frame.contentWindow || event.origin !== origin) return;
+     const data = event.data;
+@@ -64,15 +72,24 @@
+     } else if (initialized && knownKeys(data, ['type', 'version', 'height'])
+       && data.type === 'assistant:resize' && data.version === 1 && Number.isFinite(data.height)) {
+       frame.height = String(Math.max(300, Math.min(720, Math.round(data.height))));
++    } else if (initialized && knownKeys(data, ['type', 'version'])
++      && data.type === 'assistant:close' && data.version === 1) {
++      close();
+     }
+   });
++  launcher.addEventListener('keydown', (event) => {
++    if (event.key !== 'Escape' || frame.hidden) return;
++    event.preventDefault();
++    close();
++  });
+   launcher.addEventListener('click', () => {
+     if (!mounted) {
+       mounted = true;
+       frame.src = `${origin}/widget/widget.html#parent_origin=${encodeURIComponent(window.location.origin)}`;
+       root.prepend(frame);
+     }
+-    frame.hidden = !frame.hidden;
++    if (!frame.hidden) { close(); return; }
++    frame.hidden = false;
+     launcher.setAttribute('aria-expanded', String(!frame.hidden));
+     launcher.setAttribute('aria-label', frame.hidden ? 'Open support assistant' : 'Close support assistant');
+     launcher.textContent = frame.hidden ? 'Ask the assistant' : 'Close assistant';
+diff --git i/web/assets/widget-core.mjs w/web/assets/widget-core.mjs
+index dabcbab..6be4bf9 100644
+--- i/web/assets/widget-core.mjs
++++ w/web/assets/widget-core.mjs
+@@ -394,17 +394,15 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
+     event.preventDefault();
+     submitEscalation();
+   });
+-  // Escape closes the handoff disclosure and returns focus to its trigger, so
+-  // a keyboard visitor never loses their place. No other key closes it: a
+-  // letter typed in the email form must never dismiss the menu.
++  // Escape closes the entire host window, even when the handoff form is open.
++  // The host returns focus to its launcher; nothing in this iframe is reloaded.
+   platform.addEventListener('keydown', (event) => {
+-    if (!handoffOpen || stopped) return;
+-    if (event.key !== 'Escape') return;
++    if (event.key !== 'Escape' || stopped || !initialized) return;
+     event.preventDefault();
+     handoffOpen = false;
+     escalateOpen = false;
+     controls();
+-    ui['escalate-toggle'].focus?.();
++    platform.parent.postMessage({ type: 'assistant:close', version: 1 }, parent);
+   });
+   // The stored recorded_at is already contract-validated; render it in a
+   // visitor-sane UTC form with the server's own truthful sentence verbatim.
+diff --git i/web/assets/widget.html w/web/assets/widget.html
+index 659464c..10e27f4 100644
+--- i/web/assets/widget.html
++++ w/web/assets/widget.html
+@@ -10,9 +10,12 @@
+ <body class="widget-page">
+   <main class="chat" aria-labelledby="chat-title">
+     <header class="chat-header">
+-      <p class="eyebrow">AI SUPPORT</p>
+-      <h1 id="chat-title">Ask a question</h1>
+-      <p>Find relevant information here.</p>
++      <div class="chat-heading">
++        <p class="eyebrow">AI SUPPORT</p>
++        <h1 id="chat-title">Ask a question</h1>
++        <p>Find relevant information here.</p>
++      </div>
++      <button id="chat-close" type="button" class="chat-close" aria-label="Close chat">×</button>
+     </header>
+     <div class="chat-content" aria-label="Conversation and support information" tabindex="0">
+     <section class="disclosure" aria-label="Before you ask">
+@@ -32,7 +35,7 @@
+       <button id="escalate-toggle" type="button" disabled aria-expanded="false" aria-controls="handoff-menu">Request human support</button>
+       <div id="handoff-menu" class="handoff-menu" role="group" aria-label="Ways to request human support" hidden>
+         <div class="handoff-option">
+-          <button id="handoff-email" type="button" aria-expanded="false" aria-controls="escalation-form" aria-pressed="false">By email</button>
++          <button id="handoff-email" type="button" aria-expanded="false" aria-controls="escalation-form" aria-pressed="false">Request via email</button>
+           <form id="escalation-form" aria-label="Request human support by email" hidden>
+             <label for="escalate-email">Your email</label>
+             <input id="escalate-email" name="email" type="text" inputmode="email" autocomplete="email" placeholder="you@example.org" aria-describedby="escalate-hint" required disabled>
+@@ -45,7 +48,7 @@
+           </form>
+         </div>
+         <div class="handoff-option handoff-unavailable">
+-          <button id="handoff-whatsapp" type="button" disabled aria-describedby="whatsapp-reason" aria-pressed="false">By WhatsApp</button>
++          <button id="handoff-whatsapp" type="button" disabled aria-describedby="whatsapp-reason" aria-pressed="false">Request via WhatsApp</button>
+           <p id="whatsapp-reason">Unavailable: this support service has not enabled WhatsApp.</p>
+         </div>
+       </div>
+diff --git i/web/tests/embedding.contract.test.mjs w/web/tests/embedding.contract.test.mjs
+index 6e8863b..b4c0586 100644
+--- i/web/tests/embedding.contract.test.mjs
++++ w/web/tests/embedding.contract.test.mjs
+@@ -103,6 +103,35 @@ test('capability is only a bearer in iframe-owned API calls, never URL/DOM/paren
+   }
+ });
+ 
++test('close control uses exact versioned shape, source and origin; invalid messages cannot close', async () => {
++  const fixture = await loaderFixture(); fixture.open();
++  const frame = fixture.frame();
++  const close = { type: 'assistant:close', version: 1 };
++  fixture.message(close); // No close before handshake.
++  assert.equal(frame.hidden, false);
++  fixture.message({ type: 'assistant:ready', version: 1 });
++  for (const [data, origin, source] of [
++    [close, 'https://assistant.example.evil', frame.contentWindow],
++    [close, 'https://assistant.example', {}],
++    [{ ...close, version: 2 }, 'https://assistant.example', frame.contentWindow],
++    [{ ...close, capability: 'bad' }, 'https://assistant.example', frame.contentWindow],
++    [{ ...close, height: 300 }, 'https://assistant.example', frame.contentWindow],
++    [{ type: 'assistant:resize', version: 1 }, 'https://assistant.example', frame.contentWindow],
++  ]) {
++    fixture.message(data, origin, source);
++    assert.equal(frame.hidden, false);
++  }
++  fixture.message(close);
++  assert.equal(frame.hidden, true);
++  assert.equal(fixture.launcher.focused, true);
++  assert.equal(fixture.launcher.getAttribute('aria-expanded'), 'false');
++  assert.equal(fixture.launcher.getAttribute('aria-label'), 'Open support assistant');
++  fixture.open();
++  assert.equal(fixture.frame(), frame);
++  assert.equal(frame.hidden, false);
++  assert.equal(frame.contentWindow.sent.length, 1);
++});
++
+ test('disclosure keeps the safety warning visible and names app server and configurable provider without displaying origin before send', async () => {
+   const fixture = widgetFixture();
+   const html = await readFile(new URL('../assets/widget.html', import.meta.url), 'utf8');
+@@ -234,8 +263,9 @@ test('only the visitor opens the handoff menu, and the composer stays pinned out
+   assert.match(core, /handoffOpen = !handoffOpen;/u);
+   assert.doesNotMatch(core, /handoffOpen\s*=\s*true/u);
+   assert.match(core, /ui\['handoff-whatsapp'\]\.setAttribute\('aria-pressed', 'false'\)/u);
+-  // Escape is the only key that closes the disclosure.
+-  assert.match(core, /if \(event\.key !== 'Escape'\) return;/u);
++  // Escape is the only key requesting host close, including with this disclosure open.
++  assert.match(core, /if \(event\.key !== 'Escape' \|\| stopped \|\| !initialized\) return;/u);
++  assert.match(core, /platform\.parent\.postMessage\(\{ type: 'assistant:close', version: 1 \}, parent\)/u);
+   assert.doesNotMatch(core, /event\.key === 'q'/u);
+   // The handoff panel lives in the scrollable pane; the composer stays outside
+   // it, so the question and Send controls remain visible on a small screen.
+diff --git i/web/tests/escalation.test.mjs w/web/tests/escalation.test.mjs
+index 9689289..39db7c1 100644
+--- i/web/tests/escalation.test.mjs
++++ w/web/tests/escalation.test.mjs
+@@ -88,7 +88,7 @@ test('the handoff menu opens only after a conversation exists and no server even
+   assert.equal(fixture.ui['escalation-form'].hidden, true);
+ });
+ 
+-test('Escape closes the handoff menu and returns focus to its trigger, and no other key closes it', async () => {
++test('Escape requests window close even with handoff form open; other keys leave it open', async () => {
+   const fixture = ready(); await settle();
+   fixture.ui['escalate-toggle'].dispatch('click');
+   fixture.ui['handoff-email'].dispatch('click');
+@@ -98,11 +98,16 @@ test('Escape closes the handoff menu and returns focus to its trigger, and no ot
+   // A typed letter must never dismiss the menu.
+   fixture.emit('keydown', { key: 'q', target: {}, preventDefault() {} });
+   assert.equal(fixture.ui['handoff-menu'].hidden, false);
+-  fixture.emit('keydown', { key: 'Escape', target: {}, preventDefault() {} });
++  let prevented = false;
++  fixture.ui['escalate-email'].value = 'visitor@example.org';
++  fixture.emit('keydown', { key: 'Escape', target: fixture.ui['escalate-email'], preventDefault() { prevented = true; } });
++  assert.equal(prevented, true);
+   assert.equal(fixture.ui['handoff-menu'].hidden, true);
+   assert.equal(fixture.ui['escalation-form'].hidden, true);
+   assert.equal(fixture.ui['escalate-toggle'].getAttribute('aria-expanded'), 'false');
+-  assert.equal(fixture.ui['escalate-toggle'].focused, true);
++  assert.equal(fixture.ui['escalate-toggle'].focused, undefined);
++  assert.deepEqual(fixture.sent.at(-1), { data: { type: 'assistant:close', version: 1 }, origin: 'https://host.example' });
++  assert.equal(fixture.ui['escalate-email'].value, 'visitor@example.org');
+ });
+ 
+ test('an outside click closes the handoff menu while a click inside the handoff region does not', async () => {
+@@ -153,6 +158,7 @@ test('handoff menu closes on Escape and outside click, and never auto-opens on a
+   fixture.emit('keydown', { key: 'Escape', target: {}, preventDefault() {} });
+   assert.equal(fixture.ui['handoff-menu'].hidden, true);
+   assert.equal(fixture.ui['escalation-form'].hidden, true);
++  assert.equal(fixture.sent.at(-1).data.type, 'assistant:close');
+   // An outside click closes the disclosure too.
+   fixture.ui['escalate-toggle'].dispatch('click');
+   assert.equal(fixture.ui['handoff-menu'].hidden, false);
+diff --git i/web/tests/sandbox-send.browser.mjs w/web/tests/sandbox-send.browser.mjs
+index 9fc6ac8..2bd23f2 100644
+--- i/web/tests/sandbox-send.browser.mjs
++++ w/web/tests/sandbox-send.browser.mjs
+@@ -203,6 +203,36 @@ try {
+     report.trustedInputs.push({ action, events: await evaluate(f, '__inputs') });
+     await screenshot(`${action}${sent ? '-complete' : '-blocked'}.png`);
+   }
++  // Real keyboard events inside the iframe must close the host window in one
++  // press, even when focus is in the expanded email form. Hiding must not
++  // reload the iframe or discard the conversation and unsent draft.
++  const { h, f } = await open();
++  const priorPosts = posts().length;
++  const creations = () => report.requests.filter((request) => request.method === 'POST' && request.url.endsWith('/conversations')).length;
++  const initialCreations = creations();
++  await click(f, '#question', h);
++  await cdp('Input.insertText', { text: 'Unsent draft stays here' });
++  await key('q', 'KeyQ', 81, 0, 'q');
++  check('Other iframe key does not close window', await evaluate(h, `!document.querySelector('iframe').hidden`));
++  await key('Escape', 'Escape', 27);
++  await wait(() => evaluate(h, `document.querySelector('iframe').hidden`), 'iframe Escape closes window');
++  check('Iframe Escape returns focus and closed launcher state', await evaluate(h, `document.activeElement===document.querySelector('.assistant-launcher')&&document.querySelector('.assistant-launcher').getAttribute('aria-expanded')==='false'&&document.querySelector('.assistant-launcher').getAttribute('aria-label')==='Open support assistant'`));
++  await click(h, '.assistant-launcher');
++  check('Reopen preserves iframe and unsent draft without new creation', await evaluate(f, `document.querySelector('#question').value.startsWith('Unsent draft stays here')`) && creations() === initialCreations);
++  await click(f, '#escalate-toggle', h);
++  await click(f, '#handoff-email', h);
++  await click(f, '#escalate-email', h);
++  await cdp('Input.insertText', { text: 'visitor@example.org' });
++  check('Email form open before Escape', await evaluate(f, `!document.querySelector('#handoff-menu').hidden&&!document.querySelector('#escalation-form').hidden`));
++  await key('Escape', 'Escape', 27);
++  await wait(() => evaluate(h, `document.querySelector('iframe').hidden`), 'email form Escape closes window');
++  check('Email form Escape focuses launcher', await evaluate(h, `document.activeElement===document.querySelector('.assistant-launcher')`));
++  await click(h, '.assistant-launcher');
++  check('Email draft and conversation survive reopening', await evaluate(f, `document.querySelector('#escalate-email').value==='visitor@example.org'&&document.querySelector('#question').value.startsWith('Unsent draft stays here')`) && creations() === initialCreations);
++  await evaluate(h, `document.querySelector('.assistant-launcher').focus()`);
++  await key('Escape', 'Escape', 27);
++  check('Trusted host launcher Escape closes and keeps focus', await evaluate(h, `document.querySelector('iframe').hidden&&document.activeElement===document.querySelector('.assistant-launcher')&&document.querySelector('.assistant-launcher').getAttribute('aria-expanded')==='false'`));
++  check('Escape does not submit questions or escalation', posts().length === priorPosts && !report.requests.some((request) => request.url.endsWith('/escalation')));
+   check('All observed control inputs are browser-trusted', report.trustedInputs.every((input) => input.events.length && input.events.every((event) => event.trusted)));
+   check('No browser JavaScript exceptions', !report.exception);
+ } catch (error) {
+diff --git i/web/tests/widget.test.mjs w/web/tests/widget.test.mjs
+index 85e2420..4d53f84 100644
+--- i/web/tests/widget.test.mjs
++++ w/web/tests/widget.test.mjs
+@@ -334,6 +334,41 @@ test('loader toggle reuses one iframe, accessible control and conversation hands
+   assert.equal(walk(fixture.document.body).filter((node) => node.tagName === 'IFRAME').length, 1);
+ });
+ 
++test('launcher Escape closes an open window and focuses launcher; other keys do nothing', async () => {
++  const fixture = await loaderFixture(); fixture.open();
++  const frame = fixture.frame();
++  let prevented = 0;
++  fixture.launcher.dispatch('keydown', { key: 'q', preventDefault() { prevented++; } });
++  assert.equal(frame.hidden, false);
++  fixture.launcher.dispatch('keydown', { key: 'Escape', preventDefault() { prevented++; } });
++  assert.equal(prevented, 1);
++  assert.equal(frame.hidden, true);
++  assert.equal(fixture.launcher.focused, true);
++  assert.equal(fixture.launcher.getAttribute('aria-expanded'), 'false');
++  assert.equal(fixture.launcher.textContent, 'Ask the assistant');
++  fixture.launcher.dispatch('keydown', { key: 'Escape', preventDefault() { prevented++; } });
++  assert.equal(prevented, 1);
++  fixture.open();
++  assert.equal(fixture.frame(), frame);
++  assert.equal(frame.hidden, false);
++});
++
++test('iframe Escape requests host close without a menu or a send, only after init', async () => {
++  const fixture = widgetFixture();
++  let prevented = 0;
++  fixture.emit('keydown', { key: 'Escape', preventDefault() { prevented++; } });
++  assert.equal(prevented, 0);
++  assert.equal(fixture.sent.filter((message) => message.data.type === 'assistant:close').length, 0);
++  fixture.init(); await settle();
++  fixture.ui.question.value = 'Keep this draft';
++  fixture.emit('keydown', { key: 'x', preventDefault() { prevented++; } });
++  fixture.emit('keydown', { key: 'Escape', preventDefault() { prevented++; } });
++  assert.equal(prevented, 1);
++  assert.equal(fixture.ui.question.value, 'Keep this draft');
++  assert.deepEqual(fixture.sent.at(-1), { data: { type: 'assistant:close', version: 1 }, origin: 'https://host.example' });
++  assert.equal(fixture.requests.length, 2);
++});
++
+ test('bounded property sweep: arbitrary malformed boundary values never fetch or crash', async () => {
+   // Deterministic regression/property corpus; no claim of a browser or native fuzzer.
+   let seed = 14641;

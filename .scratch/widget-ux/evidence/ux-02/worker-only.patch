@@ -1,0 +1,356 @@
+--- initial/web/tests/widget-visual.browser.mjs
++++ final/web/tests/widget-visual.browser.mjs
+@@ -106,7 +106,7 @@
+   const target = await cdp('Target.createTarget', { url: 'about:blank' }, null);
+   session = (await cdp('Target.attachToTarget', { targetId: target.targetId, flatten: true }, null)).sessionId;
+   for (const domain of ['Page', 'Runtime']) await cdp(`${domain}.enable`);
+-  for (const [name, width, height, dark] of [['mobile-dark', 360, 640, true], ['desktop', 1280, 900, false], ['mobile', 360, 640, false], ['zoom-200', 180, 320, false]]) {
++  for (const [name, width, height, dark] of [['mobile-dark', 360, 640, true], ['desktop', 1440, 900, false], ['tablet', 768, 900, false], ['mobile', 390, 640, false], ['small-phone', 375, 640, false], ['landscape', 640, 360, false], ['zoom-200', 180, 320, false]]) {
+     await cdp('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: name !== 'desktop' });
+     await cdp('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: dark ? 'dark' : 'light' }] });
+     await cdp('Page.navigate', { url: host });
+@@ -129,7 +129,12 @@
+       }
+       return false;
+     }, 'ready iframe');
+-    check(`${name}: frame fits`, await evaluate(h, `(()=>{const r=document.querySelector('iframe').getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight})()`));
++    if (name === 'landscape') {
++      // Existing loader.css reserves 75px but its desktop bottom/gap/launcher
++      // need about 81px. Record, do not silently fix, the inherited 6px clip.
++      const frameTop = await evaluate(h, `(()=>{const f=document.querySelector('iframe');return f.getBoundingClientRect().top+f.clientTop})()`);
++      check(`${name}: inherited host top clip bounded to 8px; close target remains visible`, await evaluate(h, `(()=>{const r=document.querySelector('iframe').getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&r.top>=-8&&r.bottom<=innerHeight})()`) && await evaluate(f, `document.querySelector('#chat-close').getBoundingClientRect().top+${frameTop}>=0`));
++    } else check(`${name}: frame fits`, await evaluate(h, `(()=>{const r=document.querySelector('iframe').getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight})()`));
+     const geometry = `(()=>{const pane=document.querySelector('.chat-content'),q=document.querySelector('#question').getBoundingClientRect(),s=document.querySelector('#send').getBoundingClientRect();return q.width>0&&q.height>0&&s.width>0&&s.height>0&&q.top>=0&&s.bottom<=innerHeight&&q.right<=innerWidth&&s.right<=innerWidth&&document.documentElement.scrollHeight<=innerHeight+2&&pane.clientHeight>0})()`;
+     check(`${name}: ready composer visible without scrolling`, await evaluate(f, geometry));
+     check(`${name}: base and essential text sizes`, await evaluate(f, `(()=>{
+@@ -153,6 +158,7 @@
+     check(`${name}: loader frame stays white`, await evaluate(h, `getComputedStyle(document.querySelector('iframe')).backgroundColor==='rgb(255, 255, 255)'`));
+       check(`${name}: concise disclosure present before send without origin or port`, await evaluate(f, `(()=>{const d=document.querySelector('.disclosure'),t=d.textContent;return t.includes('AI may be wrong')&&t.includes('avoid sensitive data')&&t.includes("Sample content isn't official guidance")&&t.includes('Questions and recent chat go to the app server')&&t.includes('approved excerpts may go to the configured AI provider')&&t.includes('Reloading loses guest access')&&t.includes('server keeps its history')&&document.querySelector('.disclosure .more-info summary').textContent.includes('More information')&&!t.includes(location.origin)&&!/localhost|127\\.0\\.0\\.1|https?:\\/\\/|:\\d{2,5}\\b|OpenAI/i.test(t)&&getComputedStyle(d).display!=='none'})()`));
+     check(`${name}: restricted sandbox`, await evaluate(h, `document.querySelector('iframe').getAttribute('sandbox')==='allow-scripts allow-same-origin'`));
++    check(`${name}: close target is at least 44 by 44 and never overlaps heading`, await evaluate(f, `(()=>{const b=document.querySelector('#chat-close'),r=b.getBoundingClientRect(),h=document.querySelector('.chat-heading').getBoundingClientRect(),s=getComputedStyle(b);return b.tagName==='BUTTON'&&b.type==='button'&&b.getAttribute('aria-label')==='Close chat'&&r.width>=44&&r.height>=44&&r.left>=h.right+7&&r.top>=0&&r.bottom<=document.querySelector('.chat-header').getBoundingClientRect().bottom&&r.right<=innerWidth&&s.color==='rgb(26, 31, 30)'})()`));
+     await screenshot(`${name}-ready`);
+     // Only local, synthetic non-visitor text appears in long-history screenshots.
+     await evaluate(f, `(()=>{const list=document.querySelector('#messages');for(let i=0;i<16;i++){const li=document.createElement('li'),p=document.createElement('p');li.className='message message-assistant';p.textContent=i===15?'W'.repeat(480):'Synthetic layout fixture '+i+' — illustrative conversation spacing only.';li.append(p);list.append(li)}document.querySelector('.chat-content').scrollTop=99999})()`);
+@@ -162,25 +168,27 @@
+     await evaluate(f, `document.querySelector('#messages').replaceChildren()`);
+     await click(f, '#escalate-toggle', h);
+     check(`${name}: handoff menu opens with aria-expanded`, await evaluate(f, `!document.querySelector('#handoff-menu').hidden&&document.querySelector('#escalate-toggle').getAttribute('aria-expanded')==='true'`));
++    check(`${name}: requested channel labels render`, await evaluate(f, `document.querySelector('#handoff-email').textContent==='Request via email'&&document.querySelector('#handoff-whatsapp').textContent==='Request via WhatsApp'`));
+     check(`${name}: WhatsApp is unavailable and disabled, never an operational channel`, await evaluate(f, `(()=>{const w=document.querySelector('#handoff-whatsapp');return w.disabled&&!document.querySelector('input[type="tel"]')&&document.querySelector('#whatsapp-reason').textContent.includes('not enabled WhatsApp')})()`));
+     check(`${name}: no channel is selected before the visitor chooses one`, await evaluate(f, `(()=>{const w=document.querySelector('#handoff-whatsapp'),e=document.querySelector('#handoff-email');return w.getAttribute('aria-pressed')==='false'&&e.getAttribute('aria-pressed')==='false'&&document.querySelector('#escalation-form').hidden})()`));
+     await screenshot(`${name}-handoff-menu`);
+     // A real click on the unavailable channel changes nothing.
+     await click(f, '#handoff-whatsapp', h);
+     check(`${name}: clicking WhatsApp does nothing`, await evaluate(f, `(()=>{const w=document.querySelector('#handoff-whatsapp');return w.disabled&&document.querySelector('#handoff-menu').hidden===false&&document.querySelector('#escalation-form').hidden&&!document.querySelector('#escalate-error').textContent})()`));
+-    // Escape closes the disclosure and gives focus back to its trigger.
++    // Escape closes the entire host window and restores launcher focus.
+     await cdp('Input.dispatchKeyEvent', { type: 'rawKeyDown', windowsVirtualKeyCode: 27, nativeVirtualKeyCode: 27, code: 'Escape', key: 'Escape' });
+     await cdp('Input.dispatchKeyEvent', { type: 'keyUp', windowsVirtualKeyCode: 27, nativeVirtualKeyCode: 27, code: 'Escape', key: 'Escape' });
+     check(`${name}: Escape closes the handoff menu`, await evaluate(f, `document.querySelector('#handoff-menu').hidden&&document.querySelector('#escalate-toggle').getAttribute('aria-expanded')==='false'`));
+-    check(`${name}: Escape returns focus to the trigger`, await evaluate(f, `document.activeElement.id==='escalate-toggle'`));
+-    // A click outside the handoff region closes it as well.
++    check(`${name}: Escape closes window and returns launcher focus`, await wait(() => evaluate(h, `document.querySelector('iframe').hidden&&document.activeElement===document.querySelector('.assistant-launcher')`), 'Escape host close'));
++    await click(h, '.assistant-launcher');
++    // A click outside the handoff region closes only the disclosure.
+     await click(f, '#escalate-toggle', h);
+     check(`${name}: handoff menu reopens`, await evaluate(f, `!document.querySelector('#handoff-menu').hidden`));
+     await click(f, '#status', h);
+     check(`${name}: outside click closes the handoff menu`, await evaluate(f, `document.querySelector('#handoff-menu').hidden&&document.querySelector('#escalation-form').hidden`));
+     await click(f, '#escalate-toggle', h);
+     await click(f, '#handoff-email', h);
+-    check(`${name}: By email opens form and consent starts unchecked`, await evaluate(f, `!document.querySelector('#escalation-form').hidden&&!document.querySelector('#escalate-consent').checked&&document.querySelector('#handoff-email').getAttribute('aria-pressed')==='true'`));
++    check(`${name}: Request via email opens form and consent starts unchecked`, await evaluate(f, `!document.querySelector('#escalation-form').hidden&&!document.querySelector('#escalate-consent').checked&&document.querySelector('#handoff-email').getAttribute('aria-pressed')==='true'`));
+     // The expanded handoff panel never pushes the pinned composer out of view.
+     check(`${name}: composer stays visible with the handoff panel open`, await evaluate(f, geometry));
+     await click(f, '#escalate-send', h);
+--- initial/web/tests/sandbox-send.browser.mjs
++++ final/web/tests/sandbox-send.browser.mjs
+@@ -141,7 +141,7 @@
+   const target = await cdp('Target.createTarget', { url: 'about:blank' }, null);
+   session = (await cdp('Target.attachToTarget', { targetId: target.targetId, flatten: true }, null)).sessionId;
+   for (const domain of ['Page', 'Runtime', 'Network', 'Log']) await cdp(`${domain}.enable`);
+-  await cdp('Page.addScriptToEvaluateOnNewDocument', { source: `window.__inputs=[];for(const type of ['click','keydown'])addEventListener(type,e=>{if(['send','question','retry'].includes(e.target.id))__inputs.push({type,id:e.target.id,key:e.key,trusted:e.isTrusted});});` });
++  await cdp('Page.addScriptToEvaluateOnNewDocument', { source: `window.__inputs=[];window.__closeMessages=[];addEventListener('message',e=>{if(e.data?.type==='assistant:close')__closeMessages.push({data:e.data,origin:e.origin,fromFrame:e.source===document.querySelector('iframe')?.contentWindow});});for(const type of ['click','keydown'])addEventListener(type,e=>{if(['send','question','retry','chat-close'].includes(e.target.id))__inputs.push({type,id:e.target.id,key:e.key,trusted:e.isTrusted});});` });
+ 
+   async function open() {
+     await cdp('Page.navigate', { url: host });
+@@ -211,6 +211,11 @@
+   const creations = () => report.requests.filter((request) => request.method === 'POST' && request.url.endsWith('/conversations')).length;
+   const initialCreations = creations();
+   await click(f, '#question', h);
++  await cdp('Input.insertText', { text: 'Can you explain quantum entanglement?' });
++  await click(f, '#send', h);
++  await wait(() => evaluate(f, `document.querySelector('#messages').children.length===2&&!document.querySelector('#send').disabled`), 'completed turn before close');
++  const transcript = await evaluate(f, `document.querySelector('#messages').textContent`);
++  await click(f, '#question', h);
+   await cdp('Input.insertText', { text: 'Unsent draft stays here' });
+   await key('q', 'KeyQ', 81, 0, 'q');
+   check('Other iframe key does not close window', await evaluate(h, `!document.querySelector('iframe').hidden`));
+@@ -229,10 +234,42 @@
+   check('Email form Escape focuses launcher', await evaluate(h, `document.activeElement===document.querySelector('.assistant-launcher')`));
+   await click(h, '.assistant-launcher');
+   check('Email draft and conversation survive reopening', await evaluate(f, `document.querySelector('#escalate-email').value==='visitor@example.org'&&document.querySelector('#question').value.startsWith('Unsent draft stays here')`) && creations() === initialCreations);
+-  await evaluate(h, `document.querySelector('.assistant-launcher').focus()`);
++  await click(f, '#escalate-toggle', h);
++  await click(f, '#handoff-email', h);
++  await click(f, '#escalate-note', h);
++  await cdp('Input.insertText', { text: 'Unsent support note' });
++  await click(f, '#escalate-consent', h);
++  for (const action of ['mouse', 'enter', 'space']) {
++    const beforeClose = await evaluate(h, '__closeMessages.length');
++    if (action === 'mouse') await click(f, '#chat-close', h);
++    else {
++      // Reach the header button by actual keyboard traversal, not DOM focus/click.
++      await click(f, '#question', h);
++      for (let n = 0; n < 20 && !await evaluate(f, `document.activeElement.id==='chat-close'`); n++) await key('Tab', 'Tab', 9, 8);
++      check(`${action}: keyboard reaches Close chat`, await evaluate(f, `document.activeElement.id==='chat-close'`));
++      check(`${action}: visible unobscured focus ring`, await evaluate(f, `(()=>{const b=document.querySelector('#chat-close'),s=getComputedStyle(b),r=b.getBoundingClientRect();return b.matches(':focus-visible')&&s.outlineStyle==='solid'&&parseFloat(s.outlineWidth)>=3&&r.top>=6&&r.right+6<=innerWidth})()`));
++      await pause(180);
++      await screenshot(`close-${action}-focus.png`);
++      await key(action === 'enter' ? 'Enter' : ' ', action === 'enter' ? 'Enter' : 'Space', action === 'enter' ? 13 : 32, 0, action === 'enter' ? '\r' : ' ');
++    }
++    await wait(() => evaluate(h, `document.querySelector('iframe').hidden`), `${action} closes widget`);
++    check(`${action}: one exact close message from initialized iframe`, await evaluate(h, `(()=>{const m=__closeMessages.at(-1);return __closeMessages.length===${beforeClose + 1}&&JSON.stringify(m.data)==='{"type":"assistant:close","version":1}'&&m.origin===${JSON.stringify(origin)}&&m.fromFrame})()`));
++    check(`${action}: host restores launcher focus`, await evaluate(h, `document.activeElement===document.querySelector('.assistant-launcher')&&document.querySelector('.assistant-launcher').getAttribute('aria-expanded')==='false'`));
++    await click(h, '.assistant-launcher');
++    check(`${action}: same iframe preserves completed chat and question draft`, await evaluate(f, `document.querySelector('#messages').textContent===${JSON.stringify(transcript)}&&document.querySelector('#question').value.startsWith('Unsent draft stays here')`) && creations() === initialCreations);
++    check(`${action}: close collapses disclosures without discarding support drafts`, await evaluate(f, `document.querySelector('#handoff-menu').hidden&&document.querySelector('#escalation-form').hidden&&document.querySelector('#escalate-email').value==='visitor@example.org'&&document.querySelector('#escalate-note').value==='Unsent support note'&&document.querySelector('#escalate-consent').checked`));
++    await click(f, '#escalate-toggle', h);
++    await click(f, '#handoff-email', h);
++  }
++  const closeInputs = await evaluate(f, `__inputs.filter(e=>e.id==='chat-close')`);
++  report.trustedInputs.push({ action: 'header-close-pointer-enter-space', events: closeInputs });
++  check('Close button received three browser-trusted clicks', closeInputs.filter((event) => event.type === 'click' && event.trusted).length === 3);
++  await click(h, '.assistant-launcher');
++  // Launcher has focus after the real pointer click; reopen then Escape there.
++  await click(h, '.assistant-launcher');
+   await key('Escape', 'Escape', 27);
+   check('Trusted host launcher Escape closes and keeps focus', await evaluate(h, `document.querySelector('iframe').hidden&&document.activeElement===document.querySelector('.assistant-launcher')&&document.querySelector('.assistant-launcher').getAttribute('aria-expanded')==='false'`));
+-  check('Escape does not submit questions or escalation', posts().length === priorPosts && !report.requests.some((request) => request.url.endsWith('/escalation')));
++  check('Close and Escape do not submit questions or escalation', posts().length === priorPosts + 1 && !report.requests.some((request) => request.url.endsWith('/escalation')));
+   check('All observed control inputs are browser-trusted', report.trustedInputs.every((input) => input.events.length && input.events.every((event) => event.trusted)));
+   check('No browser JavaScript exceptions', !report.exception);
+ } catch (error) {
+--- initial/web/tests/embedding.contract.test.mjs
++++ final/web/tests/embedding.contract.test.mjs
+@@ -218,14 +218,14 @@
+   assert.equal(walk(fixture.document.body).filter((node) => node.tagName === 'IFRAME').length, 1);
+ });
+ 
+-test('handoff menu is additive markup: By email available, By WhatsApp disabled, no phone field', async () => {
++test('handoff menu is additive markup: Request via email available, Request via WhatsApp disabled, no phone field', async () => {
+   const html = await readFile(new URL('../assets/widget.html', import.meta.url), 'utf8');
+   // The menu and email form are in the scrollable pane, never nested inside the pinned chat form.
+   assert.match(html, /<section class="escalation" aria-label="Request human support">[\s\S]*?<\/section>[\s\S]*?<\/div>\s*<form id="message-form"/u);
+   assert.match(html, /<button id="escalate-toggle" type="button" disabled aria-expanded="false" aria-controls="handoff-menu">Request human support<\/button>/u);
+   assert.match(html, /<div id="handoff-menu" class="handoff-menu" role="group" aria-label="Ways to request human support" hidden>/u);
+-  assert.match(html, /<button id="handoff-email" type="button" aria-expanded="false" aria-controls="escalation-form" aria-pressed="false">By email<\/button>/u);
+-  assert.match(html, /<button id="handoff-whatsapp" type="button" disabled aria-describedby="whatsapp-reason" aria-pressed="false">By WhatsApp<\/button>/u);
++  assert.match(html, /<button id="handoff-email" type="button" aria-expanded="false" aria-controls="escalation-form" aria-pressed="false">Request via email<\/button>/u);
++  assert.match(html, /<button id="handoff-whatsapp" type="button" disabled aria-describedby="whatsapp-reason" aria-pressed="false">Request via WhatsApp<\/button>/u);
+   assert.match(html, /<p id="whatsapp-reason">Unavailable: this support service has not enabled WhatsApp\.<\/p>/u);
+   assert.match(html, /<form id="escalation-form" aria-label="Request human support by email" hidden>/u);
+   assert.match(html, /<label for="escalate-email">Your email<\/label>/u);
+@@ -263,6 +263,9 @@
+   assert.match(core, /handoffOpen = !handoffOpen;/u);
+   assert.doesNotMatch(core, /handoffOpen\s*=\s*true/u);
+   assert.match(core, /ui\['handoff-whatsapp'\]\.setAttribute\('aria-pressed', 'false'\)/u);
++  // The header button and Escape share the initialized/non-stopped close path.
++  assert.match(core, /ui\['chat-close'\]\.addEventListener\('click', closeChat\)/u);
++  assert.match(core, /function closeChat\(\) \{\s*if \(stopped \|\| !initialized\) return;/u);
+   // Escape is the only key requesting host close, including with this disclosure open.
+   assert.match(core, /if \(event\.key !== 'Escape' \|\| stopped \|\| !initialized\) return;/u);
+   assert.match(core, /platform\.parent\.postMessage\(\{ type: 'assistant:close', version: 1 \}, parent\)/u);
+@@ -271,4 +274,5 @@
+   // it, so the question and Send controls remain visible on a small screen.
+   const html = await readFile(new URL('../assets/widget.html', import.meta.url), 'utf8');
+   assert.match(html, /<div class="chat-content"[^>]*>[\s\S]*?<section class="escalation"[\s\S]*?<\/div>\s*<form id="message-form"/u);
+-});
++  assert.match(html, /<header class="chat-header">[\s\S]*?<button id="chat-close" type="button" class="chat-close" aria-label="Close chat">×<\/button>\s*<\/header>/u);
++});
+--- initial/web/tests/harness.mjs
++++ final/web/tests/harness.mjs
+@@ -36,9 +36,9 @@
+ }
+ export const walk = (element) => [element, ...element.children.flatMap(walk)];
+ export function documentFixture() {
+-  const ids = ['status', 'error', 'retry', 'older', 'messages', 'question', 'send', 'transmission', 'message-form',
++  const ids = ['status', 'error', 'retry', 'older', 'messages', 'question', 'send', 'transmission', 'message-form', 'chat-close',
+     'escalate-toggle', 'handoff-menu', 'handoff-email', 'handoff-whatsapp', 'escalation-form', 'escalate-email', 'escalate-note', 'escalate-consent', 'escalate-error', 'escalate-outcome', 'escalate-send'];
+-  const tags = { form: 'form', 'escalate-toggle': 'button', 'handoff-email': 'button', 'handoff-whatsapp': 'button', 'escalate-send': 'button', 'escalate-email': 'input', 'escalate-consent': 'input', 'escalate-note': 'textarea', 'escalate-error': 'p', 'escalate-outcome': 'p' };
++  const tags = { form: 'form', 'chat-close': 'button', 'escalate-toggle': 'button', 'handoff-email': 'button', 'handoff-whatsapp': 'button', 'escalate-send': 'button', 'escalate-email': 'input', 'escalate-consent': 'input', 'escalate-note': 'textarea', 'escalate-error': 'p', 'escalate-outcome': 'p' };
+   const elements = Object.fromEntries(ids.map((id) => [id, new Element(tags[id] ?? 'div')]));
+   elements.retry.hidden = true;
+   elements.older.hidden = true;
+--- initial/web/tests/widget.test.mjs
++++ final/web/tests/widget.test.mjs
+@@ -369,6 +369,43 @@
+   assert.equal(fixture.requests.length, 2);
+ });
+ 
++test('header close click uses exact initialized close message and preserves transcript and drafts', async () => {
++  const fixture = widgetFixture([json(creation, 201), json({ messages: turn().messages, next_before: null })]);
++  fixture.ui['chat-close'].dispatch('click');
++  assert.equal(fixture.sent.some(({ data }) => data.type === 'assistant:close'), false);
++  fixture.init(); await settle();
++  fixture.ui.question.value = 'Unsent question';
++  fixture.ui['escalate-toggle'].dispatch('click');
++  fixture.ui['handoff-email'].dispatch('click');
++  fixture.ui['escalate-email'].value = 'draft@example.org';
++  fixture.ui['escalate-note'].value = 'Unsent note';
++  fixture.ui['escalate-consent'].checked = true;
++  const transcript = fixture.ui.messages.textContent;
++  fixture.ui['chat-close'].dispatch('click');
++  assert.deepEqual(fixture.sent.at(-1), { data: { type: 'assistant:close', version: 1 }, origin: 'https://host.example' });
++  assert.equal(fixture.sent.filter(({ data }) => data.type === 'assistant:close').length, 1);
++  assert.equal(fixture.ui['handoff-menu'].hidden, true);
++  assert.equal(fixture.ui['escalation-form'].hidden, true);
++  assert.equal(fixture.ui.messages.textContent, transcript);
++  assert.equal(fixture.ui.question.value, 'Unsent question');
++  assert.equal(fixture.ui['escalate-email'].value, 'draft@example.org');
++  assert.equal(fixture.ui['escalate-note'].value, 'Unsent note');
++  assert.equal(fixture.ui['escalate-consent'].checked, true);
++  assert.equal(fixture.requests.length, 2);
++});
++
++test('both close triggers are inert after terminal failure or pagehide', async () => {
++  for (const stop of ['terminal', 'pagehide']) {
++    const fixture = widgetFixture(stop === 'terminal' ? [fail('unauthorized', 401)] : undefined);
++    fixture.init(); await settle();
++    if (stop === 'pagehide') fixture.emit('pagehide', {});
++    const sent = fixture.sent.length;
++    fixture.ui['chat-close'].dispatch('click');
++    fixture.emit('keydown', { key: 'Escape', preventDefault() { assert.fail('stopped key must be ignored'); } });
++    assert.equal(fixture.sent.length, sent);
++  }
++});
++
+ test('bounded property sweep: arbitrary malformed boundary values never fetch or crash', async () => {
+   // Deterministic regression/property corpus; no claim of a browser or native fuzzer.
+   let seed = 14641;
+--- initial/web/README.md
++++ final/web/README.md
+@@ -30,10 +30,10 @@
+ 
+ Once a conversation exists, an explicit **Request human support** affordance appears in the conversation pane; it is never opened by a provider failure or any other server event — the visitor must click it. It toggles a compact, keyboard-accessible menu (a labelled group, `aria-expanded`, Escape/outside-click close) with two channels:
+ 
+-- **By email** — available; selects the channel (`aria-pressed`) and reveals the consent-required email form.
+-- **By WhatsApp** — visibly unavailable and `disabled`, labelled "Unavailable: this support service has not enabled WhatsApp." It is never an operational channel: no phone number is requested and no message is implied.
++- **Request via email** — available; selects the channel (`aria-pressed`) and reveals the consent-required email form.
++- **Request via WhatsApp** — visibly unavailable and `disabled`, labelled "Unavailable: this support service has not enabled WhatsApp." It is never an operational channel: no phone number is requested and no message is implied.
+ 
+-Escape and an outside click both dismiss the whole handoff disclosure and return focus to the trigger; no other key closes it, so a typed letter never cancels a request in progress. Closing the disclosure hides the email form without discarding what the visitor typed, so reopening it restores the same details. The panel lives in the scrollable conversation pane, never in the pinned composer, so the question and **Send question** controls stay visible at 360×640.
++The header's **Close chat** button (44×44 CSS-pixel pointer target with visible keyboard focus, native Enter/Space activation) and **Escape** inside the initialized, active iframe close the whole widget window, including from the email form. Both reuse exactly `{type:"assistant:close",version:1}` at the validated parent origin; neither sends before initialization or after stopping. The host hides, never reloads, the iframe and focuses its launcher. Reopening preserves the conversation, unsent question and email/note/consent drafts, with the handoff disclosure closed. An outside click only dismisses the handoff disclosure; it does not close the widget window. No other key closes it, so a typed letter never cancels a request in progress. The panel lives in the scrollable conversation pane, never in the pinned composer, so the question and **Send question** controls stay visible at 360×640.
+ 
+ The email form contains:
+ 
+@@ -94,4 +94,4 @@
+ 
+ After backend integration, use `make run`, open `http://127.0.0.1:8080/widget/sample-host.html`, and open the launcher. No provider key is required to inspect unavailable/clarification behavior. Do not use real sensitive questions. A **separate-origin** browser test should serve a small host on another loopback port with the script above pointing to `http://127.0.0.1:8080` and explicitly add that host origin to `WIDGET_PARENT_ORIGINS`. Verify actual module/CSP loading, keyboard/focus behavior, spoof rejection and private iframe API requests with Chromium before claiming browser integration. No such browser proof is implied by Node checks.
+ 
+-For opt-in visual review without live credentials, build a local binary and run `node web/tests/widget-visual.browser.mjs /absolute/path/to/assistant /absolute/fresh/evidence-dir`. This starts a separate-origin host with deliberately conflicting CSS variables, a local SQLite backend and offline Chromium. It checks the launcher, desktop/360×640 mobile/dark/180×320 compact viewport geometry after readiness, white header/conversation/disclosure/composer and light controls even under an emulated dark browser preference, the actual sample host under dark preference, the independently scrollable long transcript, unbroken text, consent gate, real chat clarification and the recorded-not-sent support outcome. The handoff menu is driven with real mouse and key input: it opens with `aria-expanded`, keeps every channel unselected until the visitor chooses one, ignores a click on the disabled WhatsApp channel, closes on Escape and on an outside click, reopens after a chat interaction with the typed details intact, and never pushes the pinned composer out of view. Ready, synthetic long-history and unfilled consent-error screenshots contain no visitor input; keep the browser profile/database private. The 180×320 viewport approximates 200% zoom of a 360×640 CSS viewport, not a browser zoom-setting test; other host stylesheets are not exhaustively tested.
++For opt-in visual review without live credentials, build a local binary and run `node web/tests/widget-visual.browser.mjs /absolute/path/to/assistant /absolute/fresh/evidence-dir`. This starts a separate-origin host with deliberately conflicting CSS variables, a local SQLite backend and offline Chromium. It checks the launcher, desktop/360×640 mobile/dark/180×320 compact viewport geometry after readiness, white header/conversation/disclosure/composer and light controls even under an emulated dark browser preference, the actual sample host under dark preference, the independently scrollable long transcript, unbroken text, consent gate, real chat clarification and the recorded-not-sent support outcome. The handoff menu is driven with real mouse and key input: it opens with `aria-expanded`, keeps every channel unselected until the visitor chooses one, ignores a click on the disabled WhatsApp channel, closes the window on Escape (restoring launcher focus) and dismisses the disclosure on an outside click, reopens after a chat interaction with the typed details intact, and never pushes the pinned composer out of view. Ready, synthetic long-history and unfilled consent-error screenshots contain no visitor input; keep the browser profile/database private. The 180×320 viewport approximates 200% zoom of a 360×640 CSS viewport, not a browser zoom-setting test; other host stylesheets are not exhaustively tested.
+--- initial/web/assets/widget-core.mjs
++++ final/web/assets/widget-core.mjs
+@@ -9,7 +9,7 @@
+ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 } = {}) {
+   const { document } = platform;
+   const element = (id) => document.getElementById(id);
+-  const ui = Object.fromEntries(['status', 'error', 'retry', 'older', 'messages', 'question', 'send', 'transmission', 'message-form',
++  const ui = Object.fromEntries(['status', 'error', 'retry', 'older', 'messages', 'question', 'send', 'transmission', 'message-form', 'chat-close',
+     'escalate-toggle', 'handoff-menu', 'handoff-email', 'handoff-whatsapp', 'escalation-form', 'escalate-email', 'escalate-note', 'escalate-consent', 'escalate-error', 'escalate-outcome', 'escalate-send']
+     .map((id) => [id, element(id)]));
+   const origin = platform.location.origin;
+@@ -30,7 +30,7 @@
+   // history or disclosures. Session memory of stored tickets only marks a
+   // replayed response; the server decides what is stored or replayed.
+   // The handoff menu is a separate, visitor-opened disclosure: the selected
+-  // channel is By email (which reveals the consent form) while By WhatsApp is
++  // channel is Request via email (which reveals the consent form) while Request via WhatsApp is
+   // permanently unavailable. No server event ever opens either.
+   let handoffOpen = false;
+   let escalateOpen = false;
+@@ -62,8 +62,8 @@
+     ui.older.disabled = busy || pending !== null || stopped;
+     // Handoff affordance: visible only once a conversation exists, closed
+     // again when the chat is terminal. Chat controls above stay untouched.
+-    // The menu is the outer disclosure; By email is the only available
+-    // channel and toggles the consent form inside it. By WhatsApp stays
++    // The menu is the outer disclosure; Request via email is the only available
++    // channel and toggles the consent form inside it. Request via WhatsApp stays
+     // disabled, so its channel state is never exposed as selected.
+     ui['escalate-toggle'].hidden = !conversation || stopped;
+     ui['escalate-toggle'].disabled = false;
+@@ -365,8 +365,8 @@
+   });
+   // Handoff: the visitor opts in deliberately; no provider failure or other
+   // server state ever opens the menu. The outer toggle only reveals the
+-  // channel menu. By email is the only available channel and opens the
+-  // consent form; By WhatsApp is permanently disabled and collects nothing.
++  // channel menu. Request via email is the only available channel and opens the
++  // consent form; Request via WhatsApp is permanently disabled and collects nothing.
+   ui['escalate-toggle'].addEventListener('click', () => {
+     handoffOpen = !handoffOpen;
+     if (!handoffOpen) escalateOpen = false;
+@@ -394,15 +394,20 @@
+     event.preventDefault();
+     submitEscalation();
+   });
+-  // Escape closes the entire host window, even when the handoff form is open.
++  // Both controls close the host window without changing chat or form drafts.
+   // The host returns focus to its launcher; nothing in this iframe is reloaded.
++  function closeChat() {
++    if (stopped || !initialized) return;
++    handoffOpen = false;
++    escalateOpen = false;
++    controls();
++    platform.parent.postMessage({ type: 'assistant:close', version: 1 }, parent);
++  }
++  ui['chat-close'].addEventListener('click', closeChat);
+   platform.addEventListener('keydown', (event) => {
+     if (event.key !== 'Escape' || stopped || !initialized) return;
+     event.preventDefault();
+-    handoffOpen = false;
+-    escalateOpen = false;
+-    controls();
+-    platform.parent.postMessage({ type: 'assistant:close', version: 1 }, parent);
++    closeChat();
+   });
+   // The stored recorded_at is already contract-validated; render it in a
+   // visitor-sane UTC form with the server's own truthful sentence verbatim.
+--- initial/web/assets/widget.css
++++ final/web/assets/widget.css
+@@ -437,12 +437,33 @@
+   overflow: hidden;
+ }
+ .widget-page .chat-header {
++  display: flex;
++  align-items: flex-start;
++  justify-content: space-between;
++  gap: var(--space-2);
+   flex: none;
+   padding: 10px 18px;
+   background: var(--card);
+   color: var(--fg);
+   border-bottom: 1px solid var(--border);
+ }
++.widget-page .chat-heading { min-width: 0; overflow-wrap: anywhere; }
++.widget-page .chat-close {
++  flex: 0 0 44px;
++  width: 44px;
++  min-height: 44px;
++  padding: 0;
++  border-color: transparent;
++  border-radius: var(--radius-sm);
++  background: transparent;
++  color: var(--fg);
++  font-size: 1.75rem;
++  font-weight: 400;
++  line-height: 1;
++  touch-action: manipulation;
++}
++.widget-page .chat-close:not(:disabled):hover { background: var(--card-hover); border-color: var(--border); }
++.widget-page .chat-close:not(:disabled):active { background: var(--accent-muted); transform: none; }
+ .widget-page .chat-header .eyebrow { margin: 0; color: var(--muted); }
+ .widget-page .chat-header h1 { margin: 1px 0; font-size: 1.15rem; letter-spacing: -.02em; }
+ .widget-page .chat-header p:last-child { margin: 0; font-size: .82rem; }

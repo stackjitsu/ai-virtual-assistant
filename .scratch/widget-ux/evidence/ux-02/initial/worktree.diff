@@ -1,0 +1,450 @@
+diff --git i/.harness/blockers.md w/.harness/blockers.md
+index f4a5c12..8e6cc54 100644
+--- i/.harness/blockers.md
++++ w/.harness/blockers.md
+@@ -4,6 +4,9 @@ Record each blocker with its impact, owner, and next action. Remove it when reso
+ 
+ | Blocker | Impact | Owner | Next action | Status |
+ |---|---|---|---|---|
++| Rating integration awaiting user decision | Accepted recovered-rating test batch is isolated, not on main feature branch | user / coordinator | Decide push and integration of local validation/rating-acceptance at eface12; preserve uncommitted main-tree Escape/UI and separately validate combined behavior | pending decision |
++| CI browser subprocess hang and ownership drift | AUTO-01 remains pending; crashing Chromium can exhaust CI timeout | foundation repair worker (assistant-ci-repair) | Bound/clean process group with crash/hang regressions and synchronize context map; independent re-review required. Historical CI ledger still has evidence errors; hosted GitHub execution separately unauthorized | active acceptance blocker |
++| ADMIN-01 draft awaiting security/policy review | No admin runtime implementation authorized at this gate | coordinator / user with foundation and backend | Review all-staff visibility, auth/session policy, custodian/recovery, retention, consent caveat and transaction/tooling approach; rerun historically quota-blocked checks | design gate |
+ | Live OpenAI/Turso setup not supplied or authorized | Cannot claim real AI answers or hosted database integration | User / orchestrator | Review local slice first; separately authorize credentials and live smoke tests without sharing secrets in chat | deferred |
+ | No outbound email or staffed operator path | Saved escalation tickets cannot reach a human; public human-support claim is untrue | User names operator/inbox; backend + foundation design durable mail and restricted review | Choose real mailbox and transport or explicitly remove the human-support promise; implement/test durable delivery and failure recovery | blocking release |
+ | Production content, hosting, privacy and operating policy undecided | Demo data, local credentials/DB/loopback HTTP, indefinite records and local rate limits are not a public-service release | User / orchestrator with backend, foundation and widget owners | Agree on approved source content, provider/host/database, retention policy, spend/traffic limits and incident owner; stage and validate | blocking release |
+diff --git i/.harness/goal.md w/.harness/goal.md
+index 9fa2f30..f831c91 100644
+--- i/.harness/goal.md
++++ w/.harness/goal.md
+@@ -1,6 +1,10 @@
+ # Pinned Goal
+ 
+-Current integration goal (2026-10-21): implement guest conversation rating (1–5 with optional comment and revision) on `feat/conversation-rating`. DISC-01 verified existing disclosures and identified one wording precision gap assigned to RATE-03; RATE-01 contract is accepted; RATE-02/03 are delegated, then RATE-04 validation. Staff/admin, live email and WhatsApp remain deferred; never claim production readiness. Next decision: review backend/widget evidence and merge order.
++Immediate user-directed step: finish UX-02 close button/labels while preserving current main-tree widget changes, run technical validation and provide a verified local preview. User will perform visual acceptance. Worker `assistant-widget-finish` owns main-tree web paths; no UI commit or integration until user review. Rating remains accepted/pushed separately; CI re-review remains pending.
++
++Current coordination goal (resumed 2026-11-02): finish evidence-backed acceptance of recovered guest conversation rating and independently review CI-01 before AUTO-01. RATE-02 storage-test and RATE-03 trusted-input/actual-backend browser follow-ups are delivered but not yet accepted. RATE-04 independent acceptance passed on recovered rating plus the two test patches, including all gates/full fuzz and real browser regressions. Accepted test/evidence batch is committed locally as eface12 on validation/rating-acceptance in assistant-rating-acceptance. User approved proceeding and validation/rating-acceptance is now pushed; remote head verified at eface12. No merge performed: checked-out feat/conversation-rating has overlapping uncommitted work, including incomplete UX-02; RATE-02/03 feature integration remains separate and must preserve that work. CI-01 independent review found a reproducible browser-adapter hang and ownership-documentation drift; bounded foundation repair is dispatched in assistant-ci. Workers must return handoffs for coordinator review; running sessions are not completion evidence. Preserve main-tree Escape/UI changes. No commits, pushes, merges, deployment or remote writes are authorized.
++
++Staff dashboard contract/design is approved work, not deferred: ADMIN-01 has delivered a draft handoff in `/home/me/Documents/agent-worktrees/assistant-admin/.scratch/admin-dashboard/handoff.md`; review and security/policy decisions remain before any implementation. No staff runtime exists. Live email and WhatsApp remain deferred; public release remains no-go. Next decision: review bounded rating/CI follow-up handoffs, then independently validate an identified integrated revision. AUTO-01 waits for CI acceptance. Historical slice/preview details below are not claims that old processes or URLs are currently running.
+ 
+ Status: slices 1–2 and the provider endpoint seam are committed and pushed (slice-2 896ed7a/8915abc, seam e4bdf39/190ffe4); live composition was verified once locally on 2026-10-20; Milestone 3 and 4 report figures are complete; nothing is deployed. UI-01 local visual pass remains uncommitted. User selected a production-ready visitor-support release; PROD-01 audit completed with a public-release no-go.
+ 
+diff --git i/.harness/plan.md w/.harness/plan.md
+index 2cc2d0d..0d2fa73 100644
+--- i/.harness/plan.md
++++ w/.harness/plan.md
+@@ -1,5 +1,61 @@
+ # Active Plan
+ 
++## Current UI completion — user visual acceptance
++
++User requested finishing the UI and will validate it personally. UX-02 dispatched to `assistant-widget-finish` in the main feature worktree: sole web writer, preserve existing edits, complete visible close wiring/styles/tests and handoff labels; no rating import, commit, push, merge or deployment. Brief `.scratch/widget-ux/issues/08-close-button-and-labels.md` now includes explicit evidence scope and preview authorization. Worker must pass technical gates/trusted-browser checks and leave a credential-free loopback preview at unused port 18102 (or documented alternative) in `assistant-widget-preview`. URL is not claimed running until verified. Handoff `.scratch/widget-ux/handoff-ux-02.md`. User visual approval gates next UI commit/integration. Other workstreams remain separate; rating branch already pushed, CI repair still needs independent re-review.
++
++## Rating branch pushed; merge held — 2026-11-02
++
++User green-lit proceeding. Pushed `validation/rating-acceptance` and verified remote head equals `eface12be8e508a31efa6a8d1ceb7bd2daf07be5`; upstream tracking configured. Remote feature branch `feat/conversation-rating` does not exist; remote main currently points to 40773a3e09e83c584baadc6dae18a3482991ac67 (not inspected/accepted for integration). Local feature branch is an ancestor of the rating branch (0 local-only / 11 rating-only commits), but its checked-out worktree has overlapping uncommitted harness/UI edits including incomplete UX-02. No stash, reset, overwrite, feature-branch push or merge performed. Next: obtain explicit scope for checkpointing/finishing main-tree work before feature integration; do not merge into remote main blindly. CI remains pending independent re-review.
++
++## Earlier local rating acceptance committed — 2026-11-02
++
++Reviewed final RATE-04 handoff and accepted its bounded recovered-rating scope. Created local branch `validation/rating-acceptance` in assistant-rating-acceptance and committed `eface12` (`Strengthen rating durability and trusted-browser acceptance`). Commit includes only the two reviewed test files plus selected durable acceptance handoff/logs/JSON results (no executable, SQLite database, browser profile or screenshots). All source checks were run before this evidence-only commit; no test source changed after validation. RATE-04 independent acceptance is completed; RATE-02/03 integration into main feature tree remains pending separately. Main feature branch and its existing application/UI edits were untouched. No push or merge performed. Low-severity runner-profile cleanup is not an acceptance blocker. CI repair remains unaccepted until independent re-review. Next user decision: whether/how to push and integrate the local rating branch; do not assume permission.
++
++## Earlier local commit permission — 2026-11-02
++
++User authorized committing only if safe; push and merge are separate future decisions. Independent rating execution logs show all common gates/full fuzz passed (seven mutation campaigns), repeated rating race tests passed ten times, browser rating 52/52, sandbox-send 22/22, visual 113/113. Validator reports no acceptance blocker and is finalizing handoff; review before committing only the test/evidence batch on isolated local branch `validation/rating-acceptance`. CI remains unaccepted pending repair/re-review. Main-tree UX-02 is incomplete: header close-button markup exists but click wiring/styles/tests remain pending, so do not sweep main-tree changes into a commit. Preserve all uncommitted work.
++
++## Earlier acceptance/repair dispatch — 2026-11-02
++
++Reviewed the backend test diff and complete browser regression plus all three handoffs. RATE-02/03 workers delivered test-only changes; reported passes are not independent acceptance. Dispatched `assistant-rate-acceptance` in new isolated `/home/me/Documents/agent-worktrees/assistant-rating-acceptance` at 1253287: mechanically assemble only supplied test patches, independently review/rerun common gates, full fuzz, trusted-input rating plus sandbox-send/visual regressions. Backend patch SHA256 `98bc40d3700374850f3c8bdc29a2122a418d2c37c2bad6c2fd9625912adb1ad6`; browser patch SHA256 `dab81ae7b84b3517a48eadc3ed8fa4278df50eb008a634ddb910086ae4b3efbc`. Main-tree Escape work is excluded and not implicitly accepted. Brief `07-rating-independent-acceptance.md` under `.scratch/automation/issues/`.
++
++CI review recommended hold: P2 adapter can hang when Chromium dies by signal; P3 workflow ownership missing from context map. Dispatched `assistant-ci-repair` in existing assistant-ci worktree with allowed foundation adapter/tests/docs paths only, including context map; no web changes. Brief `06-ci-failure-containment.md`. Must demonstrate timeout/process-group cleanup without browser sandbox bypass; independent re-review follows.
++
++Central ledger repair restored genuine DISC-01/RATE-01 evidence pointers from existing issue handoffs; RATE-02/03 remain claimed pending acceptance. CI worktree's historical ledger remains unchanged and can still fail static; no fabricated evidence or schema weakening. Next: review acceptance and CI repair handoffs; do not start AUTO-01 or admin runtime yet. No commit/push/merge/deploy authorized.
++
++## Earlier resume — 2026-11-02
++
++User authorized proceeding with the status report's next work. Started three interactive tmux workers using explicit openai/gpt-6.1-sol; each has executed its first brief-read tool call (not merely opened a session):
++
++| Task | Session | Worktree / allowed scope | Handoff |
++|---|---|---|---|
++| RATE-02 follow-up | assistant-rate-backend | assistant-rating-review at 1253287; backend tests only | `.scratch/automation/backend-followup/handoff.md` |
++| RATE-03 follow-up | assistant-rate-browser | new isolated assistant-rating-browser at 1253287; rating browser/tests only | `.scratch/automation/browser-followup/handoff.md` |
++| CI-01 independent review | assistant-ci-review | assistant-ci at 1253287 plus existing CI diff; no implementation writes | `.scratch/automation/ci-review/handoff.md` |
++
++Briefs are `.scratch/automation/issues/03-rating-backend-followup.md`, `04-rating-browser-followup.md`, and `05-ci-independent-review.md`. Each worker has a two-repair limit and must stop at handoff/blocker. Main-tree Escape/UI changes remain untouched. No commit/push/merge/deploy or remote-write permission granted. No polling/heartbeat daemon added.
++
++Recovered ADMIN-01 handoff exists; draft contract/design delivered, not accepted. Static/unit/contract attempts were blocked by historical disk-quota errors; current filesystem check shows 13GB available on home and 3.8GB on /tmp, which does not itself establish quota remediation or passing checks. Review security/policy decisions before any admin implementation dispatch.
++
++Next: inspect completed follow-up handoffs, assign any demonstrated defects to owners, and perform independent RATE-04 validation only on the exact combined reviewed tree. CI must retain honest ledger-schema failures until real evidence/status corrections exist. AUTO-01 remains pending CI acceptance. Goal now acknowledges approved admin design scope; older plan/preview sections below are historical.
++
++## Staff dashboard — approved new feature
++
++User approved separate staff login and ticket management dashboard and requested available UI/UX skills. ADMIN-01 contract/design worker dispatched on feat/admin-contract at `/home/me/Documents/agent-worktrees/assistant-admin`, base 1253287. Brief: `.scratch/admin-dashboard/issues/01-contract-design.md`. Apply UI/UX Pro Max, Design Taste app-screen workflow, and Tailwind v4 tokens. Contract gate precedes backend/UI implementation. Ticket lifecycle, priority, assignment, internal notes and audit included; outbound replies and public signup excluded. CI/rating blockers remain open; no main-tree application changes or commit/push/deploy authorized by this dispatch.
++
++## Approved automation — current decision
++
++Latest resume: tmux server/sessions are absent, but both worker handoffs survived and were copied to `.scratch/automation/handoffs/`. CI-01 implementation remains uncommitted in its isolated worktree; local gates passed except new full task-schema validation, which correctly rejects four completed rating/disclosure records with empty evidence on base 1253287. GitHub execution and independent CI patch review remain outstanding. Rating recovery passed existing local gates and browser scripts, but acceptance is BLOCKED: rating browser tests use synthetic input against a mock API; storage restart/concurrent-write/uncertain-commit assertions need strengthening. Full fuzz not independently rerun. Next dispatch: bounded widget browser and backend test follow-ups, plus independent CI review; do not reimplement rating or declare completion. AUTO-01 remains pending CI acceptance. Original Escape/UI work remains untouched.
++
++User approved CI-01 and AUTO-01. CI-01 foundation implementation dispatched in isolated worktree `/home/me/Documents/agent-worktrees/assistant-ci` on `tooling/ci-autonomy`, based on recovered rating integration `1253287`. Brief: `.scratch/automation/issues/01-ci.md`. No commit/push/merge/deploy authorized by this dispatch. Independent validation is required before acceptance. Startup correction: both initial worker calls failed before implementation because default gpt-5.5 was rejected by the account. Explicit openai/gpt-5.4 was also rejected. Restarted the two owned tmux workers with openai/gpt-6-astra, matching the current coordinator's PI_MODEL/PI_PROVIDER; success must be confirmed from tool activity/handoffs, not session existence. Rating recovery brief: `.scratch/automation/issues/02-rating-recovery.md`; isolated review tree: `/home/me/Documents/agent-worktrees/assistant-rating-review`.
++
++Reconciliation: rating backend/widget commits already exist, and `rating-integration-clean` ends at `1253287`; previous temporary worktrees are absent/prunable and no matching tmux workers remain. Old claimed task statuses below are historical, not proof of running sessions. Preserve the main tree's uncommitted Escape/UI work. Next: review CI handoff, independently validate recovered rating integration, then implement bounded AUTO-01 runtime/skills with two-repair limit and explicit permission gates. No autonomous production work.
++
++## Widget Escape close — completed locally
++
++WIDGET-ESC-01 and WIDGET-ESC-02 are complete: Escape inside the iframe (including the handoff form) or on the focused launcher closes the window, focuses the launcher, and leaves the guest chat/draft intact for reopening. Exact-origin/source message guards and embedding contract were reviewed. Widget owner passed format, lint, static, unit, contract, fuzz-smoke and trusted Chromium checks (31/31); foundation owner passed format, lint, static, unit, contract. Current isolated preview: `http://127.0.0.1:18101/widget/sample-host.html` (local SQLite, no external AI credentials). Existing 18100 preview was left untouched. No commit/push or deployment. Next decision: user review of Escape behavior; rating slice below remains independent.
++
+ ## Rating slice — integration branch feat/conversation-rating
+ 
+ | Step | Owner | State | Depends on |
+diff --git i/.harness/tasks.json w/.harness/tasks.json
+index 4256065..e6489bd 100644
+--- i/.harness/tasks.json
++++ w/.harness/tasks.json
+@@ -2,6 +2,18 @@
+   "$schema": "./tasks.schema.json",
+   "schemaVersion": 1,
+   "tasks": [
++    {
++      "id": "UX-02", "title": "Finish visible close button and handoff labels", "status": "claimed", "goal": "Complete existing widget UI changes and provide a tested local preview for user visual acceptance.", "acceptanceCriteria": ["Close control works via pointer and keyboard, preserving chat/drafts and launcher focus", "Updated handoff labels, white responsive layout and mobile composer remain correct", "Technical gates, trusted browser evidence and live loopback preview supplied; user visual approval remains separate"], "context": "chat-widget", "owner": "widget completion worker (assistant-widget-finish)", "allowedPaths": ["web/**", ".scratch/widget-ux/issues/08-close-button-and-labels.md", ".scratch/widget-ux/evidence/ux-02/**", ".scratch/widget-ux/handoff-ux-02.md"], "contractRefs": ["docs/contracts/chat.md", ".scratch/widget-ux/issues/08-close-button-and-labels.md"], "invariants": ["Preserve all pre-existing uncommitted widget work", "No backend, shared contracts, harness or other-worktree edits", "No commits, pushes, merges, deployment or live-service use; user validates UI"], "checks": ["format", "lint", "static", "unit", "contract"], "dependencies": ["WIDGET-ESC-01", "WIDGET-ESC-02"], "evidence": []
++    },
++    {
++      "id": "ADMIN-01", "title": "Staff dashboard contract and design", "status": "claimed", "goal": "Define secure staff ticket management and a separate accessible Tailwind v4 admin interface before implementation.", "acceptanceCriteria": ["Reviewed staff auth/API/migration/privacy contract", "Skill-informed ticket-first design and backend/UI/validation briefs"], "context": "project-foundation", "owner": "admin contract/design worker; draft handoff delivered, coordinator review pending", "allowedPaths": [".scratch/admin-dashboard/**", "docs/contracts/admin.md", "design-system/admin/**"], "contractRefs": [".scratch/admin-dashboard/issues/01-contract-design.md", "docs/contracts/backend.md", "docs/contracts/chat.md"], "invariants": ["No runtime changes at contract gate", "Staff auth separate from guest capability", "No commits, pushes, live services or other-worktree edits"], "checks": ["format", "lint", "static"], "dependencies": [], "evidence": []
++    },
++    {
++      "id": "CI-01", "title": "Deterministic PR validation", "status": "claimed", "goal": "Implement CI around real checks with browser and schema validation.", "acceptanceCriteria": ["Restricted deterministic CI with failure artifacts", "Local gates and independent review evidence"], "context": "project-foundation", "owner": "foundation CI repair worker (assistant-ci-repair); independent review found P2 hang and P3 ownership drift", "allowedPaths": [".github/workflows/**", "scripts/**", "Makefile", "docs/testing/project-checks.md", "harness.json", ".scratch/automation/**"], "contractRefs": [".scratch/automation/issues/01-ci.md", "docs/testing/testing-contract.md"], "invariants": ["No application changes, commits, pushes or deployment", "Preserve main working tree"], "checks": ["format", "lint", "static", "unit", "contract", "fuzz-smoke"], "dependencies": [], "evidence": []
++    },
++    {
++      "id": "AUTO-01", "title": "Bounded orchestration loop and skills", "status": "pending", "goal": "Add isolated workers, bounded repair and independent acceptance using the existing task ledger.", "acceptanceCriteria": ["Persistent coordinator with bounded repair and permission gates", "Resume, orchestrate, validate and repair skills", "Tests demonstrate limits and stale-evidence rejection"], "context": "coordination", "owner": "automation worker, pending dispatch", "allowedPaths": ["scripts/**", "skills/**", "docs/agents/**", ".scratch/automation/**"], "contractRefs": ["docs/agents/orchestration-runtime.md", "docs/agents/delegation-protocol.md"], "invariants": ["No external heartbeat or unbounded repair", "No automatic push, merge, deployment or remote data writes", "No production credentials"], "checks": ["format", "lint", "static", "unit", "contract"], "dependencies": ["CI-01"], "evidence": []
++    },
+     {
+       "id": "SETUP-01",
+       "title": "First-slice contracts and validation tooling",
+@@ -318,19 +330,25 @@
+       "evidence": ["Request human support opens an accessible channel menu only after a conversation exists; By email opens the existing consent form, By WhatsApp is disabled with a truthful unavailable reason and no phone field", "More information disclosure keeps server/provider and guest-history facts while the AI risk and sample-content warning stay visible; no origin, port or demo wording", "Worker evidence 113/113 visual and 22/22 send real-browser assertions; primary reran make format lint static unit contract: PASS (55 Node unit, 14 Node contract)", "Orchestrator reviewed screenshots, built local preview and served it on plain port 18100; HTTP 200 and served widget.html byte-match verified; 18099 closed; no commit/push"]
+     },
+     {
+-      "id": "DISC-01", "title": "Verify guest and sharing disclosures", "status": "completed", "goal": "Verify existing pre-send disclosures without changing runtime unless a gap is found.", "acceptanceCriteria": ["Guest reload and server-side history disclosed", "App-server and AI-provider sharing disclosed"], "context": "coordination", "owner": "independent disclosure validator", "allowedPaths": [".scratch/conversation-rating/issues/01-disclosures.md"], "contractRefs": [".scratch/conversation-rating/spec.md", "docs/contracts/chat.md"], "invariants": ["No runtime edits", "No live services"], "checks": ["contract"], "dependencies": [], "evidence": []
++      "id": "DISC-01", "title": "Verify guest and sharing disclosures", "status": "completed", "goal": "Verify existing pre-send disclosures without changing runtime unless a gap is found.", "acceptanceCriteria": ["Guest reload and server-side history disclosed", "App-server and AI-provider sharing disclosed"], "context": "coordination", "owner": "independent disclosure validator", "allowedPaths": [".scratch/conversation-rating/issues/01-disclosures.md"], "contractRefs": [".scratch/conversation-rating/spec.md", "docs/contracts/chat.md"], "invariants": ["No runtime edits", "No live services"], "checks": ["contract"], "dependencies": [], "evidence": ["Coordinator read .scratch/conversation-rating/issues/01-disclosures.md validation result: pre-send sharing/reload facts available inside More information, not expanded by default; wording precision gap explicitly delegated to RATE-03", "Historical validator reported make format lint static unit contract passing; no fresh test run is claimed by this ledger repair"]
+     },
+     {
+-      "id": "RATE-01", "title": "Additive conversation rating contract", "status": "completed", "goal": "Specify rating data and cross-context API behavior before implementation.", "acceptanceCriteria": ["Exact endpoint, validation, replay, revision, errors and migration invariants specified"], "context": "project-foundation", "owner": "contract worker", "allowedPaths": ["docs/contracts/**", "docs/adr/**", ".scratch/conversation-rating/issues/02-contract.md"], "contractRefs": [".scratch/conversation-rating/spec.md"], "invariants": ["No runtime changes", "No live services"], "checks": ["format", "lint", "static", "unit", "contract"], "dependencies": [], "evidence": []
++      "id": "RATE-01", "title": "Additive conversation rating contract", "status": "completed", "goal": "Specify rating data and cross-context API behavior before implementation.", "acceptanceCriteria": ["Exact endpoint, validation, replay, revision, errors and migration invariants specified"], "context": "project-foundation", "owner": "contract worker", "allowedPaths": ["docs/contracts/**", "docs/adr/**", ".scratch/conversation-rating/issues/02-contract.md"], "contractRefs": [".scratch/conversation-rating/spec.md"], "invariants": ["No runtime changes", "No live services"], "checks": ["format", "lint", "static", "unit", "contract"], "dependencies": [], "evidence": ["Accepted contract handoff .scratch/conversation-rating/issues/02-contract.md publishes additive rating endpoint and widget behavior in chat.md plus storage/migration obligations in backend.md; implementation is not asserted", "Contract acceptance recorded by existing commits c902913 and 8fb8e2a and active rating plan; coordinator restored evidence pointer, not a new validation claim"]
+     },
+     {
+-      "id": "RATE-02", "title": "Durable rating backend", "status": "claimed", "goal": "Store capability-authorized ratings atomically in both adapters.", "acceptanceCriteria": ["Replay and revision are safe", "Isolation, restart and no-turn paths tested"], "context": "chat-backend", "owner": "backend worker", "allowedPaths": ["cmd/**", "internal/**", "database/**", ".scratch/conversation-rating/issues/03-backend.md"], "contractRefs": ["docs/contracts/chat.md", ".scratch/conversation-rating/spec.md"], "invariants": ["No live services or secrets", "Unchanged chat and escalation behavior"], "checks": ["format", "lint", "static", "unit", "contract", "fuzz-smoke"], "dependencies": ["RATE-01"], "evidence": []
++      "id": "RATE-02", "title": "Durable rating backend", "status": "claimed", "goal": "Store capability-authorized ratings atomically in both adapters.", "acceptanceCriteria": ["Replay and revision are safe", "Isolation, restart and no-turn paths tested"], "context": "chat-backend", "owner": "rating backend follow-up worker (assistant-rate-backend)", "allowedPaths": ["internal/chat/*test.go", ".scratch/automation/backend-followup/**", ".scratch/automation/backend-followup-brief.md"], "contractRefs": ["docs/contracts/chat.md", ".scratch/conversation-rating/spec.md"], "invariants": ["No live services or secrets", "Unchanged chat and escalation behavior"], "checks": ["format", "lint", "static", "unit", "contract", "fuzz-smoke"], "dependencies": ["RATE-01"], "evidence": []
+     },
+     {
+-      "id": "RATE-03", "title": "Accessible guest rating widget", "status": "claimed", "goal": "Collect optional feedback after a completed turn without disturbing chat.", "acceptanceCriteria": ["Accessible rating and comment, replay and revision", "Browser and Node regression evidence"], "context": "chat-widget", "owner": "widget worker", "allowedPaths": ["web/**", ".scratch/conversation-rating/issues/04-widget.md"], "contractRefs": ["docs/contracts/chat.md", ".scratch/conversation-rating/spec.md"], "invariants": ["No new browser storage", "Preserve handoff and disclosures"], "checks": ["format", "lint", "static", "unit", "contract"], "dependencies": ["RATE-01"], "evidence": []
++      "id": "RATE-03", "title": "Accessible guest rating widget", "status": "claimed", "goal": "Collect optional feedback after a completed turn without disturbing chat.", "acceptanceCriteria": ["Accessible rating and comment, replay and revision", "Browser and Node regression evidence"], "context": "chat-widget", "owner": "rating browser follow-up worker (assistant-rate-browser)", "allowedPaths": ["web/tests/rating.browser.mjs", "web/tests/rating*.test.mjs", ".scratch/automation/browser-followup/**", ".scratch/automation/browser-followup-brief.md"], "contractRefs": ["docs/contracts/chat.md", ".scratch/conversation-rating/spec.md"], "invariants": ["No new browser storage", "Preserve handoff and disclosures"], "checks": ["format", "lint", "static", "unit", "contract"], "dependencies": ["RATE-01"], "evidence": []
+     },
+     {
+-      "id": "RATE-04", "title": "Independent rating verification", "status": "pending", "goal": "Verify full local rating flow and all regression gates.", "acceptanceCriteria": ["Real input browser tests and server isolation/restart", "Final gates and risk notes"], "context": "coordination", "owner": "independent validator", "allowedPaths": [".scratch/conversation-rating/issues/05-verification.md"], "contractRefs": ["docs/contracts/chat.md", ".scratch/conversation-rating/spec.md"], "invariants": ["No live provider/mail/database services", "No production readiness claim"], "checks": ["format", "lint", "static", "unit", "contract", "fuzz-smoke", "fuzz-full"], "dependencies": ["RATE-02", "RATE-03"], "evidence": []
++      "id": "RATE-04", "title": "Independent rating verification", "status": "completed", "goal": "Verify full local rating flow and all regression gates.", "acceptanceCriteria": ["Real input browser tests and server isolation/restart", "Final gates and risk notes"], "context": "coordination", "owner": "independent rating acceptance validator (assistant-rate-acceptance)", "allowedPaths": [".scratch/automation/rating-acceptance/**", ".scratch/automation/rating-acceptance-brief.md", "internal/chat/rating_test.go (mechanical supplied-patch assembly only)", "web/tests/rating.browser.mjs (mechanical supplied-patch assembly only)"], "contractRefs": ["docs/contracts/chat.md", ".scratch/conversation-rating/spec.md"], "invariants": ["No live provider/mail/database services", "No production readiness claim"], "checks": ["format", "lint", "static", "unit", "contract", "fuzz-smoke", "fuzz-full"], "dependencies": ["RATE-02", "RATE-03"], "evidence": ["Independent validator accepted recovered rating plus test follow-ups at base 1253287; exact tested source and durable evidence committed locally as eface12 on validation/rating-acceptance; not merged into the main working tree", "All common gates and full fuzz passed, seven mutation campaigns; eight rating race tests passed ten repetitions; actual-backend browser assertions rating 52/52, sandbox-send 22/22, widget visual 113/113", "Evidence .scratch/automation/rating-acceptance/handoff.md and logs/results live on validation/rating-acceptance; low-severity browser-profile retention follow-up remains; main-tree Escape/UI, CI and production readiness are excluded"]
++    },
++    {
++      "id": "WIDGET-ESC-01", "title": "Close widget with Escape", "status": "completed", "goal": "Close the visible chat window on Escape and return keyboard focus to the launcher.", "acceptanceCriteria": ["Escape in iframe or launcher closes host window", "Reopen preserves guest chat and drafts", "Strict-origin close message and browser keyboard regression"], "context": "chat-widget", "owner": "widget worker", "allowedPaths": ["web/assets/loader.js", "web/assets/widget-core.mjs", "web/tests/**", ".scratch/widget-escape/issues/01-close-window.md"], "contractRefs": ["docs/contracts/chat.md", ".scratch/widget-escape/issues/01-close-window.md"], "invariants": ["No API mutation or iframe reload on close", "Never pass guest secrets or chat text to host", "No production claim or commit/push"], "checks": ["format", "lint", "static", "unit", "contract", "fuzz-smoke"], "dependencies": ["UX-01G"], "evidence": ["Worker gates passed: make format lint static unit contract fuzz-smoke", "Trusted Chromium keyboard regression: 31/31, including open handoff form, launcher focus, preserved drafts and no POST on Escape", "Orchestrator reviewed widget diff and embedding guard tests; git diff --check passed"]
++    },
++    {
++      "id": "WIDGET-ESC-02", "title": "Document close control message", "status": "completed", "goal": "Publish the exact iframe-host close message and guard rules.", "acceptanceCriteria": ["Contract states exact versioned message, source/origin checks and focus/reuse behavior"], "context": "project-foundation", "owner": "contract-tooling worker", "allowedPaths": ["docs/contracts/chat.md", ".scratch/widget-escape/issues/02-embedding-contract.md"], "contractRefs": ["docs/contracts/chat.md", ".scratch/widget-escape/issues/02-embedding-contract.md"], "invariants": ["No unrelated contract change or runtime edits"], "checks": ["format", "lint", "static", "unit", "contract"], "dependencies": ["WIDGET-ESC-01"], "evidence": ["Foundation worker documented close message and guards in embedding contract; make format lint static unit contract passed"]
+     }
+   ]
+ }
+diff --git i/docs/contracts/chat.md w/docs/contracts/chat.md
+index 8b91442..8bcff01 100644
+--- i/docs/contracts/chat.md
++++ w/docs/contracts/chat.md
+@@ -63,6 +63,7 @@ Host integration example:
+ 
+ - Loader validates configured absolute origin (HTTPS, or loopback HTTP for development), no credentials/path/query/fragment; derive default from its own script URL, not parent URL. It mounts an accessible launcher and one iframe at `<assistant-origin>/widget/widget.html#parent_origin=<encoded location.origin>`. No context/capability in URL. Iframe provides actual chat controls, AI/disclosure label, loading, retry/error, clarification, source and history rendering; screenshots alone are not integration.
+ - Iframe sandbox: `allow-scripts allow-same-origin`, no top navigation, forms, downloads/popups. Loader sends only `{type:"assistant:init",version:1,context:{…}}` after receiving `{type:"assistant:ready",version:1}`. Iframe accepts init only from `window.parent`, exact validated fragment parent origin, and only once. Loader accepts ready/resize only from its iframe `contentWindow` and exact assistant origin. Every `postMessage` uses a concrete target origin (never `*`); validate shape/version, cap resize height to 300–720 px. No transcript, capability, request text, provider key or response contents ever cross postMessage. Parent origin is an untrusted routing hint, **not authentication**. Bad/missing origin → no handshake/no conversation.
++- Escape in the initialized, active iframe closes the whole host chat window, including when the handoff menu or email form is open: the iframe first closes those disclosures, then sends exactly `{type:"assistant:close",version:1}` to its validated fragment parent origin. It sends no close message before initialization or after the widget stops, and no guest data or extra fields accompany it. The loader accepts `assistant:close` only after its ready/init handshake, from its mounted iframe `contentWindow` at the exact configured assistant origin, with exactly the `type` and `version` keys and version `1`; wrong versions, extra keys, other sources or origins are ignored. On an accepted close, the loader hides the iframe without removing or reloading it, restores the launcher's closed label/state, and focuses the launcher; reopening reuses the same iframe and its in-memory guest chat. Escape on the launcher also closes a visible frame and returns focus to the launcher.
+ - Widget fetches only its own origin using bearer headers and `credentials:"omit"`. Keep conversation ID/capability in iframe memory only, not host DOM, URL, logs, local/session storage or parent events. Reload loses capability and creates a fresh conversation; disclose this rather than promise account history. Disable parallel sends, preserve request ID/text for retry; capability never returned again via GET.
+ - Sample host must demonstrate the loader, not directly mount application markup; also test a different-origin host/iframe with exact-origin/source rejection. Same-origin sample is useful but does not prove cross-origin embedding. Backend allows **no API CORS**: host never calls chat directly. API requests carrying an Origin other than configured `ASSISTANT_ORIGIN` are rejected (including `null`); missing Origin is allowed for authorized CLI/tests, not a separate authentication mechanism. Compare parsed exact origins, not suffixes or untrusted forwarded headers. No credentialed wildcard CORS.
+ - Serve widget CSP `default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors <configured WIDGET_PARENT_ORIGINS>`. Production uses explicit space-separated origins. Local default permits only `http://localhost:8080` and `http://127.0.0.1:8080`; a second-origin browser fixture explicitly configures its port. Do not send X-Frame-Options DENY/SAMEORIGIN on widget.html. Parent origins/allowlists are public anti-misembedding controls, not secrets or User authentication. Backend and loader must agree on optional context validation.
+diff --git i/web/assets/loader.js w/web/assets/loader.js
+index d5995ad..25f1889 100644
+--- i/web/assets/loader.js
++++ w/web/assets/loader.js
+@@ -55,6 +55,14 @@
+   let initialized = false;
+   const knownKeys = (data, expected) => data && typeof data === 'object' && !Array.isArray(data)
+     && Object.keys(data).length === expected.length && expected.every((key) => Object.hasOwn(data, key));
++  const close = () => {
++    if (frame.hidden) return;
++    frame.hidden = true;
++    launcher.setAttribute('aria-expanded', 'false');
++    launcher.setAttribute('aria-label', 'Open support assistant');
++    launcher.textContent = 'Ask the assistant';
++    launcher.focus();
++  };
+   window.addEventListener('message', (event) => {
+     if (!mounted || event.source !== frame.contentWindow || event.origin !== origin) return;
+     const data = event.data;
+@@ -64,15 +72,24 @@
+     } else if (initialized && knownKeys(data, ['type', 'version', 'height'])
+       && data.type === 'assistant:resize' && data.version === 1 && Number.isFinite(data.height)) {
+       frame.height = String(Math.max(300, Math.min(720, Math.round(data.height))));
++    } else if (initialized && knownKeys(data, ['type', 'version'])
++      && data.type === 'assistant:close' && data.version === 1) {
++      close();
+     }
+   });
++  launcher.addEventListener('keydown', (event) => {
++    if (event.key !== 'Escape' || frame.hidden) return;
++    event.preventDefault();
++    close();
++  });
+   launcher.addEventListener('click', () => {
+     if (!mounted) {
+       mounted = true;
+       frame.src = `${origin}/widget/widget.html#parent_origin=${encodeURIComponent(window.location.origin)}`;
+       root.prepend(frame);
+     }
+-    frame.hidden = !frame.hidden;
++    if (!frame.hidden) { close(); return; }
++    frame.hidden = false;
+     launcher.setAttribute('aria-expanded', String(!frame.hidden));
+     launcher.setAttribute('aria-label', frame.hidden ? 'Open support assistant' : 'Close support assistant');
+     launcher.textContent = frame.hidden ? 'Ask the assistant' : 'Close assistant';
+diff --git i/web/assets/widget-core.mjs w/web/assets/widget-core.mjs
+index dabcbab..6be4bf9 100644
+--- i/web/assets/widget-core.mjs
++++ w/web/assets/widget-core.mjs
+@@ -394,17 +394,15 @@ export function mountWidget(platform, { timeoutMs = 25000, handshakeMs = 10000 }
+     event.preventDefault();
+     submitEscalation();
+   });
+-  // Escape closes the handoff disclosure and returns focus to its trigger, so
+-  // a keyboard visitor never loses their place. No other key closes it: a
+-  // letter typed in the email form must never dismiss the menu.
++  // Escape closes the entire host window, even when the handoff form is open.
++  // The host returns focus to its launcher; nothing in this iframe is reloaded.
+   platform.addEventListener('keydown', (event) => {
+-    if (!handoffOpen || stopped) return;
+-    if (event.key !== 'Escape') return;
++    if (event.key !== 'Escape' || stopped || !initialized) return;
+     event.preventDefault();
+     handoffOpen = false;
+     escalateOpen = false;
+     controls();
+-    ui['escalate-toggle'].focus?.();
++    platform.parent.postMessage({ type: 'assistant:close', version: 1 }, parent);
+   });
+   // The stored recorded_at is already contract-validated; render it in a
+   // visitor-sane UTC form with the server's own truthful sentence verbatim.
+diff --git i/web/assets/widget.html w/web/assets/widget.html
+index 659464c..10e27f4 100644
+--- i/web/assets/widget.html
++++ w/web/assets/widget.html
+@@ -10,9 +10,12 @@
+ <body class="widget-page">
+   <main class="chat" aria-labelledby="chat-title">
+     <header class="chat-header">
+-      <p class="eyebrow">AI SUPPORT</p>
+-      <h1 id="chat-title">Ask a question</h1>
+-      <p>Find relevant information here.</p>
++      <div class="chat-heading">
++        <p class="eyebrow">AI SUPPORT</p>
++        <h1 id="chat-title">Ask a question</h1>
++        <p>Find relevant information here.</p>
++      </div>
++      <button id="chat-close" type="button" class="chat-close" aria-label="Close chat">×</button>
+     </header>
+     <div class="chat-content" aria-label="Conversation and support information" tabindex="0">
+     <section class="disclosure" aria-label="Before you ask">
+@@ -32,7 +35,7 @@
+       <button id="escalate-toggle" type="button" disabled aria-expanded="false" aria-controls="handoff-menu">Request human support</button>
+       <div id="handoff-menu" class="handoff-menu" role="group" aria-label="Ways to request human support" hidden>
+         <div class="handoff-option">
+-          <button id="handoff-email" type="button" aria-expanded="false" aria-controls="escalation-form" aria-pressed="false">By email</button>
++          <button id="handoff-email" type="button" aria-expanded="false" aria-controls="escalation-form" aria-pressed="false">Request via email</button>
+           <form id="escalation-form" aria-label="Request human support by email" hidden>
+             <label for="escalate-email">Your email</label>
+             <input id="escalate-email" name="email" type="text" inputmode="email" autocomplete="email" placeholder="you@example.org" aria-describedby="escalate-hint" required disabled>
+@@ -45,7 +48,7 @@
+           </form>
+         </div>
+         <div class="handoff-option handoff-unavailable">
+-          <button id="handoff-whatsapp" type="button" disabled aria-describedby="whatsapp-reason" aria-pressed="false">By WhatsApp</button>
++          <button id="handoff-whatsapp" type="button" disabled aria-describedby="whatsapp-reason" aria-pressed="false">Request via WhatsApp</button>
+           <p id="whatsapp-reason">Unavailable: this support service has not enabled WhatsApp.</p>
+         </div>
+       </div>
+diff --git i/web/tests/embedding.contract.test.mjs w/web/tests/embedding.contract.test.mjs
+index 6e8863b..b4c0586 100644
+--- i/web/tests/embedding.contract.test.mjs
++++ w/web/tests/embedding.contract.test.mjs
+@@ -103,6 +103,35 @@ test('capability is only a bearer in iframe-owned API calls, never URL/DOM/paren
+   }
+ });
+ 
++test('close control uses exact versioned shape, source and origin; invalid messages cannot close', async () => {
++  const fixture = await loaderFixture(); fixture.open();
++  const frame = fixture.frame();
++  const close = { type: 'assistant:close', version: 1 };
++  fixture.message(close); // No close before handshake.
++  assert.equal(frame.hidden, false);
++  fixture.message({ type: 'assistant:ready', version: 1 });
++  for (const [data, origin, source] of [
++    [close, 'https://assistant.example.evil', frame.contentWindow],
++    [close, 'https://assistant.example', {}],
++    [{ ...close, version: 2 }, 'https://assistant.example', frame.contentWindow],
++    [{ ...close, capability: 'bad' }, 'https://assistant.example', frame.contentWindow],
++    [{ ...close, height: 300 }, 'https://assistant.example', frame.contentWindow],
++    [{ type: 'assistant:resize', version: 1 }, 'https://assistant.example', frame.contentWindow],
++  ]) {
++    fixture.message(data, origin, source);
++    assert.equal(frame.hidden, false);
++  }
++  fixture.message(close);
++  assert.equal(frame.hidden, true);
++  assert.equal(fixture.launcher.focused, true);
++  assert.equal(fixture.launcher.getAttribute('aria-expanded'), 'false');
++  assert.equal(fixture.launcher.getAttribute('aria-label'), 'Open support assistant');
++  fixture.open();
++  assert.equal(fixture.frame(), frame);
++  assert.equal(frame.hidden, false);
++  assert.equal(frame.contentWindow.sent.length, 1);
++});
++
+ test('disclosure keeps the safety warning visible and names app server and configurable provider without displaying origin before send', async () => {
+   const fixture = widgetFixture();
+   const html = await readFile(new URL('../assets/widget.html', import.meta.url), 'utf8');
+@@ -234,8 +263,9 @@ test('only the visitor opens the handoff menu, and the composer stays pinned out
+   assert.match(core, /handoffOpen = !handoffOpen;/u);
+   assert.doesNotMatch(core, /handoffOpen\s*=\s*true/u);
+   assert.match(core, /ui\['handoff-whatsapp'\]\.setAttribute\('aria-pressed', 'false'\)/u);
+-  // Escape is the only key that closes the disclosure.
+-  assert.match(core, /if \(event\.key !== 'Escape'\) return;/u);
++  // Escape is the only key requesting host close, including with this disclosure open.
++  assert.match(core, /if \(event\.key !== 'Escape' \|\| stopped \|\| !initialized\) return;/u);
++  assert.match(core, /platform\.parent\.postMessage\(\{ type: 'assistant:close', version: 1 \}, parent\)/u);
+   assert.doesNotMatch(core, /event\.key === 'q'/u);
+   // The handoff panel lives in the scrollable pane; the composer stays outside
+   // it, so the question and Send controls remain visible on a small screen.
+diff --git i/web/tests/escalation.test.mjs w/web/tests/escalation.test.mjs
+index 9689289..39db7c1 100644
+--- i/web/tests/escalation.test.mjs
++++ w/web/tests/escalation.test.mjs
+@@ -88,7 +88,7 @@ test('the handoff menu opens only after a conversation exists and no server even
+   assert.equal(fixture.ui['escalation-form'].hidden, true);
+ });
+ 
+-test('Escape closes the handoff menu and returns focus to its trigger, and no other key closes it', async () => {
++test('Escape requests window close even with handoff form open; other keys leave it open', async () => {
+   const fixture = ready(); await settle();
+   fixture.ui['escalate-toggle'].dispatch('click');
+   fixture.ui['handoff-email'].dispatch('click');
+@@ -98,11 +98,16 @@ test('Escape closes the handoff menu and returns focus to its trigger, and no ot
+   // A typed letter must never dismiss the menu.
+   fixture.emit('keydown', { key: 'q', target: {}, preventDefault() {} });
+   assert.equal(fixture.ui['handoff-menu'].hidden, false);
+-  fixture.emit('keydown', { key: 'Escape', target: {}, preventDefault() {} });
++  let prevented = false;
++  fixture.ui['escalate-email'].value = 'visitor@example.org';
++  fixture.emit('keydown', { key: 'Escape', target: fixture.ui['escalate-email'], preventDefault() { prevented = true; } });
++  assert.equal(prevented, true);
+   assert.equal(fixture.ui['handoff-menu'].hidden, true);
+   assert.equal(fixture.ui['escalation-form'].hidden, true);
+   assert.equal(fixture.ui['escalate-toggle'].getAttribute('aria-expanded'), 'false');
+-  assert.equal(fixture.ui['escalate-toggle'].focused, true);
++  assert.equal(fixture.ui['escalate-toggle'].focused, undefined);
++  assert.deepEqual(fixture.sent.at(-1), { data: { type: 'assistant:close', version: 1 }, origin: 'https://host.example' });
++  assert.equal(fixture.ui['escalate-email'].value, 'visitor@example.org');
+ });
+ 
+ test('an outside click closes the handoff menu while a click inside the handoff region does not', async () => {
+@@ -153,6 +158,7 @@ test('handoff menu closes on Escape and outside click, and never auto-opens on a
+   fixture.emit('keydown', { key: 'Escape', target: {}, preventDefault() {} });
+   assert.equal(fixture.ui['handoff-menu'].hidden, true);
+   assert.equal(fixture.ui['escalation-form'].hidden, true);
++  assert.equal(fixture.sent.at(-1).data.type, 'assistant:close');
+   // An outside click closes the disclosure too.
+   fixture.ui['escalate-toggle'].dispatch('click');
+   assert.equal(fixture.ui['handoff-menu'].hidden, false);
+diff --git i/web/tests/sandbox-send.browser.mjs w/web/tests/sandbox-send.browser.mjs
+index 9fc6ac8..2bd23f2 100644
+--- i/web/tests/sandbox-send.browser.mjs
++++ w/web/tests/sandbox-send.browser.mjs
+@@ -203,6 +203,36 @@ try {
+     report.trustedInputs.push({ action, events: await evaluate(f, '__inputs') });
+     await screenshot(`${action}${sent ? '-complete' : '-blocked'}.png`);
+   }
++  // Real keyboard events inside the iframe must close the host window in one
++  // press, even when focus is in the expanded email form. Hiding must not
++  // reload the iframe or discard the conversation and unsent draft.
++  const { h, f } = await open();
++  const priorPosts = posts().length;
++  const creations = () => report.requests.filter((request) => request.method === 'POST' && request.url.endsWith('/conversations')).length;
++  const initialCreations = creations();
++  await click(f, '#question', h);
++  await cdp('Input.insertText', { text: 'Unsent draft stays here' });
++  await key('q', 'KeyQ', 81, 0, 'q');
++  check('Other iframe key does not close window', await evaluate(h, `!document.querySelector('iframe').hidden`));
++  await key('Escape', 'Escape', 27);
++  await wait(() => evaluate(h, `document.querySelector('iframe').hidden`), 'iframe Escape closes window');
++  check('Iframe Escape returns focus and closed launcher state', await evaluate(h, `document.activeElement===document.querySelector('.assistant-launcher')&&document.querySelector('.assistant-launcher').getAttribute('aria-expanded')==='false'&&document.querySelector('.assistant-launcher').getAttribute('aria-label')==='Open support assistant'`));
++  await click(h, '.assistant-launcher');
++  check('Reopen preserves iframe and unsent draft without new creation', await evaluate(f, `document.querySelector('#question').value.startsWith('Unsent draft stays here')`) && creations() === initialCreations);
++  await click(f, '#escalate-toggle', h);
++  await click(f, '#handoff-email', h);
++  await click(f, '#escalate-email', h);
++  await cdp('Input.insertText', { text: 'visitor@example.org' });
++  check('Email form open before Escape', await evaluate(f, `!document.querySelector('#handoff-menu').hidden&&!document.querySelector('#escalation-form').hidden`));
++  await key('Escape', 'Escape', 27);
++  await wait(() => evaluate(h, `document.querySelector('iframe').hidden`), 'email form Escape closes window');
++  check('Email form Escape focuses launcher', await evaluate(h, `document.activeElement===document.querySelector('.assistant-launcher')`));
++  await click(h, '.assistant-launcher');
++  check('Email draft and conversation survive reopening', await evaluate(f, `document.querySelector('#escalate-email').value==='visitor@example.org'&&document.querySelector('#question').value.startsWith('Unsent draft stays here')`) && creations() === initialCreations);
++  await evaluate(h, `document.querySelector('.assistant-launcher').focus()`);
++  await key('Escape', 'Escape', 27);
++  check('Trusted host launcher Escape closes and keeps focus', await evaluate(h, `document.querySelector('iframe').hidden&&document.activeElement===document.querySelector('.assistant-launcher')&&document.querySelector('.assistant-launcher').getAttribute('aria-expanded')==='false'`));
++  check('Escape does not submit questions or escalation', posts().length === priorPosts && !report.requests.some((request) => request.url.endsWith('/escalation')));
+   check('All observed control inputs are browser-trusted', report.trustedInputs.every((input) => input.events.length && input.events.every((event) => event.trusted)));
+   check('No browser JavaScript exceptions', !report.exception);
+ } catch (error) {
+diff --git i/web/tests/widget.test.mjs w/web/tests/widget.test.mjs
+index 85e2420..4d53f84 100644
+--- i/web/tests/widget.test.mjs
++++ w/web/tests/widget.test.mjs
+@@ -334,6 +334,41 @@ test('loader toggle reuses one iframe, accessible control and conversation hands
+   assert.equal(walk(fixture.document.body).filter((node) => node.tagName === 'IFRAME').length, 1);
+ });
+ 
++test('launcher Escape closes an open window and focuses launcher; other keys do nothing', async () => {
++  const fixture = await loaderFixture(); fixture.open();
++  const frame = fixture.frame();
++  let prevented = 0;
++  fixture.launcher.dispatch('keydown', { key: 'q', preventDefault() { prevented++; } });
++  assert.equal(frame.hidden, false);
++  fixture.launcher.dispatch('keydown', { key: 'Escape', preventDefault() { prevented++; } });
++  assert.equal(prevented, 1);
++  assert.equal(frame.hidden, true);
++  assert.equal(fixture.launcher.focused, true);
++  assert.equal(fixture.launcher.getAttribute('aria-expanded'), 'false');
++  assert.equal(fixture.launcher.textContent, 'Ask the assistant');
++  fixture.launcher.dispatch('keydown', { key: 'Escape', preventDefault() { prevented++; } });
++  assert.equal(prevented, 1);
++  fixture.open();
++  assert.equal(fixture.frame(), frame);
++  assert.equal(frame.hidden, false);
++});
++
++test('iframe Escape requests host close without a menu or a send, only after init', async () => {
++  const fixture = widgetFixture();
++  let prevented = 0;
++  fixture.emit('keydown', { key: 'Escape', preventDefault() { prevented++; } });
++  assert.equal(prevented, 0);
++  assert.equal(fixture.sent.filter((message) => message.data.type === 'assistant:close').length, 0);
++  fixture.init(); await settle();
++  fixture.ui.question.value = 'Keep this draft';
++  fixture.emit('keydown', { key: 'x', preventDefault() { prevented++; } });
++  fixture.emit('keydown', { key: 'Escape', preventDefault() { prevented++; } });
++  assert.equal(prevented, 1);
++  assert.equal(fixture.ui.question.value, 'Keep this draft');
++  assert.deepEqual(fixture.sent.at(-1), { data: { type: 'assistant:close', version: 1 }, origin: 'https://host.example' });
++  assert.equal(fixture.requests.length, 2);
++});
++
+ test('bounded property sweep: arbitrary malformed boundary values never fetch or crash', async () => {
+   // Deterministic regression/property corpus; no claim of a browser or native fuzzer.
+   let seed = 14641;

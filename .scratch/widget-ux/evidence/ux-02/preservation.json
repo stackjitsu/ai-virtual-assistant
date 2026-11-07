@@ -1,0 +1,29 @@
+{
+  "changed_vs_initial": [
+    "web/tests/widget-visual.browser.mjs",
+    "web/tests/sandbox-send.browser.mjs",
+    "web/tests/embedding.contract.test.mjs",
+    "web/tests/harness.mjs",
+    "web/tests/widget.test.mjs",
+    "web/README.md",
+    "web/assets/widget-core.mjs",
+    "web/assets/widget.css"
+  ],
+  "unchanged_vs_initial": [
+    "web/embed_test.go",
+    "web/tests/escalation.test.mjs",
+    "web/embed.go",
+    "web/assets/loader.js",
+    "web/assets/loader.css",
+    "web/assets/protocol.mjs",
+    "web/assets/widget.html",
+    "web/assets/widget.js",
+    "web/assets/sample-host.html"
+  ],
+  "preserved_preexisting_web_files": [
+    "web/assets/loader.js",
+    "web/assets/widget.html",
+    "web/tests/escalation.test.mjs"
+  ],
+  "head": "8fb8e2acd29c3fc2a9747ba3bc6bcae4efa5ec86"
+}

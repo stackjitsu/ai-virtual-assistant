@@ -1,0 +1,108 @@
+[
+  {
+    "name": "tools",
+    "command": [
+      "python3",
+      "-c",
+      "import sys,jsonschema,importlib.metadata; print(sys.version); print(jsonschema.__file__); print(importlib.metadata.version(\"jsonschema\"))"
+    ],
+    "timeoutSeconds": 15,
+    "exit": 0,
+    "elapsedSeconds": 0.618
+  },
+  {
+    "name": "format",
+    "command": [
+      "make",
+      "format"
+    ],
+    "timeoutSeconds": 90,
+    "exit": 0,
+    "elapsedSeconds": 0.468
+  },
+  {
+    "name": "lint",
+    "command": [
+      "make",
+      "lint"
+    ],
+    "timeoutSeconds": 180,
+    "exit": 0,
+    "elapsedSeconds": 3.71
+  },
+  {
+    "name": "static",
+    "command": [
+      "make",
+      "static"
+    ],
+    "timeoutSeconds": 180,
+    "exit": 0,
+    "elapsedSeconds": 7.456
+  },
+  {
+    "name": "unit",
+    "command": [
+      "make",
+      "unit"
+    ],
+    "timeoutSeconds": 300,
+    "exit": 0,
+    "elapsedSeconds": 54.22
+  },
+  {
+    "name": "contract",
+    "command": [
+      "make",
+      "contract"
+    ],
+    "timeoutSeconds": 180,
+    "exit": 0,
+    "elapsedSeconds": 16.49
+  },
+  {
+    "name": "fuzz-smoke",
+    "command": [
+      "make",
+      "fuzz-smoke"
+    ],
+    "timeoutSeconds": 180,
+    "exit": 0,
+    "elapsedSeconds": 39.265
+  },
+  {
+    "name": "trusted-browser",
+    "command": [
+      "python3",
+      "scripts/browser_check.py",
+      "/home/me/Documents/agent-worktrees/assistant-visitor-validation/.scratch/release-independent/trusted-browser"
+    ],
+    "timeoutSeconds": 345,
+    "exit": 0,
+    "elapsedSeconds": 17.778
+  },
+  {
+    "name": "rating-browser",
+    "command": [
+      "node",
+      "web/tests/rating.browser.mjs",
+      "/home/me/Documents/agent-worktrees/assistant-visitor-validation/.scratch/release-independent/trusted-browser/assistant",
+      "/home/me/Documents/agent-worktrees/assistant-visitor-validation/.scratch/release-independent/rating-browser"
+    ],
+    "timeoutSeconds": 150,
+    "exit": 0,
+    "elapsedSeconds": 10.96
+  },
+  {
+    "name": "visual-browser",
+    "command": [
+      "node",
+      "web/tests/widget-visual.browser.mjs",
+      "/home/me/Documents/agent-worktrees/assistant-visitor-validation/.scratch/release-independent/trusted-browser/assistant",
+      "/home/me/Documents/agent-worktrees/assistant-visitor-validation/.scratch/release-independent/visual-browser"
+    ],
+    "timeoutSeconds": 150,
+    "exit": 0,
+    "elapsedSeconds": 13.998
+  }
+]

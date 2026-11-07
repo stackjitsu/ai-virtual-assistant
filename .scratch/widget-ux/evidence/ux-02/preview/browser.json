@@ -1,0 +1,29 @@
+[
+  {
+    "width": 1440,
+    "ready": true,
+    "trusted_pointer_close": true,
+    "launcher_focus": true,
+    "reduced_motion": false,
+    "dark_preference": false,
+    "exceptions": 0
+  },
+  {
+    "width": 768,
+    "ready": true,
+    "trusted_pointer_close": true,
+    "launcher_focus": true,
+    "reduced_motion": false,
+    "dark_preference": false,
+    "exceptions": 0
+  },
+  {
+    "width": 390,
+    "ready": true,
+    "trusted_pointer_close": true,
+    "launcher_focus": true,
+    "reduced_motion": true,
+    "dark_preference": true,
+    "exceptions": 0
+  }
+]

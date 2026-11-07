@@ -1,0 +1,36 @@
+{
+  "observedAt": "2026-11-05T17:31:01.747463+00:00",
+  "expectedCandidate": "8410640e027c732a83dc35d354f8c4a56736be0e",
+  "integrity": {
+    "validator": {
+      "HEAD": "8410640e027c732a83dc35d354f8c4a56736be0e",
+      "status": "?? .scratch/release-independent/\n",
+      "sourceDiffAgainstHEAD": "",
+      "applicationBaselineDiff": "",
+      "trackedNonEvidenceFiles": 86,
+      "matchesIndependentBeforeHashes": true
+    },
+    "owner": {
+      "HEAD": "8410640e027c732a83dc35d354f8c4a56736be0e",
+      "status": "?? .scratch/release/\n",
+      "sourceDiffAgainstHEAD": "",
+      "applicationBaselineDiff": "",
+      "trackedNonEvidenceFiles": 86,
+      "matchesIndependentBeforeHashes": true
+    }
+  },
+  "ownerEvidence": {
+    "fuzz-full.log": {
+      "path": "/home/me/Documents/agent-worktrees/assistant-visitor-rc/.scratch/release/evidence/fuzz-full.log",
+      "sha256": "b09d6f4a99ec8d0fece2c32e4070ecb191954e7e465a80a01347fb3474da431f"
+    },
+    "results.tsv": {
+      "path": "/home/me/Documents/agent-worktrees/assistant-visitor-rc/.scratch/release/evidence/results.tsv",
+      "sha256": "1f9742b448673cd1cf7f97dc6de1427a613c29df79fcb3fb979d652516031ffa"
+    },
+    "candidate.txt": {
+      "path": "/home/me/Documents/agent-worktrees/assistant-visitor-rc/.scratch/release/evidence/candidate.txt",
+      "sha256": "11878c118ac4b02ca559075c247f25640de044f1f38dbb12616380d02cc93a33"
+    }
+  }
+}

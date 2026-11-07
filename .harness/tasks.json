@@ -3,358 +3,2084 @@
   "schemaVersion": 1,
   "tasks": [
     {
-      "id": "INTEG-01", "title": "Combine approved UI and accepted rating", "status": "claimed", "goal": "Preserve approved close controls and accepted rating behavior in one independently validated feature tree.", "acceptanceCriteria": ["Reviewed merge preserves both UI and rating contracts", "All gates/full fuzz and actual-backend browser regressions pass", "Independent validator accepts exact integration commit before feature advance/push"], "context": "chat-widget", "owner": "widget integration worker delivered db38c32 on integration/ui-rating; independent combined validator re-dispatched 2026-11-03 (assistant-combined-validation)", "allowedPaths": ["web/**", "docs/contracts/chat.md", ".scratch/automation/ui-rating-integration/**", ".scratch/automation/issues/08-ui-rating-integration.md", "incoming non-web files: mechanical merge only; harness conflicts retain coordinator checkpoint"], "contractRefs": ["docs/contracts/chat.md", ".scratch/automation/issues/08-ui-rating-integration.md"], "invariants": ["No main-tree or other-worktree edits", "Local integration merge commit only after passing checks; no push, main merge or deployment", "Preserve both implementations; coordinator state cannot be rewritten"], "checks": ["format", "lint", "static", "unit", "contract", "fuzz-smoke", "fuzz-full"], "dependencies": ["UX-02", "RATE-04"], "evidence": []
+      "id": "STAGE-10",
+      "title": "Independently validate and audit decoder repair publication",
+      "status": "completed",
+      "goal": "Accept/reject exact a5be344 repair using fresh gates/browser checks and publication safety before remote change.",
+      "acceptanceCriteria": [
+        "Independent source/contract/regression review and fresh gates including unit process suite",
+        "Fresh local trusted browser and correctly attributed full-fuzz evidence",
+        "Publication safety and exact immutable source/remote-head integrity"
+      ],
+      "context": "project-foundation",
+      "owner": "independent VERIFY-01 in assistant-staging-turso-validation",
+      "allowedPaths": [
+        ".scratch/staging-turso-independent/**"
+      ],
+      "contractRefs": [
+        ".scratch/staging/turso-repair-independent.md",
+        "docs/testing/testing-contract.md",
+        "docs/contracts/backend.md"
+      ],
+      "invariants": [
+        "No source/tooling repairs or retry waiver for unit incident",
+        "No credentials/live resource mutations/push/deploy/AI",
+        "No full-fuzz execution attribution beyond evidence"
+      ],
+      "checks": [
+        "format",
+        "lint",
+        "static",
+        "unit",
+        "contract",
+        "fuzz-smoke",
+        "fuzz-full"
+      ],
+      "dependencies": [
+        "STAGE-08"
+      ],
+      "evidence": [
+        "ACCEPT exact a5be344 for local independent validation; publication audit ALLOW; evidence .scratch/staging-turso-independent/handoff.md in assistant-staging-turso-validation",
+        "Fresh validator gates format/lint/static/unit/contract/fuzz-smoke/fuzz-full plus versions and targeted Turso race all exit 0 (checks.jsonl), including independent fresh make fuzz-full 228s",
+        "Coordinator-completed fresh trusted-browser stages: sandbox 48/48, rating default 61/61, rating demo 69/69; failed Chromium-start attempts preserved without rerun waivers",
+        "Before/after integrity identical (validate.py after): head/refs/index/tracked-byte map unchanged, clean: true",
+        "Publication audit: 1 commit, 3 blobs only, synthetic-token literals as sole scan matches, remote release/visitor-staging still e816655; no secrets or new resources"
+      ]
     },
     {
-      "id": "UX-02", "title": "Finish visible close button and handoff labels", "status": "completed", "goal": "Complete existing widget UI changes and provide a tested local preview for user visual acceptance.", "acceptanceCriteria": ["Close control works via pointer and keyboard, preserving chat/drafts and launcher focus", "Updated handoff labels, white responsive layout and mobile composer remain correct", "Technical gates, trusted browser evidence and live loopback preview supplied; user visual approval remains separate"], "context": "chat-widget", "owner": "widget completion worker (assistant-widget-finish)", "allowedPaths": ["web/**", ".scratch/widget-ux/issues/08-close-button-and-labels.md", ".scratch/widget-ux/evidence/ux-02/**", ".scratch/widget-ux/handoff-ux-02.md"], "contractRefs": ["docs/contracts/chat.md", ".scratch/widget-ux/issues/08-close-button-and-labels.md"], "invariants": ["Preserve all pre-existing uncommitted widget work", "No backend, shared contracts, harness or other-worktree edits", "No commits, pushes, merges, deployment or live-service use; user validates UI"], "checks": ["format", "lint", "static", "unit", "contract"], "dependencies": ["WIDGET-ESC-01", "WIDGET-ESC-02"], "evidence": ["User visually approved preview and authorized proceeding; UI committed as 191910a", "Reviewed .scratch/widget-ux/handoff-ux-02.md: common gates/fuzz-smoke passed; trusted browser 48/48 and visual regression 208/208; final evidence committed", "Known inherited landscape top clipping and extreme compact-label clipping accepted as disclosed limits; rating integration still needs separate combined-tree validation"]
+      "id": "STAGE-09",
+      "title": "Repair strict Turso blob wire decoding",
+      "status": "completed",
+      "goal": "Minimal isolated strict padded/unpadded base64 decoder fix with durable failing-first regressions and required local gates.",
+      "acceptanceCriteria": [
+        "Actual decoded wire/Conversation/auth regression red before fix and green after",
+        "Padded compatibility and malformed-input rejection preserved; fuzz seeds/gates/full fuzz evidence",
+        "Scoped local commit and handoff ready for independent validation, no remote effects"
+      ],
+      "context": "chat-backend",
+      "owner": "delegated CHAT-01 implementation owner in assistant-staging-turso-fix",
+      "allowedPaths": [
+        "internal/chat/turso.go",
+        "internal/chat/turso_test.go",
+        "internal/chat/turso_wire_test.go",
+        ".scratch/staging-turso-repair/**"
+      ],
+      "contractRefs": [
+        ".scratch/staging/turso-repair-brief.md",
+        "docs/contracts/backend.md",
+        "docs/testing/fuzzing.md"
+      ],
+      "invariants": [
+        "No auth/schema/dependency/timeout/runtime policy changes",
+        "No credentials/AI/FAQ/live resources or other-worktree writes",
+        "Independent acceptance before audited staging push/one redeploy"
+      ],
+      "checks": [
+        "format",
+        "lint",
+        "static",
+        "unit",
+        "contract",
+        "fuzz-smoke",
+        "fuzz-full"
+      ],
+      "dependencies": [
+        "STAGE-08"
+      ],
+      "evidence": [
+        "Owner committed a5be344c334bf0a290491ca3276d3a6f60741372 on fix/staging-turso-blobs: minimal 3-line unpadded-base64 decoder fallback plus durable red-before-green synthetic wire regressions in exactly three allowed files",
+        "Owner handoff with red/green proof, seven owner gates, targeted Turso race and full-fuzz evidence: /home/me/Documents/agent-worktrees/assistant-staging-turso-fix/.scratch/staging-turso-repair/handoff.md",
+        "Independent STAGE-10 ACCEPT of the exact commit; no auth/schema/dependency/timeout/policy changes"
+      ]
     },
     {
-      "id": "ADMIN-01", "title": "Staff dashboard contract and design", "status": "claimed", "goal": "Define secure staff ticket management and a separate accessible Tailwind v4 admin interface before implementation.", "acceptanceCriteria": ["Reviewed staff auth/API/migration/privacy contract", "Skill-informed ticket-first design and backend/UI/validation briefs"], "context": "project-foundation", "owner": "admin contract/design worker; coordinator design review accepted with one KDF modification 2026-11-03; bounded revision round dispatched (assistant-admin-revision)", "allowedPaths": [".scratch/admin-dashboard/**", "docs/contracts/admin.md", "design-system/admin/**"], "contractRefs": [".scratch/admin-dashboard/issues/01-contract-design.md", "docs/contracts/backend.md", "docs/contracts/chat.md"], "invariants": ["No runtime changes at contract gate", "Staff auth separate from guest capability", "No commits, pushes, live services or other-worktree edits"], "checks": ["format", "lint", "static"], "dependencies": [], "evidence": []
+      "id": "STAGE-08",
+      "title": "Diagnose hosted Turso lookup failure with synthetic fixtures",
+      "status": "completed",
+      "goal": "Prove or rule out protocol/record/transport root causes without changing accepted source/live runtime or reading stored private values.",
+      "acceptanceCriteria": [
+        "Fast deterministic actual-decoder/Conversation repro with fabricated values",
+        "Root cause tied to documented and if needed synthetic actual protocol evidence, or explicit inconclusive limits",
+        "Minimal next repair proposal and unchanged source/runtime/records"
+      ],
+      "context": "chat-backend",
+      "owner": "delegated CHAT-01 diagnostic owner; coordinator reviews",
+      "allowedPaths": [
+        ".scratch/staging-storage-diagnosis/** in assistant-staging-foundation",
+        "up to four synthetic constant SELECT pipeline requests on existing staging DB",
+        "minimal existing Render auth/env read in memory only",
+        "up to two invalid-bearer hosted GETs if needed"
+      ],
+      "contractRefs": [
+        ".scratch/staging/storage-diagnosis-brief.md",
+        "docs/contracts/backend.md",
+        "docs/contracts/chat.md"
+      ],
+      "invariants": [
+        "No source repair/config/deploy/token/schema/record mutation",
+        "No secrets or stored digest/content output",
+        "No AI/FAQ/other-resource changes; preserve prior evidence"
+      ],
+      "checks": [],
+      "dependencies": [
+        "STAGE-07"
+      ],
+      "evidence": [
+        "Confirmed actual primary returns unpadded standard base64 blob32bytes->43chars; unchanged turso.go strict padded decode fails at byte40. Three constant-only protocol probes corroborate upstream STANDARD_NO_PAD serializer",
+        "Actual unchanged decoder/Conversation/auth synthetic replay reproduces wrongbearer503/missing401; changing only synthetic padding yields401. No stored digests/content read, no source/runtime/data mutation",
+        "/home/me/Documents/agent-worktrees/assistant-staging-foundation/.scratch/staging-storage-diagnosis/handoff.md; concurrent Render-specific transport/record issues not ruled out; minimal repair proposed not applied"
+      ]
     },
     {
-      "id": "CI-01", "title": "Deterministic PR validation", "status": "completed", "goal": "Implement CI around real checks with browser and schema validation.", "acceptanceCriteria": ["Restricted deterministic CI with failure artifacts", "Local gates and independent review evidence"], "context": "project-foundation", "owner": "foundation implementation accepted by independent re-review 2026-11-03 and checkpointed by the coordinator", "allowedPaths": [".github/workflows/**", "scripts/**", "Makefile", "docs/testing/project-checks.md", "harness.json", ".scratch/automation/**"], "contractRefs": [".scratch/automation/issues/01-ci.md", "docs/testing/testing-contract.md"], "invariants": ["No application changes, commits, pushes or deployment", "Preserve main working tree"], "checks": ["format", "lint", "static", "unit", "contract", "fuzz-smoke"], "dependencies": [], "evidence": ["Independent re-review (assistant-ci-review) accepted the bounded repair: P2 subprocess containment closed with real crash/hang/interrupt fixtures passing three independent executions; P3 workflow ownership closed in context map and manifest; no new blocking defect, no weakened predicate", "Coordinator checkpointed commit 84bfd72 'Add deterministic validation CI with bounded browser containment' on tooling/ci-autonomy with the exact product/evidence batch (~55 tracked source plus briefs/handoffs/JSON evidence); binaries, browser profiles, screenshots and sqlite remain deliberately untracked per evidence policy", "Not claimed: hosted GitHub execution (deferred 2026-11-03 by user decision to follow-up CI-02), independent happy-path browser rerun, and a green static (fails only on the worktree's historical four empty-evidence ledger entries, a coordination truth-up item resolved at rating/feature-tree adoption), or any merge to main"]
+      "id": "STAGE-07",
+      "title": "Independently diagnose unexpected hosted authorization smoke response",
+      "status": "completed",
+      "goal": "Capture bounded read-only response evidence and distinguish real authorization defect from harness mismatch or infrastructure error.",
+      "acceptanceCriteria": [
+        "Actual safe status/error evidence captured without new records",
+        "Independent diagnosis or explicit inconclusive finding with minimal next scope",
+        "No source/config/credential/deploy/remote data mutations"
+      ],
+      "context": "project-foundation",
+      "owner": "independent VERIFY-01; coordinator reviews",
+      "allowedPaths": [
+        ".scratch/staging-authz-validation/** in assistant-staging-foundation",
+        "six maximum read-only hosted GETs and synthetic-ID/count metadata reads"
+      ],
+      "contractRefs": [
+        ".scratch/staging/runtime-authz-validation.md",
+        "docs/contracts/chat.md"
+      ],
+      "invariants": [
+        "No repairs, app writes, secrets, live AI or deployment",
+        "Do not infer unauthorized access without captured evidence",
+        "Exact source and remote record counts preserved"
+      ],
+      "checks": [],
+      "dependencies": [
+        "STAGE-05"
+      ],
+      "evidence": [
+        "Independent VERIFY-01 reproduced three bounded GETs: valid wrong dummy bearer 503/storage_unavailable twice; missing bearer401. No unauthorized success or data disclosure observed; positive isolation/persistence remains unaccepted",
+        "Request grammar matches contract; source maps valid bearer lookup failure to503, malformed/missing bearer masks lookup error with401. Underlying transport/protocol/record failure INCONCLUSIVE; no source repair warranted from present evidence",
+        "/home/me/Documents/agent-worktrees/assistant-staging-foundation/.scratch/staging-authz-validation/handoff.md; source/index/owner scripts unchanged; remote counts remain one empty synthetic conversation and zero turns/ratings/knowledge/tickets",
+        "Next proposed scope: offline actual decoder/Conversation seam with fabricated documented protocol fixtures; not executed. No new app records, tokens, credentials, deployments or repairs"
+      ]
     },
     {
-      "id": "CI-02", "title": "Hosted deterministic PR validation follow-up", "status": "pending", "goal": "Run the reviewed CI workflow on hosted GitHub with pinned browser dependencies, artifacts, manual full-fuzz branch protection and status checks, when the user authorizes remote execution.", "acceptanceCriteria": ["Pinned Playwright/native browser deps and reproducible hosted run", "Failure artifacts uploaded without leaking repository data", "Manual full-fuzz dispatch remains explicit"], "context": "project-foundation", "owner": "pending user scheduling/dispatch; no remote actions authorized", "allowedPaths": [".github/workflows/**", "scripts/**", "docs/testing/project-checks.md", "harness.json"], "contractRefs": ["docs/testing/testing-contract.md", ".scratch/automation/ci-re-review/handoff.md"], "invariants": ["Branch on the committed 84bfd72 tooling tree", "No secrets in workflow files; credentials via operator-controlled configuration only", "No automatic remote writes beyond explicitly authorized repository actions"], "checks": ["format", "lint", "static", "unit", "contract"], "dependencies": ["CI-01"], "evidence": []
+      "id": "STAGE-06",
+      "title": "Securely configure and smoke-test empty hosted demo",
+      "status": "completed",
+      "goal": "Initialize dedicated empty staging DB, transfer expiring DB-only credential privately to new Free Render service, redeploy with AI off and run synthetic smoke.",
+      "acceptanceCriteria": [
+        "Canonical visitor schema on confirmed empty target; scoped 7d token never exposed",
+        "Exact-origin runtime configuration, AI key absent, Free/auto-deploy off/exact accepted source",
+        "Single bounded runtime deploy and truthful synthetic smoke with no real data/FAQ import",
+        "No unrelated service/source mutations; redacted final handoff and token-expiry notice"
+      ],
+      "context": "chat-backend",
+      "owner": "delegated backend/foundation operations worker; coordinator reviews",
+      "allowedPaths": [
+        ".scratch/staging-runtime/** in assistant-staging-foundation",
+        "assistant-staging Turso schema/token and synthetic records only",
+        "Render srv-dbmq3s67bikc73bngks0 env and one runtime deploy only",
+        "minimal Render local login read for authenticated API only"
+      ],
+      "contractRefs": [
+        ".scratch/staging/runtime-setup-brief.md",
+        "docs/contracts/backend.md",
+        "docs/contracts/chat.md",
+        "docs/deployment/render-staging.md"
+      ],
+      "invariants": [
+        "No AI key access/live AI, FAQ import, PII or raw credential output",
+        "No paid resources, other DB/service changes, source edits or destructive cleanup",
+        "No duplicate token creation/deploy or automatic repairs on blockers"
+      ],
+      "checks": [],
+      "dependencies": [
+        "STAGE-05"
+      ],
+      "evidence": [
+        "Canonical migrations 1-3 applied; one 7d database-only token privately transferred to Render; expires 2026-11-13 10:21:07 UTC; AI key absent",
+        "Exact e816655 live via single runtime deploy dep-dbmqkbm1egvs73dboi20; Free/auto-deploy off and unrelated source/services unchanged",
+        "2026-11-06 completion on repaired source: audited push advanced release/visitor-staging e816655->a5be344; exact-commit redeploy dep-dbn2u86i0phs73bdn78g verified live (three-deploy set, unrelated services untouched)",
+        "Resumed synthetic smoke PASS 24/24 including previously blocked wrong-capability history exactly 401 (no longer 503), uniform unauthorized responses, authorized empty history, clarification turn persistence, idempotent replay and rating recorded/replayed; digest-only capability storage shape verified; counts exactly 3 conversations (blocked-round 1, script-abort 1, completed 1) / 1 turn / 1 rating; no AI key, zero knowledge",
+        "/home/me/Documents/agent-worktrees/assistant-staging-foundation/.scratch/staging-runtime-resume/{resume-smoke.py,smoke-summary.json,smoke-assertions.json,smoke-complete.json}"
+      ]
     },
     {
-      "id": "AUTO-01", "title": "Bounded orchestration loop and skills", "status": "pending", "goal": "Add isolated workers, bounded repair and independent acceptance using the existing task ledger.", "acceptanceCriteria": ["Persistent coordinator with bounded repair and permission gates", "Resume, orchestrate, validate and repair skills", "Tests demonstrate limits and stale-evidence rejection"], "context": "coordination", "owner": "automation worker, pending dispatch", "allowedPaths": ["scripts/**", "skills/**", "docs/agents/**", ".scratch/automation/**"], "contractRefs": ["docs/agents/orchestration-runtime.md", "docs/agents/delegation-protocol.md"], "invariants": ["No external heartbeat or unbounded repair", "No automatic push, merge, deployment or remote data writes", "No production credentials"], "checks": ["format", "lint", "static", "unit", "contract"], "dependencies": ["CI-01"], "evidence": []
+      "id": "STAGE-05",
+      "title": "Create gated Free Render service and first image build",
+      "status": "completed",
+      "goal": "Create one explicitly authorized Free Docker service from accepted published source; build image with runtime deliberately blocked before application exec.",
+      "acceptanceCriteria": [
+        "One Free service, exact source, auto-deploy off and actual URL recorded",
+        "Initial build result honestly attributed; origins/credentials omitted so no application/DB/AI activity",
+        "Existing services/source preserved and finite observation handoff"
+      ],
+      "context": "project-foundation",
+      "owner": "delegated foundation deployment worker; coordinator reviews",
+      "allowedPaths": [
+        ".scratch/render-first-build/** in assistant-staging-foundation",
+        "one new Render assistant-staging Free service and initial build only"
+      ],
+      "contractRefs": [
+        ".scratch/staging/render-first-build-brief.md",
+        "docs/deployment/render-staging.md",
+        "Dockerfile"
+      ],
+      "invariants": [
+        "No paid resources/upgrades, secrets or database/model calls",
+        "No existing-service changes, source edits or deployment retries",
+        "Startup blocked by missing required origins; no public chat acceptance"
+      ],
+      "checks": [],
+      "dependencies": [
+        "STAGE-04"
+      ],
+      "evidence": [
+        "Created exactly one Free Docker service assistant-staging / srv-dbmq3s67bikc73bngks0 in existing workspace; URL https://assistant-staging-l2vi.onrender.com; plan free, Oregon, one instance, auto-deploy off; initial deploy dep-dbmq3se7bikc73bnglf0 checks out exact e816655",
+        "Image build/export/push succeeded. Deliberately omitted origins/credentials; Docker shell exits 2 on missing ASSISTANT_ORIGIN before application exec. Final deploy update_failed is expected, not a working deployment or runtime acceptance",
+        "/home/me/Documents/agent-worktrees/assistant-staging-foundation/.scratch/render-first-build/handoff.md; final-integrity.json, final-deploys.json and final-messages.json independently reviewed by coordinator",
+        "All tracked source/index/refs and unrelated services unchanged; no credentials uploaded, AI/DB calls, manual retries, migrations/imports or paid upgrades. Runtime/public traffic remains blocked pending new setup authority"
+      ]
+    },
+    {
+      "id": "STAGE-04",
+      "title": "Audit and publish accepted staging branch",
+      "status": "completed",
+      "goal": "Audit public-upload safety then push only exact accepted release/visitor-staging if no blocking finding.",
+      "acceptanceCriteria": [
+        "Complete newly published Git content checked for secrets/private artifacts",
+        "Independent audit permits exact immutable candidate",
+        "Coordinator pushes only authorized branch and verifies remote revision"
+      ],
+      "context": "project-foundation",
+      "owner": "independent publication validator; coordinator reviews and owns push",
+      "allowedPaths": [
+        ".scratch/staging-publication/** in assistant-staging-foundation",
+        ".harness/** coordination only",
+        "remote refs/heads/release/visitor-staging push only after audit"
+      ],
+      "contractRefs": [
+        ".scratch/staging/publication-audit-brief.md",
+        "docs/deployment/render-staging.md"
+      ],
+      "invariants": [
+        "Candidate e816655 immutable; no main merge or force push",
+        "No discovered secrets printed",
+        "No Render resources/deployment, DB writes, live AI or hosted CI"
+      ],
+      "checks": [],
+      "dependencies": [
+        "STAGE-03"
+      ],
+      "evidence": [
+        "Independent publication auditor ses_e4fe8effdffeQhUobK7Xn4wc07 ALLOW: five unpublished commits, 146 new objects, complete 263-path tree reviewed; no blocking secret/private-data/artifact finding; source/index/refs unchanged",
+        "/home/me/Documents/agent-worktrees/assistant-staging-foundation/.scratch/staging-publication/handoff.md; push-result.json beside handoff records successful coordinator push of exact e816655 to refs/heads/release/visitor-staging and remote verification",
+        "origin/main remains 40773a3; no PR/workflow dispatch, Render resources/deployment, database writes or live AI; repository already public before audit and not changed"
+      ]
+    },
+    {
+      "id": "STAGE-03",
+      "title": "Independently validate combined staging preparation",
+      "status": "completed",
+      "goal": "Validate immutable e816655 source integration, default/demo browser flows and Render configuration without deployment or source changes.",
+      "acceptanceCriteria": [
+        "Source scope/integrity and both owner branch correspondence verified",
+        "Fresh gates/default+demo browser checks and independently reviewed owner full fuzz",
+        "Container-engine limitation and other deployment blockers explicitly distinguished from local source acceptance"
+      ],
+      "context": "project-foundation",
+      "owner": "replacement independent VERIFY-01 ses_e500fd2b2ffevAQGLgy8Lf1xOw; final scoped local acceptance reviewed by coordinator 2026-11-06",
+      "allowedPaths": [
+        ".scratch/staging-independent/**"
+      ],
+      "contractRefs": [
+        ".scratch/staging/independent-brief.md",
+        "docs/contracts/chat.md",
+        "docs/deployment/render-staging.md"
+      ],
+      "invariants": [
+        "No source changes or recursive workers",
+        "No Docker equivalence claim from native build",
+        "No push/resources/live services/hosted CI/deployment"
+      ],
+      "checks": [
+        "format",
+        "lint",
+        "static",
+        "unit",
+        "contract",
+        "fuzz-smoke",
+        "fuzz-full"
+      ],
+      "dependencies": [
+        "REL-01",
+        "REL-02"
+      ],
+      "evidence": [
+        "ACCEPT local preparation only at e816655e7826f7468a07325b8aa1867ff8f6da11; final handoff /home/me/Documents/agent-worktrees/assistant-staging-validation/.scratch/staging-independent/handoff.md",
+        "Fresh format/lint/static/unit/contract/fuzz-smoke and uncached Go race PASS; browser send/default/demo/visual 48/61/69/208 assertions PASS (386 total, 56 screenshots); deployment offline retry PASS; failed/interrupted attempts preserved",
+        "Owner seven-target full fuzz independently reviewed with exact source correspondence, NOT independently rerun; coordinator verified all 93 source hashes, fixed HEAD and empty tracked/index diffs; manifest SHA-256 90359f48c0c2edc22f88ce5ca6c337eefbb66feeaf27bc0e67ce94c03609b62c",
+        "Container/image acceptance BLOCKED: no Docker/Podman; actual staging/public exposure and production BLOCKED; no live AI, secrets, remote writes, hosted CI or deployment"
+      ]
+    },
+    {
+      "id": "STAGE-01",
+      "title": "Prepare public-demo runtime and disabled human support",
+      "status": "completed",
+      "goal": "Implement explicit public demo labelling and fail-closed UI/server email support disabling for future staging, with no live calls or deployment.",
+      "acceptanceCriteria": [
+        "Contract documented before backend/widget consumers",
+        "Public demo cannot store email requests or call outbox",
+        "Legacy mode preserved, chat/rating and security regressions pass",
+        "Owner handoff then independent combined-tree validation"
+      ],
+      "context": "chat-backend",
+      "owner": "scoped backend/widget policy worker in assistant-staging-policy; coordinated with foundation worker through primary",
+      "allowedPaths": [
+        "cmd/**",
+        "internal/chat/**",
+        "web/**",
+        "docs/contracts/chat.md",
+        "docs/contracts/backend.md",
+        ".scratch/staging/**"
+      ],
+      "contractRefs": [
+        "/home/me/Documents/agent-worktrees/assistant-staging-policy/.scratch/staging/brief.md",
+        "docs/contracts/chat.md",
+        "docs/contracts/backend.md"
+      ],
+      "invariants": [
+        "No remote writes/live services/credentials/resource creation/deployment",
+        "No schema/dependency/admin/AUTO/demo-launcher imports",
+        "Default non-demo compatibility, unchanged CSP/sandbox/access isolation"
+      ],
+      "checks": [
+        "format",
+        "lint",
+        "static",
+        "unit",
+        "contract",
+        "fuzz-smoke",
+        "fuzz-full"
+      ],
+      "dependencies": [
+        "REL-01",
+        "REL-02"
+      ],
+      "evidence": [
+        "Owner policy commit 8754b50 integrated exactly into e816655; original handoff preserved at /home/me/Documents/agent-worktrees/assistant-staging-foundation/.scratch/staging/policy-handoff.md",
+        "STAGE-03 independently accepted combined local source: explicit fictional labels, fail-closed UI and pre-I/O server support denial, legacy default compatibility, actual default/demo browser checks; required gates PASS, owner full fuzz reviewed not independently rerun; no public/deployment acceptance"
+      ]
+    },
+    {
+      "id": "STAGE-02",
+      "title": "Prepare free-only Render deployment configuration",
+      "status": "completed",
+      "goal": "Prepare secure Docker/Render files and deployment instructions backed by current official docs; do not provision or deploy.",
+      "acceptanceCriteria": [
+        "Explicit free plan, PORT binding, remote Turso persistence and private runtime secret inputs",
+        "No automatic migration/seed/live calls or paid resources",
+        "Honest tool/build/gate results and current official provider citations"
+      ],
+      "context": "project-foundation",
+      "owner": "foundation preparation/research worker in assistant-staging-foundation",
+      "allowedPaths": [
+        "Dockerfile",
+        ".dockerignore",
+        "render.yaml",
+        "render.yml",
+        "README.md",
+        ".env.example",
+        "docs/deployment/**",
+        ".scratch/staging/**"
+      ],
+      "contractRefs": [
+        "/home/me/Documents/agent-worktrees/assistant-staging-foundation/.scratch/staging/brief.md",
+        "docs/contracts/backend.md"
+      ],
+      "invariants": [
+        "No provisioning/push/hosted CI/deployment/billing changes",
+        "No secrets or databases in image/context/config",
+        "No runtime/web/contract edits overlapping STAGE-01"
+      ],
+      "checks": [
+        "format",
+        "lint",
+        "static",
+        "unit"
+      ],
+      "dependencies": [
+        "REL-01",
+        "REL-02"
+      ],
+      "evidence": [
+        "Owner foundation commit 7132468 integrated exactly into e816655; original handoff preserved at /home/me/Documents/agent-worktrees/assistant-staging-foundation/.scratch/staging/foundation-handoff.md",
+        "STAGE-03 accepts local preparation only: explicit free Render plan, deny-default context, nonroot Docker structure, safe PORT shell, manual secrets and Turso configuration; offline official schema/focused checks and native build PASS",
+        "Container engine absent, so actual context/layer/build/nonroot/CA/port runtime acceptance remains BLOCKED; free-tier account eligibility, remote setup, hosted CI, live tests and deployment unperformed/unauthorized"
+      ]
+    },
+    {
+      "id": "REL-02",
+      "title": "Independently validate visitor release candidate",
+      "status": "completed",
+      "goal": "Review and validate immutable local candidate 8410640 without source edits or production claims.",
+      "acceptanceCriteria": [
+        "Candidate ancestry and unchanged application/coordination trees verified",
+        "Fresh local gates and real-backend browser results with exact evidence",
+        "Independent scoped verdict and remaining release blockers recorded"
+      ],
+      "context": "project-foundation",
+      "owner": "independent VERIFY-01 worker in assistant-visitor-validation",
+      "allowedPaths": [
+        ".scratch/release-independent/**"
+      ],
+      "contractRefs": [
+        "/home/me/Documents/agent-worktrees/assistant-visitor-validation/.scratch/release-independent/brief.md",
+        "docs/testing/testing-contract.md"
+      ],
+      "invariants": [
+        "No source changes",
+        "Full fuzz attributed to owner, not claimed as independently rerun",
+        "No publishing, live services or deployment"
+      ],
+      "checks": [
+        "format",
+        "lint",
+        "static",
+        "unit",
+        "contract",
+        "fuzz-smoke"
+      ],
+      "dependencies": [
+        "INTEG-01",
+        "CI-01"
+      ],
+      "evidence": [
+        "Independent handoff ACCEPTS local integration 8410640e027c732a83dc35d354f8c4a56736be0e: fresh format/lint/static/unit/contract/fuzz-smoke, browser 48/48 + rating 61/61 + visual 208/208; unchanged 86-file source fingerprint before/after",
+        "/home/me/Documents/agent-worktrees/assistant-visitor-validation/.scratch/release-independent/handoff.md; completed seven-target owner full fuzz independently reviewed in bounded follow-up, not independently rerun; hosted/live/staging/production remain blocked"
+      ]
+    },
+    {
+      "id": "REL-01",
+      "title": "Prepare visitor-only local release candidate",
+      "status": "completed",
+      "goal": "Integrate accepted chat/rating and reviewed CI in an isolated release branch; preserve unfinished work and validate locally without publishing or deployment.",
+      "acceptanceCriteria": [
+        "CI integrated on release/visitor-rc with unchanged application paths",
+        "Required local checks and bounded browser/full-fuzz results recorded honestly",
+        "Coordinator reviews handoff and records independent acceptance or blockers"
+      ],
+      "context": "project-foundation",
+      "owner": "delegated release integrator; coordinator reviews and arranges independent validation",
+      "allowedPaths": [
+        ".github/workflows/**",
+        "scripts/**",
+        "harness.json",
+        "docs/architecture/context-map.md",
+        "docs/testing/project-checks.md",
+        ".scratch/release/**",
+        "mechanical incoming CI evidence only"
+      ],
+      "contractRefs": [
+        ".scratch/release/visitor-rc-brief.md",
+        "docs/testing/testing-contract.md",
+        "docs/architecture/context-map.md"
+      ],
+      "invariants": [
+        "Preserve all existing dirty worktrees",
+        "Application paths byte-identical to accepted 65471be",
+        "No push, main merge, hosted CI, live services or deployment"
+      ],
+      "checks": [
+        "format",
+        "lint",
+        "static",
+        "unit",
+        "contract",
+        "fuzz-smoke",
+        "fuzz-full"
+      ],
+      "dependencies": [
+        "INTEG-01",
+        "CI-01"
+      ],
+      "evidence": [
+        "Candidate 8410640 integrates reviewed CI 84bfd72 into accepted feature 65471be; application and first-parent harness trees unchanged; all seven owner gates plus browser PASS; independent REL-02 acceptance reviewed by coordinator",
+        ".scratch/release/owner/handoff.md; .scratch/release/owner/gap-audit.md; .scratch/release/preservation-check.json confirms existing other worktree HEAD/tracked diffs/status unchanged",
+        "Supplemental whole-tree diff --check flags only imported historical scratch repair.diff whitespace; product/tooling scoped diff-check and make format PASS; no remote writes/main merge/hosted CI/live services/deployment"
+      ]
+    },
+    {
+      "id": "INTEG-01",
+      "title": "Combine approved UI and accepted rating",
+      "status": "completed",
+      "goal": "Preserve approved close controls and accepted rating behavior in one independently validated feature tree.",
+      "acceptanceCriteria": [
+        "Reviewed merge preserves both UI and rating contracts",
+        "All gates/full fuzz and actual-backend browser regressions pass",
+        "Independent validator accepts exact integration commit before feature advance/push"
+      ],
+      "context": "chat-widget",
+      "owner": "widget integration worker delivered; independent combined validator accepted 2026-11-03; coordinator merged and pushed",
+      "allowedPaths": [
+        "web/**",
+        "docs/contracts/chat.md",
+        ".scratch/automation/ui-rating-integration/**",
+        ".scratch/automation/issues/08-ui-rating-integration.md",
+        "incoming non-web files: mechanical merge only; harness conflicts retain coordinator checkpoint"
+      ],
+      "contractRefs": [
+        "docs/contracts/chat.md",
+        ".scratch/automation/issues/08-ui-rating-integration.md"
+      ],
+      "invariants": [
+        "No main-tree or other-worktree edits",
+        "Local integration merge commit only after passing checks; no push, main merge or deployment",
+        "Preserve both implementations; coordinator state cannot be rewritten"
+      ],
+      "checks": [
+        "format",
+        "lint",
+        "static",
+        "unit",
+        "contract",
+        "fuzz-smoke",
+        "fuzz-full"
+      ],
+      "dependencies": [
+        "UX-02",
+        "RATE-04"
+      ],
+      "evidence": [
+        "Independent validator accepted db38c323f2d0913f541d551707f2b8e70df35f41: all gates fresh with -count=1, full fuzz mutation on all seven targets, three trusted-input browser suites 61/48/208 pass on the actual backend, storage audit 2 conversations/1 turn/1 rating, 0 of 2 repairs used",
+        "Validator rebuilt the approved first parent via git archive and compared seven ready screenshots pixel-for-pixel with zero differing pixels; combined rated rebuild adds the rating panel beside close/labels/composer without redesign",
+        "Known inherited limits recorded as P3: 640x360 top clip and compact viewport clipping are approved-UI-limits deferred to a widget follow-up, not integration regressions",
+        "Coordinator checkpointed .harness state as 7f0a6c0 then merged db38c32 as 65471be; merge delta vs the validated tree is the five .harness coordination files only (verified by diff) and origin/feat/conversation-rating verified at 65471be; origin/main untouched and no main merge or deployment performed"
+      ]
+    },
+    {
+      "id": "UX-02",
+      "title": "Finish visible close button and handoff labels",
+      "status": "completed",
+      "goal": "Complete existing widget UI changes and provide a tested local preview for user visual acceptance.",
+      "acceptanceCriteria": [
+        "Close control works via pointer and keyboard, preserving chat/drafts and launcher focus",
+        "Updated handoff labels, white responsive layout and mobile composer remain correct",
+        "Technical gates, trusted browser evidence and live loopback preview supplied; user visual approval remains separate"
+      ],
+      "context": "chat-widget",
+      "owner": "widget completion worker (assistant-widget-finish)",
+      "allowedPaths": [
+        "web/**",
+        ".scratch/widget-ux/issues/08-close-button-and-labels.md",
+        ".scratch/widget-ux/evidence/ux-02/**",
+        ".scratch/widget-ux/handoff-ux-02.md"
+      ],
+      "contractRefs": [
+        "docs/contracts/chat.md",
+        ".scratch/widget-ux/issues/08-close-button-and-labels.md"
+      ],
+      "invariants": [
+        "Preserve all pre-existing uncommitted widget work",
+        "No backend, shared contracts, harness or other-worktree edits",
+        "No commits, pushes, merges, deployment or live-service use; user validates UI"
+      ],
+      "checks": [
+        "format",
+        "lint",
+        "static",
+        "unit",
+        "contract"
+      ],
+      "dependencies": [
+        "WIDGET-ESC-01",
+        "WIDGET-ESC-02"
+      ],
+      "evidence": [
+        "User visually approved preview and authorized proceeding; UI committed as 191910a",
+        "Reviewed .scratch/widget-ux/handoff-ux-02.md: common gates/fuzz-smoke passed; trusted browser 48/48 and visual regression 208/208; final evidence committed",
+        "Known inherited landscape top clipping and extreme compact-label clipping accepted as disclosed limits; rating integration still needs separate combined-tree validation"
+      ]
+    },
+    {
+      "id": "ADMIN-01",
+      "title": "Staff dashboard contract and design",
+      "status": "completed",
+      "goal": "Define secure staff ticket management and a separate accessible Tailwind v4 admin interface before implementation.",
+      "acceptanceCriteria": [
+        "Reviewed staff auth/API/migration/privacy contract",
+        "Skill-informed ticket-first design and backend/UI/validation briefs"
+      ],
+      "context": "project-foundation",
+      "owner": "foundation contract/design owner; accepted ADMIN-05 revision. Design completion does not accept backend or dashboard runtime.",
+      "allowedPaths": [
+        ".scratch/admin-dashboard/**",
+        "docs/contracts/admin.md",
+        "design-system/admin/**"
+      ],
+      "contractRefs": [
+        ".scratch/admin-dashboard/issues/01-contract-design.md",
+        "docs/contracts/backend.md",
+        "docs/contracts/chat.md"
+      ],
+      "invariants": [
+        "No runtime changes at contract gate",
+        "Staff auth separate from guest capability",
+        "No commits, pushes, live services or other-worktree edits"
+      ],
+      "checks": [
+        "format",
+        "lint",
+        "static"
+      ],
+      "dependencies": [],
+      "evidence": [
+        "Draft contract/design accepted by coordinator review with one KDF modification recorded in ADMIN-05",
+        "ADMIN-05 revision applied exactly to docs/contracts/admin.md: Argon2id primary (OWASP m=19456/t=2/p=1, per-record algorithm/params, rehash on next successful login, constant-time verify, 2-derivation cap) with stdlib PBKDF2-600k documented fallback; gates format/lint/static/unit/contract all PASS after earlier quota block"
+      ]
+    },
+    {
+      "id": "ADMIN-02",
+      "title": "Staff authorization and ticket backend",
+      "status": "claimed",
+      "goal": "Deliver the accepted secure staff contract with additive storage, authenticated ticket APIs and tested local composition.",
+      "acceptanceCriteria": [
+        "Invite-only staff lifecycle and protected HTTP APIs satisfy docs/contracts/admin.md",
+        "Migration, rollback, CAS/replay, expiry/revocation and privacy checks pass",
+        "Independent backend validation and subsequent composed browser acceptance"
+      ],
+      "context": "chat-backend",
+      "owner": "Independent issue-08 revalidation closed all three original findings but rejected one P2 admin history-query deadline gap. Two-round budget exhausted; no automatic third repair. Backend/dashboard remain unaccepted pending explicitly scoped follow-up.",
+      "allowedPaths": [
+        "cmd/**",
+        "internal/**",
+        "database/**",
+        "go.mod and go.sum: approved Argon2 dependency only",
+        ".scratch/admin-dashboard/backend/**"
+      ],
+      "contractRefs": [
+        "docs/contracts/admin.md in assistant-admin-backend",
+        ".scratch/admin-dashboard/issues/02-backend.md",
+        ".scratch/admin-dashboard/issues/06-backend-independent-checkpoint.md"
+      ],
+      "invariants": [
+        "Preserve visitor migrations/contracts and all replacement-agent work",
+        "Separate server-side staff authorization; no guest capability reuse",
+        "No publishing, deployment, live services or credentials; old pi sessions remain paused"
+      ],
+      "checks": [
+        "format",
+        "lint",
+        "static",
+        "unit",
+        "contract",
+        "fuzz-smoke",
+        "fuzz-full"
+      ],
+      "dependencies": [
+        "ADMIN-01"
+      ],
+      "evidence": [
+        "Recovered backend/completion/handoff.md reports protected HTTP and ticket APIs with passing local gates; not independently accepted. Main composition and UI CSS/JS are absent."
+      ]
+    },
+    {
+      "id": "CI-01",
+      "title": "Deterministic PR validation",
+      "status": "completed",
+      "goal": "Implement CI around real checks with browser and schema validation.",
+      "acceptanceCriteria": [
+        "Restricted deterministic CI with failure artifacts",
+        "Local gates and independent review evidence"
+      ],
+      "context": "project-foundation",
+      "owner": "foundation implementation accepted by independent re-review 2026-11-03 and checkpointed by the coordinator",
+      "allowedPaths": [
+        ".github/workflows/**",
+        "scripts/**",
+        "Makefile",
+        "docs/testing/project-checks.md",
+        "harness.json",
+        ".scratch/automation/**"
+      ],
+      "contractRefs": [
+        ".scratch/automation/issues/01-ci.md",
+        "docs/testing/testing-contract.md"
+      ],
+      "invariants": [
+        "No application changes, commits, pushes or deployment",
+        "Preserve main working tree"
+      ],
+      "checks": [
+        "format",
+        "lint",
+        "static",
+        "unit",
+        "contract",
+        "fuzz-smoke"
+      ],
+      "dependencies": [],
+      "evidence": [
+        "Independent re-review (assistant-ci-review) accepted the bounded repair: P2 subprocess containment closed with real crash/hang/interrupt fixtures passing three independent executions; P3 workflow ownership closed in context map and manifest; no new blocking defect, no weakened predicate",
+        "Coordinator checkpointed commit 84bfd72 'Add deterministic validation CI with bounded browser containment' on tooling/ci-autonomy with the exact product/evidence batch (~55 tracked source plus briefs/handoffs/JSON evidence); binaries, browser profiles, screenshots and sqlite remain deliberately untracked per evidence policy",
+        "Not claimed: hosted GitHub execution (deferred 2026-11-03 by user decision to follow-up CI-02), independent happy-path browser rerun, and a green static (fails only on the worktree's historical four empty-evidence ledger entries, a coordination truth-up item resolved at rating/feature-tree adoption), or any merge to main"
+      ]
+    },
+    {
+      "id": "CI-02",
+      "title": "Hosted deterministic PR validation follow-up",
+      "status": "pending",
+      "goal": "Run the reviewed CI workflow on hosted GitHub with pinned browser dependencies, artifacts, manual full-fuzz branch protection and status checks, when the user authorizes remote execution.",
+      "acceptanceCriteria": [
+        "Pinned Playwright/native browser deps and reproducible hosted run",
+        "Failure artifacts uploaded without leaking repository data",
+        "Manual full-fuzz dispatch remains explicit"
+      ],
+      "context": "project-foundation",
+      "owner": "pending user scheduling/dispatch; no remote actions authorized",
+      "allowedPaths": [
+        ".github/workflows/**",
+        "scripts/**",
+        "docs/testing/project-checks.md",
+        "harness.json"
+      ],
+      "contractRefs": [
+        "docs/testing/testing-contract.md",
+        ".scratch/automation/ci-re-review/handoff.md"
+      ],
+      "invariants": [
+        "Branch on the committed 84bfd72 tooling tree",
+        "No secrets in workflow files; credentials via operator-controlled configuration only",
+        "No automatic remote writes beyond explicitly authorized repository actions"
+      ],
+      "checks": [
+        "format",
+        "lint",
+        "static",
+        "unit",
+        "contract"
+      ],
+      "dependencies": [
+        "CI-01"
+      ],
+      "evidence": []
+    },
+    {
+      "id": "AUTO-01",
+      "title": "Bounded orchestration loop and skills",
+      "status": "claimed",
+      "goal": "Add isolated workers, bounded repair and independent acceptance using the existing task ledger.",
+      "acceptanceCriteria": [
+        "Persistent coordinator with bounded repair and permission gates",
+        "Resume, orchestrate, validate and repair skills",
+        "Tests demonstrate limits and stale-evidence rejection"
+      ],
+      "context": "coordination",
+      "owner": "Coordinator accepted independently validated bounded single-cycle adapter 2026-11-04; all three P2 findings closed. AUTO-01 remains incomplete because persistent turn interception/worker spawning/central execution are not implemented. No new repair dispatch.",
+      "allowedPaths": [
+        "scripts/**",
+        "skills/**",
+        "docs/agents/**",
+        ".scratch/automation/**"
+      ],
+      "contractRefs": [
+        "docs/agents/orchestration-runtime.md",
+        "docs/agents/delegation-protocol.md"
+      ],
+      "invariants": [
+        "No external heartbeat or unbounded repair",
+        "No automatic push, merge, deployment or remote data writes",
+        "No production credentials"
+      ],
+      "checks": [
+        "format",
+        "lint",
+        "static",
+        "unit",
+        "contract"
+      ],
+      "dependencies": [
+        "CI-01"
+      ],
+      "evidence": [
+        "Bounded adapter accepted against auto-final-acceptance/handoff.md in assistant-auto: loop SHA-256 dfc2ed46cc50ae11cd467919e753961e3d5faa6490e7b5cd936c3e41f550cc3a; 20 owner tests, 24 unchanged independent/adjacent tests, 252 refusal probes and fresh offline gates pass; source/prior evidence preserved. This accepts no persistent platform runtime or privileged executor."
+      ]
+    },
+    {
+      "id": "LOCAL-01",
+      "title": "One-command credential-free local FAQ demo",
+      "status": "claimed",
+      "goal": "Let a Windows collaborator clone and run a launcher: hidden API key prompt for real AI or explicit no-key FAQ fallback, with real isolated local chat storage.",
+      "acceptanceCriteria": [
+        "Windows PowerShell 5.1 launcher requires no Bash/WSL or persistent system changes",
+        "Explicit loopback-only SQLite no-key mode never contacts external providers",
+        "Deliberately entered hidden API key selects real AI; no key persistence/argv/browser/build exposure",
+        "Launchers check prerequisites, isolate demo data and start FAQ/rating/ticket flows",
+        "Normal AI/missing-key behavior unchanged; non-AI/sample/service limits disclosed",
+        "Independent CLI/HTTP/browser acceptance and honest native Windows test limits before remote sharing"
+      ],
+      "context": "chat-backend",
+      "owner": "CHAT-01 demo integration owner ses_e5abb3961ffeRnySGvZkJHhWOi with bounded foundation/widget grants in local-demo/spec.md",
+      "allowedPaths": [
+        "cmd/assistant/**",
+        "internal/chat/local_demo*.go",
+        "scripts/demo.sh",
+        "scripts/demo.ps1",
+        "scripts/demo.cmd",
+        "scripts/test_demo.py",
+        "README.md",
+        "docs/contracts/local-demo.md",
+        "docs/contracts/backend.md and chat.md additive references only",
+        ".gitignore demo artifacts only",
+        "web/assets/demo-host.html",
+        ".scratch/local-demo/**"
+      ],
+      "contractRefs": [
+        ".scratch/local-demo/spec.md in assistant-local-demo",
+        "docs/contracts/backend.md",
+        "docs/contracts/chat.md"
+      ],
+      "invariants": [
+        "No key sharing, remote inference/database or production-data mutation",
+        "No admin/AUTO branch import; preserve accepted visitor security and APIs",
+        "Demo replies explicitly not AI-generated; no email/WhatsApp delivery claim",
+        "No publishing/commits/merges/deployment without separate authorization"
+      ],
+      "checks": [
+        "format",
+        "lint",
+        "static",
+        "unit",
+        "contract",
+        "fuzz-smoke",
+        "fuzz-full"
+      ],
+      "dependencies": [
+        "INTEG-01"
+      ],
+      "evidence": [
+        "Final bounded round delivered: ambiguous advertised sample replaced with 'How should I make a private mock application checklist?'; mis-targeted documented samples corrected (scholarships/accessibility/transcripts); TestLocalDemoDocumentedSampleQuestionsResolveToApprovedSources added covering all ten documented samples with exact source and answer fidelity.",
+        "Final source fingerprint 4cea8360bd312aa5a2ba571f16053b328d21c2e6bf0dad2fbcf7b4f0276c73fd; Go runtime hashes unchanged after final full-fuzz-2 PASS, preserving full-fuzz evidence boundary; final live offline HTTP probe on final source confirmed all ten documented samples resolve to intended sources and unrelated question returns labelled clarification.",
+        "Final presentation package v2 created: share/AI_Virtual_Assistant_Windows_Demo_v2.zip SHA-256 1f7f54fbf48e0bd1c252e9c19fe5dd7b21f3ca260d2fc9c080d1486db6d42ee4 (83 files, 262094 bytes); v1 kept obsolete as AI_Virtual_Assistant_Windows_Demo_v1_OBSOLETE.zip. Native Windows runtime and independent browser acceptance remain open."
+      ]
     },
     {
       "id": "SETUP-01",
       "title": "First-slice contracts and validation tooling",
       "status": "completed",
       "goal": "Define owned interfaces and real validation adapters before implementation.",
-      "acceptanceCriteria": ["Exact HTTP, data, storage/provider and widget contracts exist", "All required checks have executable implementations and manifest is truthful", "README explains local versus live service setup without secrets"],
+      "acceptanceCriteria": [
+        "Exact HTTP, data, storage/provider and widget contracts exist",
+        "All required checks have executable implementations and manifest is truthful",
+        "README explains local versus live service setup without secrets"
+      ],
       "context": "project-foundation",
       "owner": "contract-tooling worker",
-      "allowedPaths": ["docs/architecture/**", "docs/contracts/**", "docs/testing/project-checks.md", "go.mod", "go.sum", "Makefile", "scripts/**", "harness.json", "README.md", ".env.example", "GLOSSARY.md"],
-      "contractRefs": [".scratch/ai-chat/spec.md", "docs/architecture/rules.md", "docs/testing/testing-contract.md"],
-      "invariants": ["No application runtime implemented before contract gate", "AI-first and conversation capability isolation required", "No live service calls, secrets, global installs, commits or pushes"],
-      "checks": ["format", "lint", "static", "unit", "contract", "fuzz-smoke"],
+      "allowedPaths": [
+        "docs/architecture/**",
+        "docs/contracts/**",
+        "docs/testing/project-checks.md",
+        "go.mod",
+        "go.sum",
+        "Makefile",
+        "scripts/**",
+        "harness.json",
+        "README.md",
+        ".env.example",
+        "GLOSSARY.md"
+      ],
+      "contractRefs": [
+        ".scratch/ai-chat/spec.md",
+        "docs/architecture/rules.md",
+        "docs/testing/testing-contract.md"
+      ],
+      "invariants": [
+        "No application runtime implemented before contract gate",
+        "AI-first and conversation capability isolation required",
+        "No live service calls, secrets, global installs, commits or pushes"
+      ],
+      "checks": [
+        "format",
+        "lint",
+        "static",
+        "unit",
+        "contract",
+        "fuzz-smoke"
+      ],
       "dependencies": [],
-      "evidence": ["Reviewed docs/contracts/chat.md and backend.md, ownership map and seven executable Make checks", "make setup-check: 10 tooling tests passed; make format and go mod verify passed", "Feature checks intentionally fail while application packages/tests are absent; no fake successful stubs", "Dependencies chi v5.5.0 and modernc SQLite v1.60.1; live services not called"]
+      "evidence": [
+        "Reviewed docs/contracts/chat.md and backend.md, ownership map and seven executable Make checks",
+        "make setup-check: 10 tooling tests passed; make format and go mod verify passed",
+        "Feature checks intentionally fail while application packages/tests are absent; no fake successful stubs",
+        "Dependencies chi v5.5.0 and modernc SQLite v1.60.1; live services not called"
+      ]
     },
     {
       "id": "CHAT-01",
       "title": "Persistent AI-first chat backend",
       "status": "completed",
       "goal": "Implement the reviewed Go/Chi, SQLite/Turso and grounded OpenAI contracts with isolated local tests.",
-      "acceptanceCriteria": ["HTTP contract covers capability auth, atomic turns/replay/history and safe errors", "Approved knowledge precedes AI and malformed/unsupported provider results fail safely", "SQLite restart and Turso/OpenAI fixture tests plus three fuzz targets exist and pass"],
+      "acceptanceCriteria": [
+        "HTTP contract covers capability auth, atomic turns/replay/history and safe errors",
+        "Approved knowledge precedes AI and malformed/unsupported provider results fail safely",
+        "SQLite restart and Turso/OpenAI fixture tests plus three fuzz targets exist and pass"
+      ],
       "context": "chat-backend",
       "owner": "backend worker",
-      "allowedPaths": ["cmd/**", "internal/**", "database/**", ".scratch/ai-chat/issues/02-backend.md"],
-      "contractRefs": ["docs/contracts/chat.md", "docs/contracts/backend.md", ".scratch/ai-chat/spec.md"],
-      "invariants": ["No live credentials or paid/remote database calls", "Never store raw capability or half-turn", "AI-first answers, safe limitations and bounded validated context/history", "No commits/pushes or edits to web/tooling/report files"],
-      "checks": ["format", "lint", "static", "unit", "contract", "fuzz-smoke"],
-      "dependencies": ["SETUP-01"],
-      "evidence": ["Resume baseline: primary independently ran make format lint static unit contract fuzz-smoke; all passed", "Backend review added exact JSON names/duplicate-key/presence/charset regressions and CLI startup/restart/remote migration guards", "Worker reran all gates and Go race; 19 behavioral Go tests, helper, 38 subtests and16fuzzseeds passed", "Full fuzz30s/target passed: provider119499, Turso23344, message4416executions; HTTP provider/DB tests used loopback fixtures only", "Primary reviewed actual handler/store/provider/record code and handoff; no known local backend blocker"]
+      "allowedPaths": [
+        "cmd/**",
+        "internal/**",
+        "database/**",
+        ".scratch/ai-chat/issues/02-backend.md"
+      ],
+      "contractRefs": [
+        "docs/contracts/chat.md",
+        "docs/contracts/backend.md",
+        ".scratch/ai-chat/spec.md"
+      ],
+      "invariants": [
+        "No live credentials or paid/remote database calls",
+        "Never store raw capability or half-turn",
+        "AI-first answers, safe limitations and bounded validated context/history",
+        "No commits/pushes or edits to web/tooling/report files"
+      ],
+      "checks": [
+        "format",
+        "lint",
+        "static",
+        "unit",
+        "contract",
+        "fuzz-smoke"
+      ],
+      "dependencies": [
+        "SETUP-01"
+      ],
+      "evidence": [
+        "Resume baseline: primary independently ran make format lint static unit contract fuzz-smoke; all passed",
+        "Backend review added exact JSON names/duplicate-key/presence/charset regressions and CLI startup/restart/remote migration guards",
+        "Worker reran all gates and Go race; 19 behavioral Go tests, helper, 38 subtests and16fuzzseeds passed",
+        "Full fuzz30s/target passed: provider119499, Turso23344, message4416executions; HTTP provider/DB tests used loopback fixtures only",
+        "Primary reviewed actual handler/store/provider/record code and handoff; no known local backend blocker"
+      ]
     },
     {
       "id": "WIDGET-01",
       "title": "Embeddable widget and sample host",
       "status": "completed",
       "goal": "Implement the reviewed loader/iframe interface, chat state/error handling and DOM safety tests.",
-      "acceptanceCriteria": ["Actual sample-host loader/iframe integration and web.Assets compile", "Exact source/origin validation and private capability handling", "Loading, sources, clarification, safe retry/history and disclosure rendered with no HTML injection", "Node ordinary and contract tests plus browser-ready sample exist"],
+      "acceptanceCriteria": [
+        "Actual sample-host loader/iframe integration and web.Assets compile",
+        "Exact source/origin validation and private capability handling",
+        "Loading, sources, clarification, safe retry/history and disclosure rendered with no HTML injection",
+        "Node ordinary and contract tests plus browser-ready sample exist"
+      ],
       "context": "chat-widget",
       "owner": "widget worker",
-      "allowedPaths": ["web/**", ".scratch/ai-chat/issues/03-widget.md"],
-      "contractRefs": ["docs/contracts/chat.md", "docs/contracts/backend.md", ".scratch/ai-chat/spec.md"],
-      "invariants": ["No backend/tooling edits or academic document changes", "Capability stays in iframe memory only", "No unrestricted postMessage or HTML/Markdown rendering", "No live model calls or commits/pushes"],
-      "checks": ["format", "lint", "static", "unit", "contract"],
-      "dependencies": ["SETUP-01"],
-      "evidence": ["Implementation handed off: web/embed.go, loader/iframe assets, sample host and Node test suites", "36 Node tests passed (24 ordinary, 12 contract); go test -race ./web and go vet ./web passed", "Independent Chromium validation found one native form-submit blocker (WIDGET-02) while cross-origin, containment and safety checks passed", "Fix validated by independent actual-input browser acceptance; see WIDGET-02"]
+      "allowedPaths": [
+        "web/**",
+        ".scratch/ai-chat/issues/03-widget.md"
+      ],
+      "contractRefs": [
+        "docs/contracts/chat.md",
+        "docs/contracts/backend.md",
+        ".scratch/ai-chat/spec.md"
+      ],
+      "invariants": [
+        "No backend/tooling edits or academic document changes",
+        "Capability stays in iframe memory only",
+        "No unrestricted postMessage or HTML/Markdown rendering",
+        "No live model calls or commits/pushes"
+      ],
+      "checks": [
+        "format",
+        "lint",
+        "static",
+        "unit",
+        "contract"
+      ],
+      "dependencies": [
+        "SETUP-01"
+      ],
+      "evidence": [
+        "Implementation handed off: web/embed.go, loader/iframe assets, sample host and Node test suites",
+        "36 Node tests passed (24 ordinary, 12 contract); go test -race ./web and go vet ./web passed",
+        "Independent Chromium validation found one native form-submit blocker (WIDGET-02) while cross-origin, containment and safety checks passed",
+        "Fix validated by independent actual-input browser acceptance; see WIDGET-02"
+      ]
     },
     {
       "id": "VERIFY-01",
       "title": "Independent integrated and browser verification",
       "status": "completed",
       "goal": "Prepare then run targeted independent verification after feature-owner completion.",
-      "acceptanceCriteria": ["Actual local Go/check commands and failure/security cases reviewed", "Actual cross-origin browser loader/iframe interaction checked with labelled fixtures", "Live-service limitations and concrete failures reported without claiming production readiness"],
+      "acceptanceCriteria": [
+        "Actual local Go/check commands and failure/security cases reviewed",
+        "Actual cross-origin browser loader/iframe interaction checked with labelled fixtures",
+        "Live-service limitations and concrete failures reported without claiming production readiness"
+      ],
       "context": "coordination",
       "owner": "independent validation worker",
-      "allowedPaths": ["/tmp/opencode/ai-chat-verification/**"],
-      "contractRefs": ["docs/contracts/chat.md", "docs/contracts/backend.md", ".scratch/ai-chat/spec.md"],
-      "invariants": ["No concurrent edits to implementation-owner paths", "No live OpenAI/Turso calls or credentials", "Wait for explicit completed-feature handoff before integrated validation, no progress polling"],
-      "checks": ["format", "lint", "static", "unit", "contract", "fuzz-smoke"],
-      "dependencies": ["CHAT-01", "WIDGET-01"],
-      "evidence": ["Initial actual Chromium run: 33 passed/1 native form-submit blocker; synthetic-submit checks were not accepted as User-submission proof", "Independent rerun on fixed assets: durable sandbox-send regression 22 passed/0 failed and adapted full fixture 42 passed/0 failed with browser-trusted CDP mouse/keyboard and exactly one POST per send", "Sandbox/CSP unchanged; served assets matched web/assets byte-for-byte (SHA-256 verified by primary); zero leftover owned processes", "MOCK positive UI evidence labelled separately; no live OpenAI/Turso or production-readiness proof", "Primary reran make format lint static unit contract fuzz-smoke on the post-fix tree: all passed"]
+      "allowedPaths": [
+        "/tmp/opencode/ai-chat-verification/**"
+      ],
+      "contractRefs": [
+        "docs/contracts/chat.md",
+        "docs/contracts/backend.md",
+        ".scratch/ai-chat/spec.md"
+      ],
+      "invariants": [
+        "No concurrent edits to implementation-owner paths",
+        "No live OpenAI/Turso calls or credentials",
+        "Wait for explicit completed-feature handoff before integrated validation, no progress polling"
+      ],
+      "checks": [
+        "format",
+        "lint",
+        "static",
+        "unit",
+        "contract",
+        "fuzz-smoke"
+      ],
+      "dependencies": [
+        "CHAT-01",
+        "WIDGET-01"
+      ],
+      "evidence": [
+        "Initial actual Chromium run: 33 passed/1 native form-submit blocker; synthetic-submit checks were not accepted as User-submission proof",
+        "Independent rerun on fixed assets: durable sandbox-send regression 22 passed/0 failed and adapted full fixture 42 passed/0 failed with browser-trusted CDP mouse/keyboard and exactly one POST per send",
+        "Sandbox/CSP unchanged; served assets matched web/assets byte-for-byte (SHA-256 verified by primary); zero leftover owned processes",
+        "MOCK positive UI evidence labelled separately; no live OpenAI/Turso or production-readiness proof",
+        "Primary reran make format lint static unit contract fuzz-smoke on the post-fix tree: all passed"
+      ]
     },
     {
       "id": "DOCS-01",
       "title": "Local first-slice run documentation",
       "status": "completed",
       "goal": "Replace stale scaffold-only README text with exact local startup and truthful live-service limitations while independent reviews run.",
-      "acceptanceCriteria": ["Document local SQLite/demo seed/sample host commands matching existing CLI", "Missing-key limitation and sample-vs-live knowledge are explicit", "No credentials, implementation changes or production/live-test claims"],
+      "acceptanceCriteria": [
+        "Document local SQLite/demo seed/sample host commands matching existing CLI",
+        "Missing-key limitation and sample-vs-live knowledge are explicit",
+        "No credentials, implementation changes or production/live-test claims"
+      ],
       "context": "project-foundation",
       "owner": "foundation documentation worker",
-      "allowedPaths": ["README.md", "docs/testing/project-checks.md", "harness.json", ".scratch/ai-chat/issues/04-run-docs.md"],
-      "contractRefs": ["docs/contracts/chat.md", "docs/contracts/backend.md", "web/README.md"],
-      "invariants": ["Do not edit runtime/widget files or run concurrent full integration checks", "Live service setup requires separate approval", "User keys stay server-side and are never requested in chat"],
-      "checks": ["format", "lint", "static", "unit", "contract"],
-      "dependencies": ["CHAT-01", "WIDGET-01"],
-      "evidence": ["Reviewed actual CLI, storage adapter, provider initialization, widget/README and published contracts before editing", "README and project-checks text now describe actual local behavior and limitations; no stale local test-mode claim", "Foundation worker ran make format lint static unit contract and git diff --check: PASS; primary reviewed diff", "No secrets, remote services, runtime/widget files, commits or pushes changed"]
+      "allowedPaths": [
+        "README.md",
+        "docs/testing/project-checks.md",
+        "harness.json",
+        ".scratch/ai-chat/issues/04-run-docs.md"
+      ],
+      "contractRefs": [
+        "docs/contracts/chat.md",
+        "docs/contracts/backend.md",
+        "web/README.md"
+      ],
+      "invariants": [
+        "Do not edit runtime/widget files or run concurrent full integration checks",
+        "Live service setup requires separate approval",
+        "User keys stay server-side and are never requested in chat"
+      ],
+      "checks": [
+        "format",
+        "lint",
+        "static",
+        "unit",
+        "contract"
+      ],
+      "dependencies": [
+        "CHAT-01",
+        "WIDGET-01"
+      ],
+      "evidence": [
+        "Reviewed actual CLI, storage adapter, provider initialization, widget/README and published contracts before editing",
+        "README and project-checks text now describe actual local behavior and limitations; no stale local test-mode claim",
+        "Foundation worker ran make format lint static unit contract and git diff --check: PASS; primary reviewed diff",
+        "No secrets, remote services, runtime/widget files, commits or pushes changed"
+      ]
     },
     {
       "id": "ESC-01",
       "title": "Visitor email escalation backend",
       "status": "completed",
       "goal": "Add the reviewed idempotent escalation record and safe transport seam without introducing a false delivery claim.",
-      "acceptanceCriteria": ["Capability-authorized tickets with consent/email/note bounds", "Atomic 5-ticket cap and byte-for-byte duplicate replay", "Delivery outcome remains truthful before real transport exists"],
+      "acceptanceCriteria": [
+        "Capability-authorized tickets with consent/email/note bounds",
+        "Atomic 5-ticket cap and byte-for-byte duplicate replay",
+        "Delivery outcome remains truthful before real transport exists"
+      ],
       "context": "chat-backend",
       "owner": "backend worker",
-      "allowedPaths": ["internal/chat/**", "database/**", "cmd/**", ".scratch/support-escalation/issues/01-backend.md"],
-      "contractRefs": ["docs/contracts/chat.md", "docs/contracts/backend.md", ".scratch/support-escalation/issues/01-backend.md"],
-      "invariants": ["No live email/provider/DB calls or credentials", "No chat contract/runtime regression", "No widget/docs/shared contract/harness edits or commits/pushes"],
-      "checks": ["format", "lint", "static", "unit", "contract", "fuzz-smoke"],
-      "dependencies": ["CHAT-01", "DOCS-01"],
-      "evidence": ["Backend owner completed issue, tests and fuzz target; primary reviewed diffs and reran all gates", "Idempotent migration 002, capability-authorized tickets, atomic 5-ticket cap and delivery_not_wired recorded by schema CHECK", "No live credentials/services; all required checks and full fuzz passed"]
+      "allowedPaths": [
+        "internal/chat/**",
+        "database/**",
+        "cmd/**",
+        ".scratch/support-escalation/issues/01-backend.md"
+      ],
+      "contractRefs": [
+        "docs/contracts/chat.md",
+        "docs/contracts/backend.md",
+        ".scratch/support-escalation/issues/01-backend.md"
+      ],
+      "invariants": [
+        "No live email/provider/DB calls or credentials",
+        "No chat contract/runtime regression",
+        "No widget/docs/shared contract/harness edits or commits/pushes"
+      ],
+      "checks": [
+        "format",
+        "lint",
+        "static",
+        "unit",
+        "contract",
+        "fuzz-smoke"
+      ],
+      "dependencies": [
+        "CHAT-01",
+        "DOCS-01"
+      ],
+      "evidence": [
+        "Backend owner completed issue, tests and fuzz target; primary reviewed diffs and reran all gates",
+        "Idempotent migration 002, capability-authorized tickets, atomic 5-ticket cap and delivery_not_wired recorded by schema CHECK",
+        "No live credentials/services; all required checks and full fuzz passed"
+      ]
     },
     {
       "id": "ESC-02",
       "title": "Widget email escalation affordance",
       "status": "completed",
       "goal": "Expose additive, consent-gated email escalation in the existing chat widget.",
-      "acceptanceCriteria": ["Click-gated standalone form with explicit never-prechecked consent", "Server-truthful delivery outcome and valid ticket envelope", "No backend or chat send-path regression"],
+      "acceptanceCriteria": [
+        "Click-gated standalone form with explicit never-prechecked consent",
+        "Server-truthful delivery outcome and valid ticket envelope",
+        "No backend or chat send-path regression"
+      ],
       "context": "chat-widget",
       "owner": "widget worker",
-      "allowedPaths": ["web/**", ".scratch/support-escalation/issues/02-widget.md"],
-      "contractRefs": ["docs/contracts/chat.md", ".scratch/support-escalation/issues/02-widget.md"],
-      "invariants": ["No backend/tooling/academic/live-service edits", "Consent and origin/sandbox/CSP/capability behavior preserved", "No email-sent claim or commit/push"],
-      "checks": ["format", "lint", "static", "unit", "contract"],
-      "dependencies": ["ESC-01"],
-      "evidence": ["Widget owner completed form, validation and server-verbatim rendering; primary reviewed diff and reran gates", "Node tests and contract checks pass; truthful delivery outcome remains delivery_not_wired", "No runtime/backend/tooling changes"]
+      "allowedPaths": [
+        "web/**",
+        ".scratch/support-escalation/issues/02-widget.md"
+      ],
+      "contractRefs": [
+        "docs/contracts/chat.md",
+        ".scratch/support-escalation/issues/02-widget.md"
+      ],
+      "invariants": [
+        "No backend/tooling/academic/live-service edits",
+        "Consent and origin/sandbox/CSP/capability behavior preserved",
+        "No email-sent claim or commit/push"
+      ],
+      "checks": [
+        "format",
+        "lint",
+        "static",
+        "unit",
+        "contract"
+      ],
+      "dependencies": [
+        "ESC-01"
+      ],
+      "evidence": [
+        "Widget owner completed form, validation and server-verbatim rendering; primary reviewed diff and reran gates",
+        "Node tests and contract checks pass; truthful delivery outcome remains delivery_not_wired",
+        "No runtime/backend/tooling changes"
+      ]
     },
     {
       "id": "ESC-03",
       "title": "Independent escalation verification",
       "status": "completed",
       "goal": "Verify the escalation flow end to end in a real browser against the actual Go backend, including consent gating, email validation, duplicate behavior, persistence across restart and honest outcome wording.",
-      "acceptanceCriteria": ["Real trusted input drives the visitor path; no synthetic-submit evidence accepted", "Authorization and isolation checks pass across conversations", "Restart persistence and bounded-rate behavior demonstrated with evidence", "Findings are blockers first, fixes delegated to owning context"],
+      "acceptanceCriteria": [
+        "Real trusted input drives the visitor path; no synthetic-submit evidence accepted",
+        "Authorization and isolation checks pass across conversations",
+        "Restart persistence and bounded-rate behavior demonstrated with evidence",
+        "Findings are blockers first, fixes delegated to owning context"
+      ],
       "context": "coordination",
       "owner": "independent validation worker",
-      "allowedPaths": ["/tmp/opencode/ai-escalation-verification/**"],
-      "contractRefs": ["docs/contracts/chat.md", ".scratch/support-escalation/spec.md"],
-      "invariants": ["No concurrent edits to implementation-owner paths", "No live email/provider/database calls or credentials", "No commits, pushes or harness shared-state edits"],
-      "checks": ["format", "lint", "static", "unit", "contract"],
-      "dependencies": ["ESC-01", "ESC-02"],
-      "evidence": ["Validator claimed issue 03 first; zero implementation edits (HEAD unchanged ac7bdb6); verified by primary status/log review", "Real headless Chromium 154 via CDP through backend-served sample host; 996 real-input events, every isTrusted true, zero submit events; CSP byte-checked restricted", "15/15 scenario records PASS incl. zero-network consent blocks, byte-for-byte duplicate replay (sha256), 5-ticket cap then 409, byte-identical 401 no-existence-oracle, 3x SIGTERM restart persistence, 429+Retry-After cooldown with chat unaffected", "Machine-checkable: results.json 190/190 checks pass; primary independently re-counted pass flags", "Durable copies at .scratch/support-escalation/evidence/{independent-acceptance.md,results.json}"]
+      "allowedPaths": [
+        "/tmp/opencode/ai-escalation-verification/**"
+      ],
+      "contractRefs": [
+        "docs/contracts/chat.md",
+        ".scratch/support-escalation/spec.md"
+      ],
+      "invariants": [
+        "No concurrent edits to implementation-owner paths",
+        "No live email/provider/database calls or credentials",
+        "No commits, pushes or harness shared-state edits"
+      ],
+      "checks": [
+        "format",
+        "lint",
+        "static",
+        "unit",
+        "contract"
+      ],
+      "dependencies": [
+        "ESC-01",
+        "ESC-02"
+      ],
+      "evidence": [
+        "Validator claimed issue 03 first; zero implementation edits (HEAD unchanged ac7bdb6); verified by primary status/log review",
+        "Real headless Chromium 154 via CDP through backend-served sample host; 996 real-input events, every isTrusted true, zero submit events; CSP byte-checked restricted",
+        "15/15 scenario records PASS incl. zero-network consent blocks, byte-for-byte duplicate replay (sha256), 5-ticket cap then 409, byte-identical 401 no-existence-oracle, 3x SIGTERM restart persistence, 429+Retry-After cooldown with chat unaffected",
+        "Machine-checkable: results.json 190/190 checks pass; primary independently re-counted pass flags",
+        "Durable copies at .scratch/support-escalation/evidence/{independent-acceptance.md,results.json}"
+      ]
     },
     {
       "id": "LLM-01",
       "title": "Provider endpoint configuration seam",
       "status": "completed",
       "goal": "Add an additive OPENAI_BASE_URL runtime override naming the complete chat-completions URL, so approved-knowledge inference can be evaluated against any OpenAI-compatible endpoint (zero-cost free tier) with unset-variable behavior byte-for-byte unchanged.",
-      "acceptanceCriteria": ["Unset variable reproduces today's provider behavior exactly (existing provider tests untouched and green)", "Override validated (absolute URL, https unless loopback host, no userinfo/fragment/query) and fails fast in existing honest style", "Loopback httptest test proves the POST lands on the configured path with bearer auth", "Contract and README document the surface additively; all gates pass"],
+      "acceptanceCriteria": [
+        "Unset variable reproduces today's provider behavior exactly (existing provider tests untouched and green)",
+        "Override validated (absolute URL, https unless loopback host, no userinfo/fragment/query) and fails fast in existing honest style",
+        "Loopback httptest test proves the POST lands on the configured path with bearer auth",
+        "Contract and README document the surface additively; all gates pass"
+      ],
       "context": "chat-backend",
       "owner": "backend worker",
-      "allowedPaths": ["internal/chat/**", "cmd/assistant/main.go", "docs/contracts/backend.md", "README.md", ".scratch/provider-endpoint-seam/issues/01-backend.md", "/tmp/opencode/ai-endpoint-seam/**"],
-      "contractRefs": [".scratch/provider-endpoint-seam/spec.md", ".scratch/provider-endpoint-seam/issues/01-backend.md", "docs/adr/0001-testing-approach.md"],
-      "invariants": ["Default endpoint byte-for-byte unchanged; additive contract note only", "No web/**, no live provider calls (loopback httptest only), no commits/pushes", "Provider discipline unchanged: timeouts, bounds, strict decode"],
-      "checks": ["format", "lint", "static", "unit", "contract", "fuzz-smoke"],
-      "dependencies": ["CHAT-01"],
-      "evidence": ["Worker claimed issue 01 first; NewOpenAI/Compose/providerEndpoint byte-for-byte unchanged, verified by primary diff review; main.go default branch keeps the literal today expression", "Validator rejects control/space characters (url.Parse alone tolerated inner spaces; bug caught by the brief's trailing-garbage test and fixed), userinfo, fragments, queries; https required except literal loopback hosts", "Loopback httptest capture proves the POST lands on the configured complete URL with bearer of the key; 5 subprocess fail-fast CLI guard cases", "internal/chat tests 23 to 26 functions, fuzz targets 4 to 5 incl. new FuzzValidateOpenAIEndpoint; cmd 3 to 4 tests; existing tests untouched (primary hunks check)", "Primary reran make format lint static unit contract fuzz-smoke on final tree: all PASS (48 Node unit, 13 contract); race clean -count=2"]
+      "allowedPaths": [
+        "internal/chat/**",
+        "cmd/assistant/main.go",
+        "docs/contracts/backend.md",
+        "README.md",
+        ".scratch/provider-endpoint-seam/issues/01-backend.md",
+        "/tmp/opencode/ai-endpoint-seam/**"
+      ],
+      "contractRefs": [
+        ".scratch/provider-endpoint-seam/spec.md",
+        ".scratch/provider-endpoint-seam/issues/01-backend.md",
+        "docs/adr/0001-testing-approach.md"
+      ],
+      "invariants": [
+        "Default endpoint byte-for-byte unchanged; additive contract note only",
+        "No web/**, no live provider calls (loopback httptest only), no commits/pushes",
+        "Provider discipline unchanged: timeouts, bounds, strict decode"
+      ],
+      "checks": [
+        "format",
+        "lint",
+        "static",
+        "unit",
+        "contract",
+        "fuzz-smoke"
+      ],
+      "dependencies": [
+        "CHAT-01"
+      ],
+      "evidence": [
+        "Worker claimed issue 01 first; NewOpenAI/Compose/providerEndpoint byte-for-byte unchanged, verified by primary diff review; main.go default branch keeps the literal today expression",
+        "Validator rejects control/space characters (url.Parse alone tolerated inner spaces; bug caught by the brief's trailing-garbage test and fixed), userinfo, fragments, queries; https required except literal loopback hosts",
+        "Loopback httptest capture proves the POST lands on the configured complete URL with bearer of the key; 5 subprocess fail-fast CLI guard cases",
+        "internal/chat tests 23 to 26 functions, fuzz targets 4 to 5 incl. new FuzzValidateOpenAIEndpoint; cmd 3 to 4 tests; existing tests untouched (primary hunks check)",
+        "Primary reran make format lint static unit contract fuzz-smoke on final tree: all PASS (48 Node unit, 13 contract); race clean -count=2"
+      ]
     },
     {
       "id": "UI-01",
       "title": "Formal visual refresh of corner widget",
       "status": "completed",
       "goal": "Refine the existing launcher and visitor chat/email widget into a clean, formal, responsive corner interface without expanding product scope.",
-      "acceptanceCriteria": ["Corner widget remains accessible and responsive on desktop and mobile", "Consistent visual hierarchy across chat and email states", "Existing behavior/security/disclosure unchanged and pre-existing uncommitted styles preserved", "Applicable checks pass and actual-browser visual review recorded"],
+      "acceptanceCriteria": [
+        "Corner widget remains accessible and responsive on desktop and mobile",
+        "Consistent visual hierarchy across chat and email states",
+        "Existing behavior/security/disclosure unchanged and pre-existing uncommitted styles preserved",
+        "Applicable checks pass and actual-browser visual review recorded"
+      ],
       "context": "chat-widget",
       "owner": "widget worker",
-      "allowedPaths": ["web/**", ".scratch/widget-visual-refresh/issues/01-corner-widget.md"],
-      "contractRefs": ["docs/contracts/chat.md", ".scratch/widget-visual-refresh/issues/01-corner-widget.md", "web/README.md"],
-      "invariants": ["No backend, staff login/pages, academic report, live services, commits or pushes", "No origin/sandbox/CSP or capability containment regression", "No false claim of sent email; explicit consent remains necessary", "Preserve existing uncommitted CSS and core JS edits"],
-      "checks": ["format", "lint", "static", "unit", "contract"],
-      "dependencies": ["WIDGET-01", "ESC-02"],
-      "evidence": ["Reviewed desktop, 360px mobile and mobile-dark offline Chromium screenshots and 23/23 interaction/layout assertions", "Primary reran make format lint static unit contract and git diff --check: PASS", "Existing CSS/JS work preserved; launcher styling is self-contained on a conflicting-variable host", "Mobile send and handoff controls remain reachable by scrolling, not fixed in view; 200% zoom not tested; no commit/push"]
+      "allowedPaths": [
+        "web/**",
+        ".scratch/widget-visual-refresh/issues/01-corner-widget.md"
+      ],
+      "contractRefs": [
+        "docs/contracts/chat.md",
+        ".scratch/widget-visual-refresh/issues/01-corner-widget.md",
+        "web/README.md"
+      ],
+      "invariants": [
+        "No backend, staff login/pages, academic report, live services, commits or pushes",
+        "No origin/sandbox/CSP or capability containment regression",
+        "No false claim of sent email; explicit consent remains necessary",
+        "Preserve existing uncommitted CSS and core JS edits"
+      ],
+      "checks": [
+        "format",
+        "lint",
+        "static",
+        "unit",
+        "contract"
+      ],
+      "dependencies": [
+        "WIDGET-01",
+        "ESC-02"
+      ],
+      "evidence": [
+        "Reviewed desktop, 360px mobile and mobile-dark offline Chromium screenshots and 23/23 interaction/layout assertions",
+        "Primary reran make format lint static unit contract and git diff --check: PASS",
+        "Existing CSS/JS work preserved; launcher styling is self-contained on a conflicting-variable host",
+        "Mobile send and handoff controls remain reachable by scrolling, not fixed in view; 200% zoom not tested; no commit/push"
+      ]
     },
     {
       "id": "PROD-01",
       "title": "Visitor-support production-readiness audit",
       "status": "completed",
       "goal": "Establish evidenced release blockers and an ordered delivery plan for a real visitor-support launch, without claiming fixture-tested prototype code is production ready.",
-      "acceptanceCriteria": ["Evidence-backed current-state and release-gap inventory with severity", "Each blocker names owner, acceptance test and external dependency", "Bounded implementation sequence and human decisions identified"],
+      "acceptanceCriteria": [
+        "Evidence-backed current-state and release-gap inventory with severity",
+        "Each blocker names owner, acceptance test and external dependency",
+        "Bounded implementation sequence and human decisions identified"
+      ],
       "context": "coordination",
       "owner": "independent validation worker",
-      "allowedPaths": [".scratch/production-release/issues/01-readiness-audit.md"],
-      "contractRefs": ["docs/contracts/chat.md", "docs/contracts/backend.md", ".scratch/production-release/issues/01-readiness-audit.md"],
-      "invariants": ["Read-only review of application and academic files", "No remote services, real credentials, existing database seeding, deployment, commits or pushes", "No public claim of production readiness until blockers resolved"],
-      "checks": ["format", "lint", "static", "unit", "contract"],
-      "dependencies": ["CHAT-01", "ESC-01", "UI-01"],
-      "evidence": ["Independent source/contract/test-evidence audit recorded at .scratch/production-release/issues/01-readiness-audit.md; no live services or credentials used", "No-go: saved escalation tickets have no actual outbound email or staffed retrieval path", "Other release blockers: approved real knowledge/provider, hosted durability/recovery, deploy/TLS/origins, abuse/spend control, privacy/retention, observability, staging browser/accessibility acceptance", "No tests rerun for this read-only audit; local fixture checks do not establish production readiness"]
+      "allowedPaths": [
+        ".scratch/production-release/issues/01-readiness-audit.md"
+      ],
+      "contractRefs": [
+        "docs/contracts/chat.md",
+        "docs/contracts/backend.md",
+        ".scratch/production-release/issues/01-readiness-audit.md"
+      ],
+      "invariants": [
+        "Read-only review of application and academic files",
+        "No remote services, real credentials, existing database seeding, deployment, commits or pushes",
+        "No public claim of production readiness until blockers resolved"
+      ],
+      "checks": [
+        "format",
+        "lint",
+        "static",
+        "unit",
+        "contract"
+      ],
+      "dependencies": [
+        "CHAT-01",
+        "ESC-01",
+        "UI-01"
+      ],
+      "evidence": [
+        "Independent source/contract/test-evidence audit recorded at .scratch/production-release/issues/01-readiness-audit.md; no live services or credentials used",
+        "No-go: saved escalation tickets have no actual outbound email or staffed retrieval path",
+        "Other release blockers: approved real knowledge/provider, hosted durability/recovery, deploy/TLS/origins, abuse/spend control, privacy/retention, observability, staging browser/accessibility acceptance",
+        "No tests rerun for this read-only audit; local fixture checks do not establish production readiness"
+      ]
     },
     {
       "id": "UX-01",
       "title": "Visible corner chat layout and in-view mobile composer",
       "status": "completed",
       "goal": "Create a recognizably different chat window layout with a stable composer visible on desktop and 360px mobile, preserving disclosure and email semantics.",
-      "acceptanceCriteria": ["Header/conversation/composer structure visually distinct from UI-01", "Ready-state question and Send button visible without scrolling at 360x640", "Transcript scrolls independently as history grows and composer stays reachable", "Existing security/behavior/consent and truthful disclosures unchanged; actual browser evidence and checks pass"],
+      "acceptanceCriteria": [
+        "Header/conversation/composer structure visually distinct from UI-01",
+        "Ready-state question and Send button visible without scrolling at 360x640",
+        "Transcript scrolls independently as history grows and composer stays reachable",
+        "Existing security/behavior/consent and truthful disclosures unchanged; actual browser evidence and checks pass"
+      ],
       "context": "chat-widget",
       "owner": "widget worker",
-      "allowedPaths": ["web/**", ".scratch/widget-layout/issues/01-corner-layout.md"],
-      "contractRefs": ["docs/contracts/chat.md", "web/README.md", ".scratch/widget-layout/issues/01-corner-layout.md"],
-      "invariants": ["Preserve existing UI-01 uncommitted changes and widget-core JS work", "No backend, staff login, academic files, live services, commits or pushes", "No origin/sandbox/CSP/capability regression or inaccurate provider/email claims"],
-      "checks": ["format", "lint", "static", "unit", "contract"],
-      "dependencies": ["UI-01"],
-      "evidence": ["Distinct blue header/scrollable conversation/persistent composer screenshot at desktop and 360x640 mobile; safe browser evidence at /tmp/opencode/ux-01/browser-final", "42/42 offline Chromium geometry/interaction assertions including mobile ready composer and long-history scroll; 180x320 CSS viewport approximates 200% zoom", "Primary reran make format lint static unit contract and git diff --check: PASS", "Rebuilt and restarted only local credential-free 8080 preview; HTTP 200 and served widget.html matches working tree hash; no commit/push"]
+      "allowedPaths": [
+        "web/**",
+        ".scratch/widget-layout/issues/01-corner-layout.md"
+      ],
+      "contractRefs": [
+        "docs/contracts/chat.md",
+        "web/README.md",
+        ".scratch/widget-layout/issues/01-corner-layout.md"
+      ],
+      "invariants": [
+        "Preserve existing UI-01 uncommitted changes and widget-core JS work",
+        "No backend, staff login, academic files, live services, commits or pushes",
+        "No origin/sandbox/CSP/capability regression or inaccurate provider/email claims"
+      ],
+      "checks": [
+        "format",
+        "lint",
+        "static",
+        "unit",
+        "contract"
+      ],
+      "dependencies": [
+        "UI-01"
+      ],
+      "evidence": [
+        "Distinct blue header/scrollable conversation/persistent composer screenshot at desktop and 360x640 mobile; safe browser evidence at /tmp/opencode/ux-01/browser-final",
+        "42/42 offline Chromium geometry/interaction assertions including mobile ready composer and long-history scroll; 180x320 CSS viewport approximates 200% zoom",
+        "Primary reran make format lint static unit contract and git diff --check: PASS",
+        "Rebuilt and restarted only local credential-free 8080 preview; HTTP 200 and served widget.html matches working tree hash; no commit/push"
+      ]
     },
     {
       "id": "UX-01B",
       "title": "White surfaces for corner widget",
       "status": "completed",
       "goal": "Respond to user feedback with a predominantly white formal corner-widget interface, blue accents only, preserving UX-01 structural layout.",
-      "acceptanceCriteria": ["Header, conversation and composer visually white in light theme", "Blue no longer fills header; primary action/links remain distinct", "Mobile ready composer visible and disclosure/email/security behavior unchanged", "Browser color/layout assertions, applicable checks and screenshots pass"],
+      "acceptanceCriteria": [
+        "Header, conversation and composer visually white in light theme",
+        "Blue no longer fills header; primary action/links remain distinct",
+        "Mobile ready composer visible and disclosure/email/security behavior unchanged",
+        "Browser color/layout assertions, applicable checks and screenshots pass"
+      ],
       "context": "chat-widget",
       "owner": "widget worker",
-      "allowedPaths": ["web/**", ".scratch/widget-layout/issues/02-white-surface.md"],
-      "contractRefs": ["docs/contracts/chat.md", ".scratch/widget-layout/issues/02-white-surface.md"],
-      "invariants": ["Preserve UI-01 and UX-01 local work", "No backend, academic files, live services, commits or pushes", "No origin/sandbox/CSP, consent or truthful delivery regressions"],
-      "checks": ["format", "lint", "static", "unit", "contract"],
-      "dependencies": ["UX-01"],
-      "evidence": ["Light-theme white header, conversation, disclosure and composer visible in desktop/mobile screenshots; blue restricted to accents", "46/46 offline Chromium checks including computed-color regression and mobile composer; worker make format lint static unit contract and git diff --check pass", "Orchestrator rebuilt and restarted local 8080 preview on existing demo DB; HTTP 200 and widget CSS byte-match verified", "User reported widget still not white; dark OS override remained and is addressed by UX-01C; no commit/push"]
+      "allowedPaths": [
+        "web/**",
+        ".scratch/widget-layout/issues/02-white-surface.md"
+      ],
+      "contractRefs": [
+        "docs/contracts/chat.md",
+        ".scratch/widget-layout/issues/02-white-surface.md"
+      ],
+      "invariants": [
+        "Preserve UI-01 and UX-01 local work",
+        "No backend, academic files, live services, commits or pushes",
+        "No origin/sandbox/CSP, consent or truthful delivery regressions"
+      ],
+      "checks": [
+        "format",
+        "lint",
+        "static",
+        "unit",
+        "contract"
+      ],
+      "dependencies": [
+        "UX-01"
+      ],
+      "evidence": [
+        "Light-theme white header, conversation, disclosure and composer visible in desktop/mobile screenshots; blue restricted to accents",
+        "46/46 offline Chromium checks including computed-color regression and mobile composer; worker make format lint static unit contract and git diff --check pass",
+        "Orchestrator rebuilt and restarted local 8080 preview on existing demo DB; HTTP 200 and widget CSS byte-match verified",
+        "User reported widget still not white; dark OS override remained and is addressed by UX-01C; no commit/push"
+      ]
     },
     {
       "id": "UX-01C",
       "title": "Honor white UI in dark browser mode",
       "status": "completed",
       "goal": "Ensure user's requested white interface remains white regardless of OS/browser color scheme, with red-green browser regression for dark preference.",
-      "acceptanceCriteria": ["Dark-preference browser screenshot shows white header, conversation and composer", "Light and dark preferences both compute white surfaces and readable text", "All existing layout, send, disclosure, escalation and security tests remain green"],
+      "acceptanceCriteria": [
+        "Dark-preference browser screenshot shows white header, conversation and composer",
+        "Light and dark preferences both compute white surfaces and readable text",
+        "All existing layout, send, disclosure, escalation and security tests remain green"
+      ],
       "context": "chat-widget",
       "owner": "widget worker",
-      "allowedPaths": ["web/**", ".scratch/widget-layout/issues/03-always-white.md"],
-      "contractRefs": ["docs/contracts/chat.md", ".scratch/widget-layout/issues/03-always-white.md"],
-      "invariants": ["Preserve uncommitted UI-01 and UX-01 work", "No backend, academic files, live services, commits or pushes", "No consent, origin, sandbox or truthful-disclosure regression"],
-      "checks": ["format", "lint", "static", "unit", "contract"],
-      "dependencies": ["UX-01B"],
-      "evidence": ["Red browser regression reproduced user-visible dark-preference failure before fix; green after removing automatic dark CSS, 63/63 offline browser checks", "Reviewed /tmp/opencode/ux-01c-green-verified-20261020/mobile-dark-ready.png and sample-host-dark.png: white despite dark preference", "Worker make format lint static unit contract green on final rerun; first unit run was transient during concurrent backend work; git diff --check passed", "Rebuilt and started only local credential-free preview on new port 18096; HTTP 200, served CSS checksum matches working tree, old 18095 closed; no commit/push"]
+      "allowedPaths": [
+        "web/**",
+        ".scratch/widget-layout/issues/03-always-white.md"
+      ],
+      "contractRefs": [
+        "docs/contracts/chat.md",
+        ".scratch/widget-layout/issues/03-always-white.md"
+      ],
+      "invariants": [
+        "Preserve uncommitted UI-01 and UX-01 work",
+        "No backend, academic files, live services, commits or pushes",
+        "No consent, origin, sandbox or truthful-disclosure regression"
+      ],
+      "checks": [
+        "format",
+        "lint",
+        "static",
+        "unit",
+        "contract"
+      ],
+      "dependencies": [
+        "UX-01B"
+      ],
+      "evidence": [
+        "Red browser regression reproduced user-visible dark-preference failure before fix; green after removing automatic dark CSS, 63/63 offline browser checks",
+        "Reviewed /tmp/opencode/ux-01c-green-verified-20261020/mobile-dark-ready.png and sample-host-dark.png: white despite dark preference",
+        "Worker make format lint static unit contract green on final rerun; first unit run was transient during concurrent backend work; git diff --check passed",
+        "Rebuilt and started only local credential-free preview on new port 18096; HTTP 200, served CSS checksum matches working tree, old 18095 closed; no commit/push"
+      ]
     },
     {
       "id": "JITI-01",
       "title": "Fictional Jitihada University FAQ and grounding",
       "status": "completed",
       "goal": "Develop the local fictional university FAQ corpus and adapt AI grounding and clarification without remote database or provider calls.",
-      "acceptanceCriteria": ["About ten reviewed bounded fictional FAQ records available through explicit local-only seeding", "Grounding and clarification name the fictional university and preserve approved-only, abstention and citation safety", "Local retrieval/withdrawal, prompt and no-inference/invalid-provider cases tested", "No staging import or broken source links claimed as complete"],
+      "acceptanceCriteria": [
+        "About ten reviewed bounded fictional FAQ records available through explicit local-only seeding",
+        "Grounding and clarification name the fictional university and preserve approved-only, abstention and citation safety",
+        "Local retrieval/withdrawal, prompt and no-inference/invalid-provider cases tested",
+        "No staging import or broken source links claimed as complete"
+      ],
       "context": "chat-backend",
       "owner": "backend worker",
-      "allowedPaths": ["internal/chat/**", "database/**", "cmd/**", ".scratch/jitihada-faq/issues/01-backend-content.md"],
-      "contractRefs": ["docs/contracts/backend.md", "docs/contracts/chat.md", ".scratch/jitihada-faq/issues/01-backend-content.md"],
-      "invariants": ["Fictional material only; no Kenyan institution or eligibility claims", "No remote migrations, seed/import, tokens, paid inference, or deploy", "Existing chat records, approval and source validation remain compatible", "No web/** or other uncommitted user work edited"],
-      "checks": ["format", "lint", "static", "unit", "contract", "fuzz-smoke"],
-      "dependencies": ["CHAT-01"],
-      "evidence": ["Backend owner drafted and then strengthened 10 fictional Jitihada FAQs; stable IDs and local-only seed preserve withdrawn approval on repeat", "Prompt and clarification identify fictional institution while retaining approved-only, untrusted-data, unsupported and citation rules; local fixture tests cover retrieval/withdrawal and provider behavior", "Primary reviewed code diffs, verified assistant-staging still has no tables, and independently ran make format lint static unit contract fuzz-smoke: PASS", "Provisional example.org citation links are unresolved and staging import remains blocked until approved mock source pages exist"]
+      "allowedPaths": [
+        "internal/chat/**",
+        "database/**",
+        "cmd/**",
+        ".scratch/jitihada-faq/issues/01-backend-content.md"
+      ],
+      "contractRefs": [
+        "docs/contracts/backend.md",
+        "docs/contracts/chat.md",
+        ".scratch/jitihada-faq/issues/01-backend-content.md"
+      ],
+      "invariants": [
+        "Fictional material only; no Kenyan institution or eligibility claims",
+        "No remote migrations, seed/import, tokens, paid inference, or deploy",
+        "Existing chat records, approval and source validation remain compatible",
+        "No web/** or other uncommitted user work edited"
+      ],
+      "checks": [
+        "format",
+        "lint",
+        "static",
+        "unit",
+        "contract",
+        "fuzz-smoke"
+      ],
+      "dependencies": [
+        "CHAT-01"
+      ],
+      "evidence": [
+        "Backend owner drafted and then strengthened 10 fictional Jitihada FAQs; stable IDs and local-only seed preserve withdrawn approval on repeat",
+        "Prompt and clarification identify fictional institution while retaining approved-only, untrusted-data, unsupported and citation rules; local fixture tests cover retrieval/withdrawal and provider behavior",
+        "Primary reviewed code diffs, verified assistant-staging still has no tables, and independently ran make format lint static unit contract fuzz-smoke: PASS",
+        "Provisional example.org citation links are unresolved and staging import remains blocked until approved mock source pages exist"
+      ]
     },
     {
       "id": "JITI-02",
       "title": "Document local Jitihada demo accurately",
       "status": "completed",
       "goal": "Update local README to reflect the fictional ten-FAQ seed and explicitly provisional citation links without staging or deployment claims.",
-      "acceptanceCriteria": ["README questions and seed descriptions match source", "Reserved citation URLs and missing mock pages are disclosed", "No Turso provisioning/migration/import or widget code changed"],
+      "acceptanceCriteria": [
+        "README questions and seed descriptions match source",
+        "Reserved citation URLs and missing mock pages are disclosed",
+        "No Turso provisioning/migration/import or widget code changed"
+      ],
       "context": "project-foundation",
       "owner": "foundation documentation worker",
-      "allowedPaths": ["README.md", ".scratch/jitihada-faq/issues/02-run-docs.md"],
-      "contractRefs": [".scratch/jitihada-faq/issues/01-backend-content.md", ".scratch/jitihada-faq/issues/02-run-docs.md", "docs/contracts/backend.md"],
-      "invariants": ["No credentials, remote calls or public-release claims", "No backend/widget/harness changes", "Document approval preservation and local-only seed truthfully"],
-      "checks": ["format", "lint", "static", "unit", "contract"],
-      "dependencies": ["JITI-01"],
-      "evidence": ["README now lists all 10 fictional FAQs and correct local seed/withdrawal semantics", "README marks example.org source URLs as unresolved and assistant-staging as unseeded", "Foundation worker ran make format lint static unit contract and git diff --check: PASS; primary reviewed README diff"]
+      "allowedPaths": [
+        "README.md",
+        ".scratch/jitihada-faq/issues/02-run-docs.md"
+      ],
+      "contractRefs": [
+        ".scratch/jitihada-faq/issues/01-backend-content.md",
+        ".scratch/jitihada-faq/issues/02-run-docs.md",
+        "docs/contracts/backend.md"
+      ],
+      "invariants": [
+        "No credentials, remote calls or public-release claims",
+        "No backend/widget/harness changes",
+        "Document approval preservation and local-only seed truthfully"
+      ],
+      "checks": [
+        "format",
+        "lint",
+        "static",
+        "unit",
+        "contract"
+      ],
+      "dependencies": [
+        "JITI-01"
+      ],
+      "evidence": [
+        "README now lists all 10 fictional FAQs and correct local seed/withdrawal semantics",
+        "README marks example.org source URLs as unresolved and assistant-staging as unseeded",
+        "Foundation worker ran make format lint static unit contract and git diff --check: PASS; primary reviewed README diff"
+      ]
     },
     {
       "id": "JITI-03",
       "title": "Controlled reviewed FAQ import",
       "status": "completed",
       "goal": "Build an explicit, preview-first JSONL FAQ import command with local and future Turso support, without touching staging in this task.",
-      "acceptanceCriteria": ["Strict bounded JSONL validates wholly before any write", "Preview performs no mutation and mutation requires deliberate authorization", "Approval is explicit and existing withdrawal state is preserved", "Local adapter covered; staging remains empty until a separate authorized write"],
+      "acceptanceCriteria": [
+        "Strict bounded JSONL validates wholly before any write",
+        "Preview performs no mutation and mutation requires deliberate authorization",
+        "Approval is explicit and existing withdrawal state is preserved",
+        "Local adapter covered; staging remains empty until a separate authorized write"
+      ],
       "context": "chat-backend",
       "owner": "backend worker",
-      "allowedPaths": ["internal/chat/**", "cmd/assistant/main.go", ".scratch/jitihada-faq/issues/03-staging-import.md"],
-      "contractRefs": [".scratch/jitihada-faq/issues/01-backend-content.md", ".scratch/jitihada-faq/issues/03-staging-import.md", "docs/contracts/backend.md"],
-      "invariants": ["No live Turso/import, paid provider call, deploy, token creation or commit/push", "Existing serve/seed-demo/migrate and HTTP behavior preserved", "No web/harness/docs/shared-owner edits", "All-or-nothing semantics for validated import records"],
-      "checks": ["format", "lint", "static", "unit", "contract", "fuzz-smoke"],
-      "dependencies": ["JITI-01", "JITI-02"],
-      "evidence": ["New internal/chat/import.go: strict bounded JSONL parser, read-only PlanImport and ImportKnowledge; the whole batch is applied by ONE parameterized multi-row upsert, so it commits completely or not at all, with a lost-acknowledgement read-back instead of guessing", "New cmd/assistant import-faq command with --file/--preview/--approve/--allow-remote; remote import refuses before any network I/O without --allow-remote; preview writes nothing; summary prints counts and IDs only, never record text", "Existing withdrawal is preserved: the conflict clause refreshes title/url/text only; an import can refresh content but cannot withdraw an approved row", "Orchestrator review rejected the first per-record implementation and required the single-statement form plus automated CLI guard tests; both were delivered and independently re-verified by the primary", "Primary independently ran make format lint static unit contract fuzz-smoke: PASS; independently confirmed preview writes nothing, apply without --approve is refused, apply with --approve stores 2 approved rows, and turso mode without --allow-remote fails before network I/O", "assistant-staging verified still has no tables; no Turso write, token, provider call, deployment, commit or push"]
+      "allowedPaths": [
+        "internal/chat/**",
+        "cmd/assistant/main.go",
+        ".scratch/jitihada-faq/issues/03-staging-import.md"
+      ],
+      "contractRefs": [
+        ".scratch/jitihada-faq/issues/01-backend-content.md",
+        ".scratch/jitihada-faq/issues/03-staging-import.md",
+        "docs/contracts/backend.md"
+      ],
+      "invariants": [
+        "No live Turso/import, paid provider call, deploy, token creation or commit/push",
+        "Existing serve/seed-demo/migrate and HTTP behavior preserved",
+        "No web/harness/docs/shared-owner edits",
+        "All-or-nothing semantics for validated import records"
+      ],
+      "checks": [
+        "format",
+        "lint",
+        "static",
+        "unit",
+        "contract",
+        "fuzz-smoke"
+      ],
+      "dependencies": [
+        "JITI-01",
+        "JITI-02"
+      ],
+      "evidence": [
+        "New internal/chat/import.go: strict bounded JSONL parser, read-only PlanImport and ImportKnowledge; the whole batch is applied by ONE parameterized multi-row upsert, so it commits completely or not at all, with a lost-acknowledgement read-back instead of guessing",
+        "New cmd/assistant import-faq command with --file/--preview/--approve/--allow-remote; remote import refuses before any network I/O without --allow-remote; preview writes nothing; summary prints counts and IDs only, never record text",
+        "Existing withdrawal is preserved: the conflict clause refreshes title/url/text only; an import can refresh content but cannot withdraw an approved row",
+        "Orchestrator review rejected the first per-record implementation and required the single-statement form plus automated CLI guard tests; both were delivered and independently re-verified by the primary",
+        "Primary independently ran make format lint static unit contract fuzz-smoke: PASS; independently confirmed preview writes nothing, apply without --approve is refused, apply with --approve stores 2 approved rows, and turso mode without --allow-remote fails before network I/O",
+        "assistant-staging verified still has no tables; no Turso write, token, provider call, deployment, commit or push"
+      ]
     },
     {
       "id": "UX-01D",
       "title": "Increase white widget typography one step",
       "status": "completed",
       "goal": "Increase body and small utility text readability without breaking the persistent mobile composer or white UI.",
-      "acceptanceCriteria": ["Larger readable widget body and essential disclosure/hint text", "White interface unconditional across color scheme preferences", "Desktop/mobile composer and Send visible with no overlap; browser and repository checks pass"],
+      "acceptanceCriteria": [
+        "Larger readable widget body and essential disclosure/hint text",
+        "White interface unconditional across color scheme preferences",
+        "Desktop/mobile composer and Send visible with no overlap; browser and repository checks pass"
+      ],
       "context": "chat-widget",
       "owner": "widget worker",
-      "allowedPaths": ["web/**", ".scratch/widget-layout/issues/04-type-size.md"],
-      "contractRefs": ["docs/contracts/chat.md", ".scratch/widget-layout/issues/04-type-size.md"],
-      "invariants": ["Preserve existing user UI edits", "No backend, academic, live services, commits or pushes", "No disclosure, consent, sandbox or message-routing regression"],
-      "checks": ["format", "lint", "static", "unit", "contract"],
-      "dependencies": ["UX-01C"],
-      "evidence": ["16px base and larger essential disclosure/status/compose text; white under light/dark browser preferences", "75/75 offline browser assertions and safe screenshots at /tmp/opencode/ux-01d-visual-final; 360x640 composer remains visible", "Worker make format lint static unit contract and git diff --check: PASS", "Orchestrator built local preview on fresh plain port 18097, stopped 18096, HTTP 200 and served CSS matches working tree; no commit/push"]
+      "allowedPaths": [
+        "web/**",
+        ".scratch/widget-layout/issues/04-type-size.md"
+      ],
+      "contractRefs": [
+        "docs/contracts/chat.md",
+        ".scratch/widget-layout/issues/04-type-size.md"
+      ],
+      "invariants": [
+        "Preserve existing user UI edits",
+        "No backend, academic, live services, commits or pushes",
+        "No disclosure, consent, sandbox or message-routing regression"
+      ],
+      "checks": [
+        "format",
+        "lint",
+        "static",
+        "unit",
+        "contract"
+      ],
+      "dependencies": [
+        "UX-01C"
+      ],
+      "evidence": [
+        "16px base and larger essential disclosure/status/compose text; white under light/dark browser preferences",
+        "75/75 offline browser assertions and safe screenshots at /tmp/opencode/ux-01d-visual-final; 360x640 composer remains visible",
+        "Worker make format lint static unit contract and git diff --check: PASS",
+        "Orchestrator built local preview on fresh plain port 18097, stopped 18096, HTTP 200 and served CSS matches working tree; no commit/push"
+      ]
     },
     {
       "id": "UX-01E",
       "title": "Concise honest disclosures and no demo branding",
       "status": "completed",
       "goal": "Reduce verbose chat disclosure and remove repetitive demo-facing branding without hiding privacy or preview limitations.",
-      "acceptanceCriteria": ["Brief clear pre-send AI risk, data sharing, guest-access and not-official-content copy", "No demo branding in visitor header/sample host", "Email and provider claims remain truthful; existing browser/security behavior and checks pass"],
+      "acceptanceCriteria": [
+        "Brief clear pre-send AI risk, data sharing, guest-access and not-official-content copy",
+        "No demo branding in visitor header/sample host",
+        "Email and provider claims remain truthful; existing browser/security behavior and checks pass"
+      ],
       "context": "chat-widget",
       "owner": "widget worker",
-      "allowedPaths": ["web/**", ".scratch/widget-layout/issues/05-copy-cleanup.md"],
-      "contractRefs": ["docs/contracts/chat.md", ".scratch/widget-layout/issues/05-copy-cleanup.md"],
-      "invariants": ["Current local knowledge remains fictional, not official", "No backend, contracts, academic files, live services, commits or pushes", "Consent, inert text, capability, sandbox/origin invariants unchanged"],
-      "checks": ["format", "lint", "static", "unit", "contract"],
-      "dependencies": ["UX-01D"],
-      "evidence": ["Reduced widget disclosure while retaining AI risk, no-sensitive-data, sample not official, server/provider flow and guest history persistence; removed visible demo branding", "Worker make format lint static unit contract and git diff --check: PASS; 75/75 offline real-browser assertions in /tmp/opencode/ux-01e-browser-20261020", "Orchestrator reviewed screenshots and launched only local credential-free new preview on plain port 18098; HTTP 200 and served widget HTML byte-match verified", "Still explicitly warns sample material is fictional; no real email sent; no commit/push"]
+      "allowedPaths": [
+        "web/**",
+        ".scratch/widget-layout/issues/05-copy-cleanup.md"
+      ],
+      "contractRefs": [
+        "docs/contracts/chat.md",
+        ".scratch/widget-layout/issues/05-copy-cleanup.md"
+      ],
+      "invariants": [
+        "Current local knowledge remains fictional, not official",
+        "No backend, contracts, academic files, live services, commits or pushes",
+        "Consent, inert text, capability, sandbox/origin invariants unchanged"
+      ],
+      "checks": [
+        "format",
+        "lint",
+        "static",
+        "unit",
+        "contract"
+      ],
+      "dependencies": [
+        "UX-01D"
+      ],
+      "evidence": [
+        "Reduced widget disclosure while retaining AI risk, no-sensitive-data, sample not official, server/provider flow and guest history persistence; removed visible demo branding",
+        "Worker make format lint static unit contract and git diff --check: PASS; 75/75 offline real-browser assertions in /tmp/opencode/ux-01e-browser-20261020",
+        "Orchestrator reviewed screenshots and launched only local credential-free new preview on plain port 18098; HTTP 200 and served widget HTML byte-match verified",
+        "Still explicitly warns sample material is fictional; no real email sent; no commit/push"
+      ]
     },
     {
       "id": "UX-01F",
       "title": "Remove displayed localhost/port from chat notice",
       "status": "completed",
       "goal": "Keep transparent server/provider sharing notice without displaying technical origin URLs or ports to visitors.",
-      "acceptanceCriteria": ["Visible notice no longer contains location.origin, localhost or port", "Still states chat data goes to app server and relevant excerpts may reach AI provider", "Origin routing and security behavior unchanged; tests/browser checks pass"],
+      "acceptanceCriteria": [
+        "Visible notice no longer contains location.origin, localhost or port",
+        "Still states chat data goes to app server and relevant excerpts may reach AI provider",
+        "Origin routing and security behavior unchanged; tests/browser checks pass"
+      ],
       "context": "chat-widget",
       "owner": "widget worker",
-      "allowedPaths": ["web/**", ".scratch/widget-layout/issues/06-hide-origin.md"],
-      "contractRefs": ["docs/contracts/chat.md", ".scratch/widget-layout/issues/06-hide-origin.md"],
-      "invariants": ["No backend or shared contract changes", "Keep pre-send AI/privacy/guest disclosures, consent and sandbox/origin isolation", "No live services, commits or pushes"],
-      "checks": ["format", "lint", "static", "unit", "contract"],
-      "dependencies": ["UX-01E"],
-      "evidence": ["Visible notice no longer interpolates location.origin; it reads that questions/recent chat go to the app server and approved excerpts may go to configured AI provider", "Worker tests pass 75/75 visual and 22/22 send; make format lint static unit contract and git diff --check pass", "Orchestrator verified port 18099 serves HTTP 200 and widget-core.mjs byte-matches working tree, includes revised sentence and no visible localhost/127.0.0.1", "Prior preview 18098 closed; no commit/push and no production claim"]
+      "allowedPaths": [
+        "web/**",
+        ".scratch/widget-layout/issues/06-hide-origin.md"
+      ],
+      "contractRefs": [
+        "docs/contracts/chat.md",
+        ".scratch/widget-layout/issues/06-hide-origin.md"
+      ],
+      "invariants": [
+        "No backend or shared contract changes",
+        "Keep pre-send AI/privacy/guest disclosures, consent and sandbox/origin isolation",
+        "No live services, commits or pushes"
+      ],
+      "checks": [
+        "format",
+        "lint",
+        "static",
+        "unit",
+        "contract"
+      ],
+      "dependencies": [
+        "UX-01E"
+      ],
+      "evidence": [
+        "Visible notice no longer interpolates location.origin; it reads that questions/recent chat go to the app server and approved excerpts may go to configured AI provider",
+        "Worker tests pass 75/75 visual and 22/22 send; make format lint static unit contract and git diff --check pass",
+        "Orchestrator verified port 18099 serves HTTP 200 and widget-core.mjs byte-matches working tree, includes revised sentence and no visible localhost/127.0.0.1",
+        "Prior preview 18098 closed; no commit/push and no production claim"
+      ]
     },
     {
       "id": "UX-01G",
       "title": "Human-support actions and concise disclosure",
       "status": "completed",
       "goal": "Present spec-aligned visitor handoff actions separately from normal chat: available email path, unavailable WhatsApp, and collapsed detailed disclosure.",
-      "acceptanceCriteria": ["Request human support opens an accessible menu after conversation creation", "By email opens existing consent/validation flow; WhatsApp is disabled with honest unavailable reason", "More information contains remaining required privacy/server/guest facts without technical URLs", "Normal send, white light/dark styling, mobile composer and all security/email behavior preserved; checks and browser evidence pass"],
+      "acceptanceCriteria": [
+        "Request human support opens an accessible menu after conversation creation",
+        "By email opens existing consent/validation flow; WhatsApp is disabled with honest unavailable reason",
+        "More information contains remaining required privacy/server/guest facts without technical URLs",
+        "Normal send, white light/dark styling, mobile composer and all security/email behavior preserved; checks and browser evidence pass"
+      ],
       "context": "chat-widget",
       "owner": "widget worker",
-      "allowedPaths": ["web/**", ".scratch/widget-layout/issues/07-handoff-actions.md"],
-      "contractRefs": ["docs/contracts/chat.md", ".scratch/widget-layout/issues/07-handoff-actions.md", ".scratch/ai-chat/spec.md"],
-      "invariants": ["No WhatsApp delivery, phone collection, staff features or production readiness claim", "No backend/shared contract, academic files, harness, live service, commit or push changes", "Consent, capability isolation, replay, inert text, sandbox/origin and honest delivery status remain intact"],
-      "checks": ["format", "lint", "static", "unit", "contract"],
-      "dependencies": ["UX-01F"],
-      "evidence": ["Request human support opens an accessible channel menu only after a conversation exists; By email opens the existing consent form, By WhatsApp is disabled with a truthful unavailable reason and no phone field", "More information disclosure keeps server/provider and guest-history facts while the AI risk and sample-content warning stay visible; no origin, port or demo wording", "Worker evidence 113/113 visual and 22/22 send real-browser assertions; primary reran make format lint static unit contract: PASS (55 Node unit, 14 Node contract)", "Orchestrator reviewed screenshots, built local preview and served it on plain port 18100; HTTP 200 and served widget.html byte-match verified; 18099 closed; no commit/push"]
+      "allowedPaths": [
+        "web/**",
+        ".scratch/widget-layout/issues/07-handoff-actions.md"
+      ],
+      "contractRefs": [
+        "docs/contracts/chat.md",
+        ".scratch/widget-layout/issues/07-handoff-actions.md",
+        ".scratch/ai-chat/spec.md"
+      ],
+      "invariants": [
+        "No WhatsApp delivery, phone collection, staff features or production readiness claim",
+        "No backend/shared contract, academic files, harness, live service, commit or push changes",
+        "Consent, capability isolation, replay, inert text, sandbox/origin and honest delivery status remain intact"
+      ],
+      "checks": [
+        "format",
+        "lint",
+        "static",
+        "unit",
+        "contract"
+      ],
+      "dependencies": [
+        "UX-01F"
+      ],
+      "evidence": [
+        "Request human support opens an accessible channel menu only after a conversation exists; By email opens the existing consent form, By WhatsApp is disabled with a truthful unavailable reason and no phone field",
+        "More information disclosure keeps server/provider and guest-history facts while the AI risk and sample-content warning stay visible; no origin, port or demo wording",
+        "Worker evidence 113/113 visual and 22/22 send real-browser assertions; primary reran make format lint static unit contract: PASS (55 Node unit, 14 Node contract)",
+        "Orchestrator reviewed screenshots, built local preview and served it on plain port 18100; HTTP 200 and served widget.html byte-match verified; 18099 closed; no commit/push"
+      ]
     },
     {
-      "id": "DISC-01", "title": "Verify guest and sharing disclosures", "status": "completed", "goal": "Verify existing pre-send disclosures without changing runtime unless a gap is found.", "acceptanceCriteria": ["Guest reload and server-side history disclosed", "App-server and AI-provider sharing disclosed"], "context": "coordination", "owner": "independent disclosure validator", "allowedPaths": [".scratch/conversation-rating/issues/01-disclosures.md"], "contractRefs": [".scratch/conversation-rating/spec.md", "docs/contracts/chat.md"], "invariants": ["No runtime edits", "No live services"], "checks": ["contract"], "dependencies": [], "evidence": ["Coordinator read .scratch/conversation-rating/issues/01-disclosures.md validation result: pre-send sharing/reload facts available inside More information, not expanded by default; wording precision gap explicitly delegated to RATE-03", "Historical validator reported make format lint static unit contract passing; no fresh test run is claimed by this ledger repair"]
+      "id": "DISC-01",
+      "title": "Verify guest and sharing disclosures",
+      "status": "completed",
+      "goal": "Verify existing pre-send disclosures without changing runtime unless a gap is found.",
+      "acceptanceCriteria": [
+        "Guest reload and server-side history disclosed",
+        "App-server and AI-provider sharing disclosed"
+      ],
+      "context": "coordination",
+      "owner": "independent disclosure validator",
+      "allowedPaths": [
+        ".scratch/conversation-rating/issues/01-disclosures.md"
+      ],
+      "contractRefs": [
+        ".scratch/conversation-rating/spec.md",
+        "docs/contracts/chat.md"
+      ],
+      "invariants": [
+        "No runtime edits",
+        "No live services"
+      ],
+      "checks": [
+        "contract"
+      ],
+      "dependencies": [],
+      "evidence": [
+        "Coordinator read .scratch/conversation-rating/issues/01-disclosures.md validation result: pre-send sharing/reload facts available inside More information, not expanded by default; wording precision gap explicitly delegated to RATE-03",
+        "Historical validator reported make format lint static unit contract passing; no fresh test run is claimed by this ledger repair"
+      ]
     },
     {
-      "id": "RATE-01", "title": "Additive conversation rating contract", "status": "completed", "goal": "Specify rating data and cross-context API behavior before implementation.", "acceptanceCriteria": ["Exact endpoint, validation, replay, revision, errors and migration invariants specified"], "context": "project-foundation", "owner": "contract worker", "allowedPaths": ["docs/contracts/**", "docs/adr/**", ".scratch/conversation-rating/issues/02-contract.md"], "contractRefs": [".scratch/conversation-rating/spec.md"], "invariants": ["No runtime changes", "No live services"], "checks": ["format", "lint", "static", "unit", "contract"], "dependencies": [], "evidence": ["Accepted contract handoff .scratch/conversation-rating/issues/02-contract.md publishes additive rating endpoint and widget behavior in chat.md plus storage/migration obligations in backend.md; implementation is not asserted", "Contract acceptance recorded by existing commits c902913 and 8fb8e2a and active rating plan; coordinator restored evidence pointer, not a new validation claim"]
+      "id": "RATE-01",
+      "title": "Additive conversation rating contract",
+      "status": "completed",
+      "goal": "Specify rating data and cross-context API behavior before implementation.",
+      "acceptanceCriteria": [
+        "Exact endpoint, validation, replay, revision, errors and migration invariants specified"
+      ],
+      "context": "project-foundation",
+      "owner": "contract worker",
+      "allowedPaths": [
+        "docs/contracts/**",
+        "docs/adr/**",
+        ".scratch/conversation-rating/issues/02-contract.md"
+      ],
+      "contractRefs": [
+        ".scratch/conversation-rating/spec.md"
+      ],
+      "invariants": [
+        "No runtime changes",
+        "No live services"
+      ],
+      "checks": [
+        "format",
+        "lint",
+        "static",
+        "unit",
+        "contract"
+      ],
+      "dependencies": [],
+      "evidence": [
+        "Accepted contract handoff .scratch/conversation-rating/issues/02-contract.md publishes additive rating endpoint and widget behavior in chat.md plus storage/migration obligations in backend.md; implementation is not asserted",
+        "Contract acceptance recorded by existing commits c902913 and 8fb8e2a and active rating plan; coordinator restored evidence pointer, not a new validation claim"
+      ]
     },
     {
-      "id": "RATE-02", "title": "Durable rating backend", "status": "claimed", "goal": "Store capability-authorized ratings atomically in both adapters.", "acceptanceCriteria": ["Replay and revision are safe", "Isolation, restart and no-turn paths tested"], "context": "chat-backend", "owner": "rating backend follow-up worker (assistant-rate-backend)", "allowedPaths": ["internal/chat/*test.go", ".scratch/automation/backend-followup/**", ".scratch/automation/backend-followup-brief.md"], "contractRefs": ["docs/contracts/chat.md", ".scratch/conversation-rating/spec.md"], "invariants": ["No live services or secrets", "Unchanged chat and escalation behavior"], "checks": ["format", "lint", "static", "unit", "contract", "fuzz-smoke"], "dependencies": ["RATE-01"], "evidence": []
+      "id": "RATE-02",
+      "title": "Durable rating backend",
+      "status": "completed",
+      "goal": "Store capability-authorized ratings atomically in both adapters.",
+      "acceptanceCriteria": [
+        "Replay and revision are safe",
+        "Isolation, restart and no-turn paths tested"
+      ],
+      "context": "chat-backend",
+      "owner": "rating backend follow-up delivered; test batch absorbed into accepted eface12 and combined validation",
+      "allowedPaths": [
+        "internal/chat/*test.go",
+        ".scratch/automation/backend-followup/**",
+        ".scratch/automation/backend-followup-brief.md"
+      ],
+      "contractRefs": [
+        "docs/contracts/chat.md",
+        ".scratch/conversation-rating/spec.md"
+      ],
+      "invariants": [
+        "No live services or secrets",
+        "Unchanged chat and escalation behavior"
+      ],
+      "checks": [
+        "format",
+        "lint",
+        "static",
+        "unit",
+        "contract",
+        "fuzz-smoke"
+      ],
+      "dependencies": [
+        "RATE-01"
+      ],
+      "evidence": [
+        "Storage/restart/race test strengthening delivered by follow-up worker and accepted within RATE-04's evidence-backed acceptance at eface12",
+        "Independently rerun green in the combined tree at db38c32 (unit race tests, 61/0 trusted-input rating suite, storage audit)"
+      ]
     },
     {
-      "id": "RATE-03", "title": "Accessible guest rating widget", "status": "claimed", "goal": "Collect optional feedback after a completed turn without disturbing chat.", "acceptanceCriteria": ["Accessible rating and comment, replay and revision", "Browser and Node regression evidence"], "context": "chat-widget", "owner": "rating browser follow-up worker (assistant-rate-browser)", "allowedPaths": ["web/tests/rating.browser.mjs", "web/tests/rating*.test.mjs", ".scratch/automation/browser-followup/**", ".scratch/automation/browser-followup-brief.md"], "contractRefs": ["docs/contracts/chat.md", ".scratch/conversation-rating/spec.md"], "invariants": ["No new browser storage", "Preserve handoff and disclosures"], "checks": ["format", "lint", "static", "unit", "contract"], "dependencies": ["RATE-01"], "evidence": []
+      "id": "RATE-03",
+      "title": "Accessible guest rating widget",
+      "status": "completed",
+      "goal": "Collect optional feedback after a completed turn without disturbing chat.",
+      "acceptanceCriteria": [
+        "Accessible rating and comment, replay and revision",
+        "Browser and Node regression evidence"
+      ],
+      "context": "chat-widget",
+      "owner": "rating browser follow-up delivered; test batch absorbed into accepted eface12 and combined validation",
+      "allowedPaths": [
+        "web/tests/rating.browser.mjs",
+        "web/tests/rating*.test.mjs",
+        ".scratch/automation/browser-followup/**",
+        ".scratch/automation/browser-followup-brief.md"
+      ],
+      "contractRefs": [
+        "docs/contracts/chat.md",
+        ".scratch/conversation-rating/spec.md"
+      ],
+      "invariants": [
+        "No new browser storage",
+        "Preserve handoff and disclosures"
+      ],
+      "checks": [
+        "format",
+        "lint",
+        "static",
+        "unit",
+        "contract"
+      ],
+      "dependencies": [
+        "RATE-01"
+      ],
+      "evidence": [
+        "Trusted-input/actual-backend browser coverage delivered by follow-up worker and accepted within RATE-04's evidence-backed acceptance at eface12",
+        "Independently rerun green in the combined tree at db38c32 (rating 61/0, sandbox-send 48/0, widget visual 208/0) with close/reopen-around-unsaved-rating regression"
+      ]
     },
     {
-      "id": "RATE-04", "title": "Independent rating verification", "status": "completed", "goal": "Verify full local rating flow and all regression gates.", "acceptanceCriteria": ["Real input browser tests and server isolation/restart", "Final gates and risk notes"], "context": "coordination", "owner": "independent rating acceptance validator (assistant-rate-acceptance)", "allowedPaths": [".scratch/automation/rating-acceptance/**", ".scratch/automation/rating-acceptance-brief.md", "internal/chat/rating_test.go (mechanical supplied-patch assembly only)", "web/tests/rating.browser.mjs (mechanical supplied-patch assembly only)"], "contractRefs": ["docs/contracts/chat.md", ".scratch/conversation-rating/spec.md"], "invariants": ["No live provider/mail/database services", "No production readiness claim"], "checks": ["format", "lint", "static", "unit", "contract", "fuzz-smoke", "fuzz-full"], "dependencies": ["RATE-02", "RATE-03"], "evidence": ["Independent validator accepted recovered rating plus test follow-ups at base 1253287; exact tested source and durable evidence committed locally as eface12 on validation/rating-acceptance; not merged into the main working tree", "All common gates and full fuzz passed, seven mutation campaigns; eight rating race tests passed ten repetitions; actual-backend browser assertions rating 52/52, sandbox-send 22/22, widget visual 113/113", "Evidence .scratch/automation/rating-acceptance/handoff.md and logs/results live on validation/rating-acceptance; low-severity browser-profile retention follow-up remains; main-tree Escape/UI, CI and production readiness are excluded"]
+      "id": "RATE-04",
+      "title": "Independent rating verification",
+      "status": "completed",
+      "goal": "Verify full local rating flow and all regression gates.",
+      "acceptanceCriteria": [
+        "Real input browser tests and server isolation/restart",
+        "Final gates and risk notes"
+      ],
+      "context": "coordination",
+      "owner": "independent rating acceptance validator (assistant-rate-acceptance)",
+      "allowedPaths": [
+        ".scratch/automation/rating-acceptance/**",
+        ".scratch/automation/rating-acceptance-brief.md",
+        "internal/chat/rating_test.go (mechanical supplied-patch assembly only)",
+        "web/tests/rating.browser.mjs (mechanical supplied-patch assembly only)"
+      ],
+      "contractRefs": [
+        "docs/contracts/chat.md",
+        ".scratch/conversation-rating/spec.md"
+      ],
+      "invariants": [
+        "No live provider/mail/database services",
+        "No production readiness claim"
+      ],
+      "checks": [
+        "format",
+        "lint",
+        "static",
+        "unit",
+        "contract",
+        "fuzz-smoke",
+        "fuzz-full"
+      ],
+      "dependencies": [
+        "RATE-02",
+        "RATE-03"
+      ],
+      "evidence": [
+        "Independent validator accepted recovered rating plus test follow-ups at base 1253287; exact tested source and durable evidence committed locally as eface12 on validation/rating-acceptance; not merged into the main working tree",
+        "All common gates and full fuzz passed, seven mutation campaigns; eight rating race tests passed ten repetitions; actual-backend browser assertions rating 52/52, sandbox-send 22/22, widget visual 113/113",
+        "Evidence .scratch/automation/rating-acceptance/handoff.md and logs/results live on validation/rating-acceptance; low-severity browser-profile retention follow-up remains; main-tree Escape/UI, CI and production readiness are excluded"
+      ]
     },
     {
-      "id": "WIDGET-ESC-01", "title": "Close widget with Escape", "status": "completed", "goal": "Close the visible chat window on Escape and return keyboard focus to the launcher.", "acceptanceCriteria": ["Escape in iframe or launcher closes host window", "Reopen preserves guest chat and drafts", "Strict-origin close message and browser keyboard regression"], "context": "chat-widget", "owner": "widget worker", "allowedPaths": ["web/assets/loader.js", "web/assets/widget-core.mjs", "web/tests/**", ".scratch/widget-escape/issues/01-close-window.md"], "contractRefs": ["docs/contracts/chat.md", ".scratch/widget-escape/issues/01-close-window.md"], "invariants": ["No API mutation or iframe reload on close", "Never pass guest secrets or chat text to host", "No production claim or commit/push"], "checks": ["format", "lint", "static", "unit", "contract", "fuzz-smoke"], "dependencies": ["UX-01G"], "evidence": ["Worker gates passed: make format lint static unit contract fuzz-smoke", "Trusted Chromium keyboard regression: 31/31, including open handoff form, launcher focus, preserved drafts and no POST on Escape", "Orchestrator reviewed widget diff and embedding guard tests; git diff --check passed"]
+      "id": "WIDGET-ESC-01",
+      "title": "Close widget with Escape",
+      "status": "completed",
+      "goal": "Close the visible chat window on Escape and return keyboard focus to the launcher.",
+      "acceptanceCriteria": [
+        "Escape in iframe or launcher closes host window",
+        "Reopen preserves guest chat and drafts",
+        "Strict-origin close message and browser keyboard regression"
+      ],
+      "context": "chat-widget",
+      "owner": "widget worker",
+      "allowedPaths": [
+        "web/assets/loader.js",
+        "web/assets/widget-core.mjs",
+        "web/tests/**",
+        ".scratch/widget-escape/issues/01-close-window.md"
+      ],
+      "contractRefs": [
+        "docs/contracts/chat.md",
+        ".scratch/widget-escape/issues/01-close-window.md"
+      ],
+      "invariants": [
+        "No API mutation or iframe reload on close",
+        "Never pass guest secrets or chat text to host",
+        "No production claim or commit/push"
+      ],
+      "checks": [
+        "format",
+        "lint",
+        "static",
+        "unit",
+        "contract",
+        "fuzz-smoke"
+      ],
+      "dependencies": [
+        "UX-01G"
+      ],
+      "evidence": [
+        "Worker gates passed: make format lint static unit contract fuzz-smoke",
+        "Trusted Chromium keyboard regression: 31/31, including open handoff form, launcher focus, preserved drafts and no POST on Escape",
+        "Orchestrator reviewed widget diff and embedding guard tests; git diff --check passed"
+      ]
     },
     {
-      "id": "WIDGET-ESC-02", "title": "Document close control message", "status": "completed", "goal": "Publish the exact iframe-host close message and guard rules.", "acceptanceCriteria": ["Contract states exact versioned message, source/origin checks and focus/reuse behavior"], "context": "project-foundation", "owner": "contract-tooling worker", "allowedPaths": ["docs/contracts/chat.md", ".scratch/widget-escape/issues/02-embedding-contract.md"], "contractRefs": ["docs/contracts/chat.md", ".scratch/widget-escape/issues/02-embedding-contract.md"], "invariants": ["No unrelated contract change or runtime edits"], "checks": ["format", "lint", "static", "unit", "contract"], "dependencies": ["WIDGET-ESC-01"], "evidence": ["Foundation worker documented close message and guards in embedding contract; make format lint static unit contract passed"]
+      "id": "WIDGET-ESC-02",
+      "title": "Document close control message",
+      "status": "completed",
+      "goal": "Publish the exact iframe-host close message and guard rules.",
+      "acceptanceCriteria": [
+        "Contract states exact versioned message, source/origin checks and focus/reuse behavior"
+      ],
+      "context": "project-foundation",
+      "owner": "contract-tooling worker",
+      "allowedPaths": [
+        "docs/contracts/chat.md",
+        ".scratch/widget-escape/issues/02-embedding-contract.md"
+      ],
+      "contractRefs": [
+        "docs/contracts/chat.md",
+        ".scratch/widget-escape/issues/02-embedding-contract.md"
+      ],
+      "invariants": [
+        "No unrelated contract change or runtime edits"
+      ],
+      "checks": [
+        "format",
+        "lint",
+        "static",
+        "unit",
+        "contract"
+      ],
+      "dependencies": [
+        "WIDGET-ESC-01"
+      ],
+      "evidence": [
+        "Foundation worker documented close message and guards in embedding contract; make format lint static unit contract passed"
+      ]
     }
   ]
 }

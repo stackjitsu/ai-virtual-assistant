@@ -1,0 +1,7 @@
+# STAGE-09 bounded validation follow-up
+
+Coordinator reviewed partial owner handoff: minimal3line decoder change and durable regressions pass; unrelated unchanged Python process fixture sigkillSent assertion failed once during make unit. This is NOT a waiver and not evidence of decoder failure or proven flaky baseline.
+
+Same owner/scope. Preserve original failed unit evidence and source hashes. No source/test/tooling/timeout/policy changes. Coordinator permits ONE further unchanged make unit execution with original settings, logging versioned output. If it fails again, STOP with blocker and no commit. If it passes, record first failure explicitly as intermittent validation-environment/tooling evidence (root cause not established), run remaining contract/fuzz-smoke/full and local trusted browser checks with sufficient outer bounds, same credentials-off/offline fixture conditions. No additional unit retries or test weakening. Existing partial focused/format/lint/static evidence remains valid only if exact source hashes unchanged; repeat them if source changed (no source edits requested).
+
+Only after all required local gates pass, may make the originally approved source-only local commit on fix/staging-turso-blobs and finalize handoff. Independent validator must independently rerun unit including the process suite; any new blocker remains explicit. No remote pushes/deployments/credentials or other-worktree edits.

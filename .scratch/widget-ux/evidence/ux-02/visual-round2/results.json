@@ -1,0 +1,623 @@
+[
+  {
+    "label": "mobile-dark: browser preference emulated",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: host stays white",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: independent launcher color",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: launcher text is readable",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: frame fits",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: ready composer visible without scrolling",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: base and essential text sizes",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: browser preference reaches iframe",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: white window surfaces and light form controls",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: loader frame stays white",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: concise disclosure present before send without origin or port",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: restricted sandbox",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: close target is at least 44 by 44 and never overlaps heading",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: message metadata remains legible",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: long conversation scrolls independently",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: handoff menu opens with aria-expanded",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: requested channel labels render",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: WhatsApp is unavailable and disabled, never an operational channel",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: no channel is selected before the visitor chooses one",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: clicking WhatsApp does nothing",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: Escape closes the handoff menu",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: Escape closes window and returns launcher focus",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: handoff menu reopens",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: outside click closes the handoff menu",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: Request via email opens form and consent starts unchecked",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: composer stays visible with the handoff panel open",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: consent gate",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: handoff button reachable by scrolling",
+    "pass": true
+  },
+  {
+    "label": "mobile-dark: launcher closes",
+    "pass": true
+  },
+  {
+    "label": "desktop: browser preference emulated",
+    "pass": true
+  },
+  {
+    "label": "desktop: host stays white",
+    "pass": true
+  },
+  {
+    "label": "desktop: independent launcher color",
+    "pass": true
+  },
+  {
+    "label": "desktop: launcher text is readable",
+    "pass": true
+  },
+  {
+    "label": "desktop: frame fits",
+    "pass": true
+  },
+  {
+    "label": "desktop: ready composer visible without scrolling",
+    "pass": true
+  },
+  {
+    "label": "desktop: base and essential text sizes",
+    "pass": true
+  },
+  {
+    "label": "desktop: browser preference reaches iframe",
+    "pass": true
+  },
+  {
+    "label": "desktop: white window surfaces and light form controls",
+    "pass": true
+  },
+  {
+    "label": "desktop: loader frame stays white",
+    "pass": true
+  },
+  {
+    "label": "desktop: concise disclosure present before send without origin or port",
+    "pass": true
+  },
+  {
+    "label": "desktop: restricted sandbox",
+    "pass": true
+  },
+  {
+    "label": "desktop: close target is at least 44 by 44 and never overlaps heading",
+    "pass": true
+  },
+  {
+    "label": "desktop: message metadata remains legible",
+    "pass": true
+  },
+  {
+    "label": "desktop: long conversation scrolls independently",
+    "pass": true
+  },
+  {
+    "label": "desktop: handoff menu opens with aria-expanded",
+    "pass": true
+  },
+  {
+    "label": "desktop: requested channel labels render",
+    "pass": true
+  },
+  {
+    "label": "desktop: WhatsApp is unavailable and disabled, never an operational channel",
+    "pass": true
+  },
+  {
+    "label": "desktop: no channel is selected before the visitor chooses one",
+    "pass": true
+  },
+  {
+    "label": "desktop: clicking WhatsApp does nothing",
+    "pass": true
+  },
+  {
+    "label": "desktop: Escape closes the handoff menu",
+    "pass": true
+  },
+  {
+    "label": "desktop: Escape closes window and returns launcher focus",
+    "pass": true
+  },
+  {
+    "label": "desktop: handoff menu reopens",
+    "pass": true
+  },
+  {
+    "label": "desktop: outside click closes the handoff menu",
+    "pass": true
+  },
+  {
+    "label": "desktop: Request via email opens form and consent starts unchecked",
+    "pass": true
+  },
+  {
+    "label": "desktop: composer stays visible with the handoff panel open",
+    "pass": true
+  },
+  {
+    "label": "desktop: consent gate",
+    "pass": true
+  },
+  {
+    "label": "desktop: handoff button reachable by scrolling",
+    "pass": true
+  },
+  {
+    "label": "real click: clarification turn",
+    "pass": true
+  },
+  {
+    "label": "handoff reopens after a chat interaction",
+    "pass": true
+  },
+  {
+    "label": "real click: recorded, no email sent",
+    "pass": true
+  },
+  {
+    "label": "typed support details survive a close and reopen",
+    "pass": true
+  },
+  {
+    "label": "desktop: launcher closes",
+    "pass": true
+  },
+  {
+    "label": "tablet: browser preference emulated",
+    "pass": true
+  },
+  {
+    "label": "tablet: host stays white",
+    "pass": true
+  },
+  {
+    "label": "tablet: independent launcher color",
+    "pass": true
+  },
+  {
+    "label": "tablet: launcher text is readable",
+    "pass": true
+  },
+  {
+    "label": "tablet: frame fits",
+    "pass": true
+  },
+  {
+    "label": "tablet: ready composer visible without scrolling",
+    "pass": true
+  },
+  {
+    "label": "tablet: base and essential text sizes",
+    "pass": true
+  },
+  {
+    "label": "tablet: browser preference reaches iframe",
+    "pass": true
+  },
+  {
+    "label": "tablet: white window surfaces and light form controls",
+    "pass": true
+  },
+  {
+    "label": "tablet: loader frame stays white",
+    "pass": true
+  },
+  {
+    "label": "tablet: concise disclosure present before send without origin or port",
+    "pass": true
+  },
+  {
+    "label": "tablet: restricted sandbox",
+    "pass": true
+  },
+  {
+    "label": "tablet: close target is at least 44 by 44 and never overlaps heading",
+    "pass": true
+  },
+  {
+    "label": "tablet: message metadata remains legible",
+    "pass": true
+  },
+  {
+    "label": "tablet: long conversation scrolls independently",
+    "pass": true
+  },
+  {
+    "label": "tablet: handoff menu opens with aria-expanded",
+    "pass": true
+  },
+  {
+    "label": "tablet: requested channel labels render",
+    "pass": true
+  },
+  {
+    "label": "tablet: WhatsApp is unavailable and disabled, never an operational channel",
+    "pass": true
+  },
+  {
+    "label": "tablet: no channel is selected before the visitor chooses one",
+    "pass": true
+  },
+  {
+    "label": "tablet: clicking WhatsApp does nothing",
+    "pass": true
+  },
+  {
+    "label": "tablet: Escape closes the handoff menu",
+    "pass": true
+  },
+  {
+    "label": "tablet: Escape closes window and returns launcher focus",
+    "pass": true
+  },
+  {
+    "label": "tablet: handoff menu reopens",
+    "pass": true
+  },
+  {
+    "label": "tablet: outside click closes the handoff menu",
+    "pass": true
+  },
+  {
+    "label": "tablet: Request via email opens form and consent starts unchecked",
+    "pass": true
+  },
+  {
+    "label": "tablet: composer stays visible with the handoff panel open",
+    "pass": true
+  },
+  {
+    "label": "tablet: consent gate",
+    "pass": true
+  },
+  {
+    "label": "tablet: handoff button reachable by scrolling",
+    "pass": true
+  },
+  {
+    "label": "tablet: launcher closes",
+    "pass": true
+  },
+  {
+    "label": "mobile: browser preference emulated",
+    "pass": true
+  },
+  {
+    "label": "mobile: host stays white",
+    "pass": true
+  },
+  {
+    "label": "mobile: independent launcher color",
+    "pass": true
+  },
+  {
+    "label": "mobile: launcher text is readable",
+    "pass": true
+  },
+  {
+    "label": "mobile: frame fits",
+    "pass": true
+  },
+  {
+    "label": "mobile: ready composer visible without scrolling",
+    "pass": true
+  },
+  {
+    "label": "mobile: base and essential text sizes",
+    "pass": true
+  },
+  {
+    "label": "mobile: browser preference reaches iframe",
+    "pass": true
+  },
+  {
+    "label": "mobile: white window surfaces and light form controls",
+    "pass": true
+  },
+  {
+    "label": "mobile: loader frame stays white",
+    "pass": true
+  },
+  {
+    "label": "mobile: concise disclosure present before send without origin or port",
+    "pass": true
+  },
+  {
+    "label": "mobile: restricted sandbox",
+    "pass": true
+  },
+  {
+    "label": "mobile: close target is at least 44 by 44 and never overlaps heading",
+    "pass": true
+  },
+  {
+    "label": "mobile: message metadata remains legible",
+    "pass": true
+  },
+  {
+    "label": "mobile: long conversation scrolls independently",
+    "pass": true
+  },
+  {
+    "label": "mobile: handoff menu opens with aria-expanded",
+    "pass": true
+  },
+  {
+    "label": "mobile: requested channel labels render",
+    "pass": true
+  },
+  {
+    "label": "mobile: WhatsApp is unavailable and disabled, never an operational channel",
+    "pass": true
+  },
+  {
+    "label": "mobile: no channel is selected before the visitor chooses one",
+    "pass": true
+  },
+  {
+    "label": "mobile: clicking WhatsApp does nothing",
+    "pass": true
+  },
+  {
+    "label": "mobile: Escape closes the handoff menu",
+    "pass": true
+  },
+  {
+    "label": "mobile: Escape closes window and returns launcher focus",
+    "pass": true
+  },
+  {
+    "label": "mobile: handoff menu reopens",
+    "pass": true
+  },
+  {
+    "label": "mobile: outside click closes the handoff menu",
+    "pass": true
+  },
+  {
+    "label": "mobile: Request via email opens form and consent starts unchecked",
+    "pass": true
+  },
+  {
+    "label": "mobile: composer stays visible with the handoff panel open",
+    "pass": true
+  },
+  {
+    "label": "mobile: consent gate",
+    "pass": true
+  },
+  {
+    "label": "mobile: handoff button reachable by scrolling",
+    "pass": true
+  },
+  {
+    "label": "mobile: launcher closes",
+    "pass": true
+  },
+  {
+    "label": "small-phone: browser preference emulated",
+    "pass": true
+  },
+  {
+    "label": "small-phone: host stays white",
+    "pass": true
+  },
+  {
+    "label": "small-phone: independent launcher color",
+    "pass": true
+  },
+  {
+    "label": "small-phone: launcher text is readable",
+    "pass": true
+  },
+  {
+    "label": "small-phone: frame fits",
+    "pass": true
+  },
+  {
+    "label": "small-phone: ready composer visible without scrolling",
+    "pass": true
+  },
+  {
+    "label": "small-phone: base and essential text sizes",
+    "pass": true
+  },
+  {
+    "label": "small-phone: browser preference reaches iframe",
+    "pass": true
+  },
+  {
+    "label": "small-phone: white window surfaces and light form controls",
+    "pass": true
+  },
+  {
+    "label": "small-phone: loader frame stays white",
+    "pass": true
+  },
+  {
+    "label": "small-phone: concise disclosure present before send without origin or port",
+    "pass": true
+  },
+  {
+    "label": "small-phone: restricted sandbox",
+    "pass": true
+  },
+  {
+    "label": "small-phone: close target is at least 44 by 44 and never overlaps heading",
+    "pass": true
+  },
+  {
+    "label": "small-phone: message metadata remains legible",
+    "pass": true
+  },
+  {
+    "label": "small-phone: long conversation scrolls independently",
+    "pass": true
+  },
+  {
+    "label": "small-phone: handoff menu opens with aria-expanded",
+    "pass": true
+  },
+  {
+    "label": "small-phone: requested channel labels render",
+    "pass": true
+  },
+  {
+    "label": "small-phone: WhatsApp is unavailable and disabled, never an operational channel",
+    "pass": true
+  },
+  {
+    "label": "small-phone: no channel is selected before the visitor chooses one",
+    "pass": true
+  },
+  {
+    "label": "small-phone: clicking WhatsApp does nothing",
+    "pass": true
+  },
+  {
+    "label": "small-phone: Escape closes the handoff menu",
+    "pass": true
+  },
+  {
+    "label": "small-phone: Escape closes window and returns launcher focus",
+    "pass": true
+  },
+  {
+    "label": "small-phone: handoff menu reopens",
+    "pass": true
+  },
+  {
+    "label": "small-phone: outside click closes the handoff menu",
+    "pass": true
+  },
+  {
+    "label": "small-phone: Request via email opens form and consent starts unchecked",
+    "pass": true
+  },
+  {
+    "label": "small-phone: composer stays visible with the handoff panel open",
+    "pass": true
+  },
+  {
+    "label": "small-phone: consent gate",
+    "pass": true
+  },
+  {
+    "label": "small-phone: handoff button reachable by scrolling",
+    "pass": true
+  },
+  {
+    "label": "small-phone: launcher closes",
+    "pass": true
+  },
+  {
+    "label": "landscape: browser preference emulated",
+    "pass": true
+  },
+  {
+    "label": "landscape: host stays white",
+    "pass": true
+  },
+  {
+    "label": "landscape: independent launcher color",
+    "pass": true
+  },
+  {
+    "label": "landscape: launcher text is readable",
+    "pass": true
+  },
+  {
+    "label": "landscape: inherited host top clip bounded to 8px; close target remains visible",
+    "pass": false
+  },
+  {
+    "label": "fatal",
+    "pass": false,
+    "detail": "AssertionError [ERR_ASSERTION]: landscape: inherited host top clip bounded to 8px; close target remains visible\n    at check (file:///home/me/Documents/formartting/Working_Milestone_Files/ai-virtual-assistant/web/tests/widget-visual.browser.mjs:27:10)\n    at file:///home/me/Documents/formartting/Working_Milestone_Files/ai-virtual-assistant/web/tests/widget-visual.browser.mjs:135:7"
+  }
+]

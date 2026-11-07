@@ -1,0 +1,230 @@
+{
+  "viewport": {
+    "w": 398,
+    "h": 283
+  },
+  "page": {
+    "height": 283,
+    "screens": 1,
+    "words": 39,
+    "img": 0,
+    "video": 0,
+    "canvas": 0,
+    "svg": 0,
+    "sections": 2,
+    "horizontalOverflow": 0,
+    "overflowCulprits": [],
+    "uiFragments": 0,
+    "uiAbuse": false,
+    "realPictures": 0,
+    "videoCount": 0,
+    "uiPictures": 0,
+    "pictureSamples": [],
+    "blendText": 0,
+    "sideScrollers": 0,
+    "brokenImages": [],
+    "emoji": [],
+    "videosNoPoster": 0
+  },
+  "hero": {
+    "text": "×",
+    "words": 1,
+    "chars": 1,
+    "lines": 1,
+    "size": 28,
+    "vw": 7,
+    "font": "system-ui",
+    "weight": 400,
+    "tracking": 0,
+    "leading": 1,
+    "upper": false,
+    "italic": false,
+    "mono": false,
+    "align": "center",
+    "position": "right",
+    "widthRatio": 0.11,
+    "top": 5,
+    "tag": "button",
+    "kind": "heading"
+  },
+  "h1": {
+    "text": "Ask a question",
+    "words": 3,
+    "lines": 1,
+    "size": 16,
+    "font": "system-ui"
+  },
+  "headings": [
+    {
+      "text": "×",
+      "words": 1,
+      "chars": 1,
+      "lines": 1,
+      "size": 28,
+      "vw": 7,
+      "font": "system-ui",
+      "weight": 400,
+      "tracking": 0,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "right",
+      "widthRatio": 0.11,
+      "top": 5,
+      "tag": "button",
+      "kind": "heading"
+    }
+  ],
+  "headingSummary": {
+    "count": 1,
+    "maxLines": 1,
+    "over2Lines": 0,
+    "statements": 0,
+    "centered": 1,
+    "medianWords": null,
+    "mixedFontHeadings": 0
+  },
+  "type": {
+    "families": [
+      {
+        "family": "system-ui",
+        "share": 1,
+        "mono": false
+      }
+    ],
+    "familyCount": 1,
+    "sizes": [
+      13,
+      14,
+      16,
+      28
+    ],
+    "sizeCount": 4,
+    "notLoaded": [],
+    "body": {
+      "font": "system-ui",
+      "size": 13.1,
+      "leading": 1.4,
+      "weight": 400,
+      "tracking": 0,
+      "contrast": 5.6
+    },
+    "measureChars": 55,
+    "max": {
+      "size": 28,
+      "vw": 7,
+      "font": "system-ui",
+      "text": "×"
+    },
+    "monoShare": 0,
+    "monoProseShare": 0,
+    "monoFamilies": [],
+    "monoSamples": [],
+    "microLabels": 0,
+    "microLabelShare": 0,
+    "microSamples": [],
+    "upperShare": 0,
+    "centerShare": 0.04,
+    "smallText": 0
+  },
+  "eyebrows": [],
+  "numbered": [],
+  "color": {
+    "bodyBg": "#ffffff",
+    "bodyBgHsl": {
+      "h": 0,
+      "s": 0,
+      "l": 1
+    },
+    "dark": false,
+    "sectionBgs": [
+      {
+        "color": "#ffffff",
+        "top": 55,
+        "hsl": {
+          "h": 0,
+          "s": 0,
+          "l": 1
+        }
+      }
+    ],
+    "textColors": [
+      {
+        "color": "#5a6b68",
+        "share": 0.78
+      },
+      {
+        "color": "#1a73e8",
+        "share": 0.1
+      },
+      {
+        "color": "#1a1f1e",
+        "share": 0.08
+      },
+      {
+        "color": "#ffffff",
+        "share": 0.04
+      }
+    ],
+    "button": {
+      "bg": "#1a73e8",
+      "hsl": {
+        "h": 214,
+        "s": 0.82,
+        "l": 0.51
+      },
+      "fg": "#ffffff"
+    },
+    "lowContrast": []
+  },
+  "buttons": {
+    "count": 2,
+    "inHero": 2,
+    "radius": 12,
+    "height": 43,
+    "withShadow": 0,
+    "withGradient": 0,
+    "mono": 0,
+    "upper": 0,
+    "heroLabels": [
+      "Request human support",
+      "Send question"
+    ]
+  },
+  "surfaces": {
+    "shadowStatic": 1,
+    "shadowOverlay": 0,
+    "shadowSamples": [
+      "form#message-form → rgba(22, 47, 87, 0.08) 0px -4px 14px 0px"
+    ],
+    "gradients": 0,
+    "scrims": 0,
+    "gradientSamples": [],
+    "gradientText": 0,
+    "hairlines": 1,
+    "hairlineSamples": [
+      "header.chat-header 398px"
+    ],
+    "outlinedBoxes": 1,
+    "dashed": 0,
+    "blurred": 0,
+    "roundedBoxes": 1,
+    "boxRadius": 12,
+    "squareMedia": 0,
+    "roundedMedia": 0,
+    "mediaRadius": 0,
+    "textShadow": 0,
+    "cardRows": []
+  },
+  "heroMedia": [],
+  "nav": {
+    "links": 0,
+    "fixed": false,
+    "height": 55,
+    "floatingPill": false,
+    "blur": false
+  },
+  "fontsLoaded": []
+}

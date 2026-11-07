@@ -1,0 +1,52 @@
+{
+  "/home/me/Documents/agent-worktrees/assistant-admin-backend": {
+    "head_unchanged": true,
+    "tracked_diff_unchanged": true,
+    "status_unchanged": true
+  },
+  "/home/me/Documents/agent-worktrees/assistant-rating-browser": {
+    "head_unchanged": true,
+    "tracked_diff_unchanged": true,
+    "status_unchanged": true
+  },
+  "/home/me/Documents/agent-worktrees/assistant-ci": {
+    "head_unchanged": true,
+    "tracked_diff_unchanged": true,
+    "status_unchanged": true
+  },
+  "/home/me/Documents/agent-worktrees/assistant-ui-rating-integration": {
+    "head_unchanged": true,
+    "tracked_diff_unchanged": true,
+    "status_unchanged": true
+  },
+  "/home/me/Documents/agent-worktrees/assistant-local-demo": {
+    "head_unchanged": true,
+    "tracked_diff_unchanged": true,
+    "status_unchanged": true
+  },
+  "/home/me/Documents/agent-worktrees/assistant-rating-acceptance": {
+    "head_unchanged": true,
+    "tracked_diff_unchanged": true,
+    "status_unchanged": true
+  },
+  "/home/me/Documents/agent-worktrees/assistant-auto": {
+    "head_unchanged": true,
+    "tracked_diff_unchanged": true,
+    "status_unchanged": true
+  },
+  "/home/me/Documents/agent-worktrees/assistant-ui-rating-validation": {
+    "head_unchanged": true,
+    "tracked_diff_unchanged": true,
+    "status_unchanged": true
+  },
+  "/home/me/Documents/agent-worktrees/assistant-admin": {
+    "head_unchanged": true,
+    "tracked_diff_unchanged": true,
+    "status_unchanged": true
+  },
+  "/home/me/Documents/agent-worktrees/assistant-rating-review": {
+    "head_unchanged": true,
+    "tracked_diff_unchanged": true,
+    "status_unchanged": true
+  }
+}
